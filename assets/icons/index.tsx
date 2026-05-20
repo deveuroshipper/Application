@@ -2,10 +2,14 @@ import React from "react";
 import Apple from "./Apple";
 import Arrow from "./Arrow";
 import BackArrow from "./BackArrow";
+import Bell from "./Bell";
+import Cart from "./Cart";
 import CloseEye from "./CloseEye";
 import Eye from "./Eye";
 import Google from "./Google";
 import Mail from "./Mail";
+import NextArrow from "./NextArrow";
+import Box from "./Box";
 
 const icons = {
   Arrow: Arrow,
@@ -15,6 +19,10 @@ const icons = {
   BackArrow: BackArrow,
   CloseEye: CloseEye,
   Eye: Eye,
+  NextArrow: NextArrow,
+  Cart: Cart,
+  Bell: Bell,
+  Box: Box,
 };
 
 const Icon = ({ name, ...props }: any) => {

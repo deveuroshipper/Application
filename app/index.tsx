@@ -1,8 +1,12 @@
 import CreateAccount from "@/screens/CreateAccount";
+import EmailVerification from "@/screens/EmailVerification";
+import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
 import GetStartedScreen from "@/screens/GetStartedScreen";
 import IntroScreen from "@/screens/IntroScreen";
 import LetsBeginScreen from "@/screens/LetsBeginScreen";
 import LoadingSplashScreen from "@/screens/LoadingSplashScreen";
+import LoginScreen from "@/screens/LoginScreen";
+import NewPassword from "@/screens/NewPassword";
 import WelcomeScreen from "@/screens/WelcomeScreen";
 import {
   Inter_400Regular,
@@ -18,6 +22,7 @@ import {
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 import "../global.css";
+import MainScreens from "./MainScreens";
 const Stack = createStackNavigator();
 
 const Layout = () => {
@@ -33,6 +38,7 @@ const Layout = () => {
   if (!fontsLoaded) return null;
   return (
     <Stack.Navigator
+      initialRouteName="LoadingSplashScreen"
       screenOptions={{
         headerShown: false,
       }}
@@ -66,6 +72,32 @@ const Layout = () => {
         name="CreateAccount"
         component={CreateAccount}
         options={{ title: "CreateAccount" }}
+      />
+      <Stack.Screen
+        name="EmailVerification"
+        component={EmailVerification}
+        options={{ title: "EmailVerification" }}
+      />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ title: "LoginScreen" }}
+      />
+      <Stack.Screen
+        name="ForgotPasswordScreen"
+        component={ForgotPasswordScreen}
+        options={{ title: "ForgotPasswordScreen" }}
+      />
+      <Stack.Screen
+        name="NewPassword"
+        component={NewPassword}
+        options={{ title: "NewPassword" }}
+      />
+
+      <Stack.Screen
+        name="MainScreens"
+        component={MainScreens}
+        options={{ title: "MainScreens" }}
       />
     </Stack.Navigator>
   );

@@ -9,26 +9,41 @@ const Input = ({
   onChange,
   icon,
   iconAction,
+  secureTextEntry,
+  secondLabel,
+  secondLabelAction,
 }: {
   label: String;
+  secondLabel?: String;
+  secondLabelAction?: any;
   placeholderTxt: String;
   value: any;
   onChange: any;
   icon?: any;
   iconAction?: any;
+  secureTextEntry?: boolean;
 }) => {
   return (
     <View>
-      <Text className="text-csm uppercase mt-2 mb-3 text-primary font-inter-medium">
-        {label}
-      </Text>
+      <View className="flex flex-row mt-2 mb-3 justify-between">
+        <Text className="text-csm uppercase   text-primary font-inter-medium">
+          {label}
+        </Text>
+
+        <TouchableOpacity onPress={secondLabelAction}>
+          <Text className="text-csm  w-fit text-center text-primary font-inter">
+            {secondLabel}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <View className="flex gap-2 flex-row items-center px-6 py-2 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
         <TextInput
           value={value}
-          onChangeText={onChange}
+          onChangeText={(e) => onChange(e)}
           className="flex-1"
           placeholder={placeholderTxt}
+          secureTextEntry={secureTextEntry}
         />
 
         {icon && (

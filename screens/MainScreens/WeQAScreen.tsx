@@ -1,17 +1,15 @@
-import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 
-const CreateAccount = ({ navigation }: any) => {
+const WeQAScreen = ({ navigation }: any) => {
   const [data, SetData] = useState({
     name: "",
     email: "",
-    password: "",
     mobile: "",
     code: {
       dialCode: "+1",
@@ -19,7 +17,6 @@ const CreateAccount = ({ navigation }: any) => {
       name: "United States",
     },
   });
-  const [showPass, setShowPass] = useState(false);
 
   const handelSubmit = () => {
     console.log(data);
@@ -31,16 +28,32 @@ const CreateAccount = ({ navigation }: any) => {
       <View className="px-8 pb-8 flex-1">
         <BackButton navigation={navigation} />
 
-        <View className="mt-16 flex flex-col justify-between content-between  flex-1">
-          <View>
+        <View className="mt-10 flex flex-col justify-between content-between flex-1">
+          <View className="w-full">
+            <View
+              className="w-full h-40 mb-8 overflow-hidden rounded-lg"
+              style={{
+                shadowColor: "#e3e6e9",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.02,
+                shadowRadius: 32,
+                elevation: 10,
+              }}
+            >
+              <Image
+                className="w-full h-full flex items-start bg-cover"
+                source={require("../../assets/images/WeProcurePage.png")}
+              />
+            </View>
+
             <View>
               <Text className="text-primary font-space-grotesk-bold text-cxl w-full">
-                Create Account
+                WeProcure{" "}
               </Text>
             </View>
             <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
-              Create your account and access a smarter way to manage shipping
-              and logistics.
+              Tell us what you need we’ll help you procure it from trusted
+              suppliers.
             </Text>
           </View>
 
@@ -51,6 +64,12 @@ const CreateAccount = ({ navigation }: any) => {
               value={data?.name}
               onChange={(text: string) => SetData({ ...data, name: text })}
             />
+            <Input
+              label={"Email Address"}
+              placeholderTxt={"jen@gmail.com"}
+              value={data?.email}
+              onChange={(text: string) => SetData({ ...data, email: text })}
+            />
             <PhoneNumberInput
               label={"Phone Number*"}
               placeholderTxt={"987654321"}
@@ -59,30 +78,15 @@ const CreateAccount = ({ navigation }: any) => {
               onCodeChange={(e) => SetData({ ...data, code: e })}
               onChange={(text: string) => SetData({ ...data, mobile: text })}
             />
-            <Input
-              label={"Email Address"}
-              placeholderTxt={"jen@gmail.com"}
-              value={data?.email}
-              onChange={(text: string) => SetData({ ...data, email: text })}
-            />
-            <Input
-              label={"Password"}
-              placeholderTxt={"●●●●●●"}
-              value={data?.password}
-              secureTextEntry={!showPass}
-              onChange={(text: string) => SetData({ ...data, password: text })}
-              icon={showPass ? <Icon name="CloseEye" /> : <Icon name="Eye" />}
-              iconAction={() => setShowPass(!showPass)}
-            />
           </View>
 
           <View className="mt-auto">
-            <Text className="text-csm mt-2 mb-6 text-center text-primary/60 font-inter">
+            {/* <Text className="text-csm mt-2 mb-6 text-center text-primary/60 font-inter">
               By signing up, you confirm that you agree to our Terms of Service
               and Privacy Policy.
-            </Text>
+            </Text> */}
 
-            <Button text="Create Account" action={handelSubmit} />
+            <Button text="Submit" action={handelSubmit} />
           </View>
         </View>
       </View>
@@ -90,4 +94,4 @@ const CreateAccount = ({ navigation }: any) => {
   );
 };
 
-export default CreateAccount;
+export default WeQAScreen;

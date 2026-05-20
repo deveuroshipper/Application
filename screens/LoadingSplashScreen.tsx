@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Text, View } from "react-native";
 const LoadingSplashScreen = ({ navigation }: any) => {
@@ -12,8 +13,22 @@ const LoadingSplashScreen = ({ navigation }: any) => {
       }),
     ).start();
 
-    setTimeout(() => {
-      navigation.push("LetsBeginScreen");
+    setTimeout(async () => {
+      const introComplete = await AsyncStorage.getItem("intro_complete");
+      // navigation.push(introComplete === "true" ? "WelcomeScreen" : "LetsBeginScreen");
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "MainScreens",
+            params: {
+              screen: "BottomTabBar",
+              params: { screen: "HomeScreen" },
+            },
+          },
+        ],
+      });
     }, 1000);
   }, []);
 

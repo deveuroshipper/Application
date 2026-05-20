@@ -7,10 +7,10 @@ const Button = ({
   text,
   icon,
 }: {
-  color?: String;
+  color?: string;
   action: any;
-  text: String;
-  icon: any;
+  text: string;
+  icon?: any;
 }) => {
   return (
     <TouchableOpacity
@@ -18,11 +18,16 @@ const Button = ({
       className="h-16 w-full flex flex-row gap-4 justify-center items-center rounded-2xl"
       style={{
         backgroundColor: color,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
       }}
     >
       <Text
         style={{ color: color ? "white" : "black" }}
-        className="text-cmd font-inter-bold"
+        className="text-cmd font-inter-bold pb-1"
       >
         {text}
       </Text>

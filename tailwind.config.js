@@ -9,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        gold: "#CF961A",
+        gold: "#E0A31D",
         primary: "#0F1729",
         lightBlue: "#5CA6DA",
         BgWhite: "#F8FAFC",
@@ -26,6 +26,7 @@ module.exports = {
         cxxl: 46,
         cxl: 32,
         clg: 22,
+        csl: 20,
         cmd: 18,
         cno: 16,
         csm: 14,

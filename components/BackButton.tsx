@@ -1,13 +1,19 @@
 import Icon from "@/assets/icons";
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 
-const BackButton = () => {
+const BackButton = ({ navigation }: any) => {
+  const handelBack = () => {
+    navigation.pop();
+  };
   return (
-    <View className="flex flex-row gap-4 items-center">
+    <TouchableOpacity
+      onPress={handelBack}
+      className="flex flex-row gap-4 items-center"
+    >
       <Icon name="BackArrow" size={16} />
       <Text className="text-cno font-inter-bold">Back</Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -33,7 +34,10 @@ const GetStartedScreen = ({ navigation }: any) => {
           </View>
 
           <TouchableOpacity
-            onPress={() => navigation.push("WelcomeScreen")}
+            onPress={async () => {
+            await AsyncStorage.setItem("intro_complete", "true");
+            navigation.push("WelcomeScreen");
+          }}
             className="bg-gold h-16 w-full flex justify-center items-center rounded-md"
           >
             <Text className="text-cmd text-white uppercase font-space-grotesk-bold tracking-[2px]">

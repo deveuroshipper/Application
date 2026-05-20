@@ -62,7 +62,7 @@ const WelcomeScreen = ({ navigation }: any) => {
             <Text className="text-csm text-white font-inter-medium">
               Already have an account?
             </Text>
-            <Pressable>
+            <Pressable onPress={() => navigation.push("LoginScreen")}>
               <Text className="text-csm text-gold font-inter-medium">
                 Log in
               </Text>
