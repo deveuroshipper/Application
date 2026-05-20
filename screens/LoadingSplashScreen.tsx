@@ -15,20 +15,22 @@ const LoadingSplashScreen = ({ navigation }: any) => {
 
     setTimeout(async () => {
       const introComplete = await AsyncStorage.getItem("intro_complete");
-      // navigation.push(introComplete === "true" ? "WelcomeScreen" : "LetsBeginScreen");
+      navigation.push(
+        introComplete === "true" ? "WelcomeScreen" : "LetsBeginScreen",
+      );
 
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: "MainScreens",
-            params: {
-              screen: "BottomTabBar",
-              params: { screen: "HomeScreen" },
-            },
-          },
-        ],
-      });
+      // navigation.reset({
+      //   index: 0,
+      //   routes: [
+      //     {
+      //       name: "MainScreens",
+      //       params: {
+      //         screen: "BottomTabBar",
+      //         params: { screen: "HomeScreen" },
+      //       },
+      //     },
+      //   ],
+      // });
     }, 1000);
   }, []);
 
