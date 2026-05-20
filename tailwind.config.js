@@ -1,0 +1,37 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
+    "./screens/**/*.{js,jsx,ts,tsx}",
+  ],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {
+      colors: {
+        gold: "#CF961A",
+        primary: "#0F1729",
+        lightBlue: "#5CA6DA",
+        BgWhite: "#F8FAFC",
+      },
+      fontFamily: {
+        inter: ["Inter_400Regular"],
+        "inter-medium": ["Inter_500Medium"],
+        "inter-bold": ["Inter_700Bold"],
+        "space-grotesk": ["SpaceGrotesk_400Regular"],
+        "space-grotesk-medium": ["SpaceGrotesk_500Medium"],
+        "space-grotesk-bold": ["SpaceGrotesk_700Bold"],
+      },
+      fontSize: {
+        cxxl: 46,
+        cxl: 32,
+        clg: 22,
+        cmd: 18,
+        cno: 16,
+        csm: 14,
+        cxs: 10,
+      },
+    },
+  },
+  plugins: [],
+};
