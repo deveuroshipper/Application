@@ -11,6 +11,7 @@ interface AuthState {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
+  isHydrated: boolean;
   login: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   token: null,
   user: null,
   isAuthenticated: false,
+  isHydrated: false,
 
   login: async (token, user) => {
     await AsyncStorage.setItem("access_token", token);
@@ -42,8 +44,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set({ token, user, isAuthenticated: true });
       }
     } catch {
-      // Corrupt storage — clear and stay logged out
-      await AsyncStorage.multiRemove(["access_token", "user_data"]);
+      try {
+        await AsyncStorage.multiRemove(["access_token", "user_data"]);
+      } catch {}
+    } finally {
+      set({ isHydrated: true });
     }
   },
 }));
