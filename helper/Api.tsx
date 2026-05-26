@@ -10,8 +10,8 @@ const getAccessToken = () => {
 };
 
 api.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
+  async (config) => {
+    const token = await getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -59,12 +59,47 @@ api.interceptors.request.use(
 //   },
 // );
 
+export const getProfileApiHandler = async () => {
+  try {
+    const response = await api.get(`/auth/me`);
+    return response.data.data;
+  } catch (error: any) {
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message || "Check Network Connection";
+    const err: any = new Error(message);
+    err.status = status;
+    throw err;
+  }
+};
+
 export const loginApiHandler = async (email: String, password: String) => {
   try {
     const response = await api.post(`/auth/login`, {
       email,
       password,
     });
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getRoutesApiHandler = async () => {
+  try {
+    const response = await api.get(`/shipping-routes`);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getCategoryApiHandler = async () => {
+  try {
+    const response = await api.get(`/categories`);
+
     return response.data.data;
   } catch (error: any) {
     console.log(error);

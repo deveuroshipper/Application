@@ -3,8 +3,12 @@ import { create } from "zustand";
 
 export interface User {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
+  phone: String;
+  role: String;
+  status: String;
+  profileImage: String;
 }
 
 interface AuthState {
@@ -15,6 +19,7 @@ interface AuthState {
   login: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -24,12 +29,21 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isHydrated: false,
 
   login: async (token, user) => {
+    const userData = {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      profileImage: user.profileImage,
+    };
     try {
       await AsyncStorage.multiSet([
         ["access_token", token],
-        ["user_data", JSON.stringify(user)],
+        ["user_data", JSON.stringify(userData)],
       ]);
-      set({ token, user, isAuthenticated: true });
+      set({ token, user: userData, isAuthenticated: true });
     } catch {
       // Storage write failed — do not update in-memory state
     }
@@ -39,6 +53,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
     await AsyncStorage.multiRemove(["access_token", "user_data"]);
     set({ token: null, user: null, isAuthenticated: false });
   },
+
+  setUser: (user) => set({ user }),
 
   loadFromStorage: async () => {
     try {

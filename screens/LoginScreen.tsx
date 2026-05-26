@@ -38,7 +38,8 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const response = await loginApiHandler(data.email, data.password);
-      await useAuthStore.getState().login(response.accessToken, response.user);
+      console.log("response : ", response);
+      await useAuthStore.getState().login(response.token, response.user);
       navigation.reset({
         index: 0,
         routes: [
@@ -55,7 +56,10 @@ const LoginScreen = ({ navigation }: any) => {
       console.log("error : ", error);
       Toast.show({
         type: "error",
-        text1: typeof error === "string" ? error : error?.message ?? "Something went wrong",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
       });
     } finally {
       setLoading(false);

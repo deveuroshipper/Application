@@ -1,0 +1,51 @@
+import { SHIPMENT_TYPE } from "@/constants/enums";
+import { create } from "zustand";
+
+interface AddressState {
+  route: string | null;
+  shipmentType: SHIPMENT_TYPE | null;
+  date: Date | String | null;
+  time: Date | String | null;
+  pickupAddress: string | null;
+  deliverAddress: string | null;
+
+  setRoute: (route: string | null) => void;
+  setShipmentType: (type: SHIPMENT_TYPE | null) => void;
+  setDate: (date: Date | String | null) => void;
+  setTime: (time: Date | String | null) => void;
+  setPickupAddress: (address: string | null) => void;
+  setDeliverAddress: (address: string | null) => void;
+}
+
+export const useAddressStore = create<AddressState>()((set) => ({
+  route: null,
+  shipmentType: null,
+  date: null,
+  time: null,
+  pickupAddress: null,
+  deliverAddress: null,
+
+  setRoute: (route) => {
+    set({ route });
+  },
+
+  setShipmentType: (shipmentType) => {
+    set({ shipmentType });
+  },
+
+  setDate: (date) => {
+    set({ date });
+  },
+
+  setTime: (time) => {
+    set({ time });
+  },
+
+  setPickupAddress: (pickupAddress) => {
+    set({ pickupAddress });
+  },
+
+  setDeliverAddress: (deliverAddress) => {
+    set({ deliverAddress });
+  },
+}));

@@ -9,6 +9,7 @@ import Button from "@/components/Button";
 import BoxDimension from "@/components/OrderScreation/BoxDimension";
 import CategoryBox from "@/components/OrderScreation/CategoryBox";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { useSpecificationStore } from "@/store/useSpecification";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -88,6 +89,15 @@ const Specification = ({ navigation, route }: any) => {
     },
   ];
 
+  const handelSetCategory = (categoryId: string) => {
+    useSpecificationStore.getState().setCategory(categoryId);
+    setCategory(categoryId);
+  };
+  const handelSetSubCategory = (categoryId: string) => {
+    useSpecificationStore.getState().setSubcategory(categoryId);
+    setSubcategory(categoryId);
+  };
+
   const handelSubmit = () => {
     if (selectedBox?.inquiry) {
       navigation.push("SubmitShipment");
@@ -95,6 +105,12 @@ const Specification = ({ navigation, route }: any) => {
       navigation.push("DetailsAndPayment");
     }
   };
+  console.log(
+    "category data in store : ",
+    useSpecificationStore.getState().category,
+    "  ",
+    useSpecificationStore.getState().subcategory,
+  );
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
       <View className="flex-1 px-8 pb-8">
@@ -114,9 +130,9 @@ const Specification = ({ navigation, route }: any) => {
           >
             <CategoryBox
               selectedCategory={category}
-              setCategory={(e) => setCategory(e)}
+              setCategory={(e: any) => handelSetCategory(e)}
               selectedSubCategory={subCategory}
-              setSubCategory={(e) => setSubcategory(e)}
+              setSubCategory={(e: any) => handelSetSubCategory(e)}
             />
 
             <BoxDimension

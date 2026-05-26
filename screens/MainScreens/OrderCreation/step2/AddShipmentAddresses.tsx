@@ -23,12 +23,22 @@ const TOTAL_STEP = 4;
 const SAVED_ADDRESSES = [
   {
     id: "1",
+    number: "9725398019",
+    pincode: "30018",
     name: "14 Baker Street",
+    state: "Gujarat",
+    city: "Ahmadabad",
+    country: "India",
     detail: "Marylebone, London W1U 3BW, 654321\nUnited Kingdom",
   },
   {
     id: "2",
-    name: "14 Baker Street",
+    number: "9725398019",
+    pincode: "30018",
+    name: "150 shreenath app",
+    state: "Gujarat",
+    city: "Ahmadabad",
+    country: "India",
     detail: "Marylebone, London W1U 3BW, 654321\nUnited Kingdom",
   },
 ];

@@ -1,3 +1,4 @@
+import CartScreen from "@/screens/CartScreen";
 import AddNewAddress from "@/screens/MainScreens/AddNewAddress";
 import AddShipmentAddresses from "@/screens/MainScreens/OrderCreation/step2/AddShipmentAddresses";
 import ChooseHowShip from "@/screens/MainScreens/OrderCreation/step2/ChooseHowShip";
@@ -6,18 +7,17 @@ import ConfirmAddressScreen from "@/screens/MainScreens/OrderCreation/step2/Conf
 import DateAndTimeSubmission from "@/screens/MainScreens/OrderCreation/step2/DateAndTimeSubmission";
 import Specification from "@/screens/MainScreens/OrderCreation/step3/Specification";
 import SubmitShipment from "@/screens/MainScreens/OrderCreation/step3/SubmitShipment";
+import ApplyCoupon from "@/screens/MainScreens/OrderCreation/step4/ApplyCoupon";
 import DetailsAndPayment from "@/screens/MainScreens/OrderCreation/step4/DetailsAndPayment";
+import OrderStatus from "@/screens/MainScreens/OrderCreation/step4/OrderStatus";
+import PackageDetails from "@/screens/MainScreens/OrderCreation/step4/PackageDetails";
 import WeProcureScreen from "@/screens/MainScreens/WeProcureScreen";
 import WeQAScreen from "@/screens/MainScreens/WeQAScreen";
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 import "../global.css";
 import MyTabs from "./BottomTab";
-import PackageDetails from "@/screens/MainScreens/OrderCreation/step4/PackageDetails";
-import ApplyCoupon from "@/screens/MainScreens/OrderCreation/step4/ApplyCoupon";
-import OrderStatus from "@/screens/MainScreens/OrderCreation/step4/OrderStatus";
-import CartScreen from "@/screens/CartScreen";
-import OrderTracking from "@/components/OrderTracking";
+// import NotificationScreen from "@/screens/MainScreens/NOtificationScreen";
 
 const Stack = createStackNavigator();
 
@@ -109,6 +109,11 @@ const MainScreens = () => {
         component={CartScreen}
         options={{ title: "CartScreen" }}
       />
+      {/* <Stack.Screen
+        name="NotificationScreen"
+        component={NotificationScreen}
+        options={{ title: "NotificationScreen" }}
+      /> */}
       {/* <Stack.Screen
         name="OrderTracking"
         component={OrderTracking}

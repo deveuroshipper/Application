@@ -24,15 +24,20 @@ const BANNER_SLIDES: BannerSlide[] = [
 ];
 
 const HomeScreen = ({ navigation }: any) => {
-
-
   const handelCartClick = () => {
     navigation.push("CartScreen");
-  }
+  };
+  const handelNotificationClick = () => {
+    console.log("clicked")
+    navigation.push("NotificationScreen");
+  };
   return (
     <ScreenWrapper bg={"#FFFF"} KeyboardAvoiding={false}>
       <View className="flex-1">
-        <Header CartClick={handelCartClick} />
+        <Header
+          CartClick={handelCartClick}
+          NotificationClick={handelNotificationClick}
+        />
         <ScrollView
           className="flex-1 flex  gap-10 bg-BgWhite w-full"
           showsVerticalScrollIndicator={false}

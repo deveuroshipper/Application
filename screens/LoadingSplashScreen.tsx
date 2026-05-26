@@ -1,8 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Text, View } from "react-native";
+import { getProfileApiHandler } from "../helper/Api";
+import { useAuthStore } from "../store/useAuthStore";
+
 const LoadingSplashScreen = ({ navigation }: any) => {
   const rotation = useRef(new Animated.Value(0)).current;
+  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+  const logout = useAuthStore((s) => s.logout);
+  const setUser = useAuthStore((s) => s.setUser);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
 
   useEffect(() => {
     Animated.loop(
@@ -15,24 +23,42 @@ const LoadingSplashScreen = ({ navigation }: any) => {
 
     setTimeout(async () => {
       const introComplete = await AsyncStorage.getItem("intro_complete");
-      navigation.push(
-        introComplete === "true" ? "WelcomeScreen" : "LetsBeginScreen",
-      );
 
-      // navigation.reset({
-      //   index: 0,
-      //   routes: [
-      //     {
-      //       name: "MainScreens",
-      //       params: {
-      //         screen: "DetailsAndPayment",
-      //       },
-      //     },
-      //   ],
-      // });
-      // navigation.push("MainScreens");
+      if (introComplete !== "true") {
+        navigation.push("LetsBeginScreen");
+        return;
+      }
+
+      // Intro done — hydrate auth state then decide destination
+      await loadFromStorage();
     }, 1000);
   }, []);
+
+  // Once hydration is done and intro is complete, verify session then navigate
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!isAuthenticated) {
+      navigation.reset({ index: 0, routes: [{ name: "WelcomeScreen" }] });
+      return;
+    }
+
+    // Verify the stored token is still valid by fetching fresh profile data
+    getProfileApiHandler()
+      .then((userData) => {
+        console.log("user data : ", userData);
+        setUser(userData);
+        navigation.reset({ index: 0, routes: [{ name: "MainScreens" }] });
+      })
+      .catch((err) => {
+        console.log("user data : ", err);
+
+        if (err?.status === 401) {
+          logout();
+        }
+        navigation.reset({ index: 0, routes: [{ name: "WelcomeScreen" }] });
+      });
+  }, [isHydrated]);
 
   return (
     <View className="relative flex-1  w-full">

@@ -10,6 +10,7 @@ import { Image, Platform, Pressable, Text, View } from "react-native";
 
 import DoorPIck from "@/assets/images/DoorPIck.png";
 import earthMap from "@/assets/images/earthmap.png";
+import { useAddressStore } from "@/store/useAddress";
 
 const TOTAL_STEP = 4;
 
@@ -40,11 +41,13 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDate(false);
+    if (selectedDate) useAddressStore.getState().setDate(selectedDate);
     if (selectedDate) setData((prev) => ({ ...prev, date: selectedDate }));
   };
 
   const onTimeChange = (_event: any, selectedTime?: Date) => {
     if (Platform.OS === "android") setShowTime(false);
+    if (selectedTime) useAddressStore.getState().setTime(selectedTime);
     if (selectedTime) setData((prev) => ({ ...prev, time: selectedTime }));
   };
 
@@ -94,7 +97,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
                 </Text>
                 {IsDropAt ? (
                   <Text className="text-primary font-space-grotesk-bold text-cml leading-[40px]">
-                    Shipping Route
+                    Warehouse
                   </Text>
                 ) : null}
               </View>
@@ -130,10 +133,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
               </View>
             ) : (
               <View className="w-full overflow-hidden rounded-3xl">
-                <Image
-                  className="w-full bg-cover"
-                  source={DoorPIck}
-                />
+                <Image className="w-full bg-cover" source={DoorPIck} />
               </View>
             )}
 
@@ -162,7 +162,11 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
           </View>
 
           <View className="mt-auto">
-            <Button text="Continue" action={handelSubmit} />
+            <Button
+              disabled={!data.time || !data.date}
+              text="Continue"
+              action={handelSubmit}
+            />
           </View>
         </View>
       </View>

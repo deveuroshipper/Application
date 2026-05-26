@@ -64,4 +64,5 @@ export const nameMap = {
   uk: "gb",
   usa: "us",
   vietnam: "vn",
+  rwanda : "rw",
 };

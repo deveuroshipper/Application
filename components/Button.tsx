@@ -20,6 +20,7 @@ const Button = ({
   size = Size.NORMAL,
   frontIcon,
   loading = false,
+  disabled = false,
 }: {
   color?: string;
   action: any;
@@ -29,13 +30,15 @@ const Button = ({
   size?: Size;
   frontIcon?: any;
   loading?: Boolean;
+  disabled?: Boolean;
 }) => {
   if (!loading) {
     return (
       <TouchableOpacity
-        onPress={action}
+        onPress={disabled ? null : action}
         className="w-full flex flex-row gap-4 justify-center items-center"
         style={{
+          opacity: disabled ? 0.6 : 1,
           height: size == Size.NORMAL ? 60 : 48,
           borderRadius: size == Size.NORMAL ? 16 : 10,
           backgroundColor: variant == Variant.DEFAULT ? color : "transparent",
@@ -52,7 +55,7 @@ const Button = ({
         <Text
           style={{
             color: variant == Variant.DEFAULT ? "white" : color,
-            fontSize: size == Size.NORMAL ? 18 : 16,
+            fontSize: size == Size.NORMAL ? 18 : 14,
           }}
           className="text-cmd font-inter-bold"
         >

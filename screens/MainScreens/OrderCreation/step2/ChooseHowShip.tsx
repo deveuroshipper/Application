@@ -5,17 +5,17 @@ import earthMap from "@/assets/images/earthmap.png";
 import BackButton from "@/components/BackButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
-import { useState } from "react";
+import { useAddressStore } from "@/store/useAddress";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 const TOTAL_STEP = 4;
 
 const ChooseHowShip = ({ navigation }: any) => {
-  const [step, setStep] = useState(2);
-  const [selected, setSelected] = useState(null);
-  const [shippingRout, setShippingRout] = useState<SHIPMENT_TYPE | null>(null);
+  const step = 2;
+
   const handelClick = (type: SHIPMENT_TYPE) => {
-    setShippingRout(type);
+    console.log("type : ", type);
+    useAddressStore.getState().setShipmentType(type);
     navigation.push("DateAndTimeSubmission", {
       ShipmentType: type,
     });
@@ -24,10 +24,7 @@ const ChooseHowShip = ({ navigation }: any) => {
     <ScreenWrapper KeyboardAvoiding={false}>
       <View className="px-8 pb-8 flex-1">
         <View className="flex flex-row items-center justify-between">
-          <BackButton
-            navigation={navigation}
-            onPress={step > 1 ? () => setStep((prev) => prev - 1) : undefined}
-          />
+          <BackButton navigation={navigation} />
           <View className="px-4 py-1  bg-[#BFCDDE] rounded-full">
             <Text className="text-cno  text-primary font-inter-medium">
               {step}/{TOTAL_STEP}

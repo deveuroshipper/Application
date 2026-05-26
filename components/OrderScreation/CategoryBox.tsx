@@ -1,5 +1,6 @@
+import { getCategoryApiHandler } from "@/helper/Api";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 type Category = {
@@ -7,39 +8,6 @@ type Category = {
   name: string;
   icon: keyof typeof Ionicons.glyphMap;
 };
-
-const categories: Category[] = [
-  {
-    id: "electrical-devices",
-    name: "Electrical Devices",
-    icon: "hardware-chip-outline",
-  },
-  {
-    id: "furniture-home-decor",
-    name: "Furniture Home Decor",
-    icon: "home-outline",
-  },
-  {
-    id: "toys-games",
-    name: "Toys & Games",
-    icon: "game-controller-outline",
-  },
-  {
-    id: "fashion",
-    name: "Fashion",
-    icon: "shirt-outline",
-  },
-  {
-    id: "books",
-    name: "Books",
-    icon: "book-outline",
-  },
-  {
-    id: "beauty-care",
-    name: "Beauty Care",
-    icon: "sparkles-outline",
-  },
-];
 
 const CategoryBox = ({
   selectedCategory,
@@ -52,6 +20,30 @@ const CategoryBox = ({
   selectedSubCategory: String | null;
   setSubCategory: String | null;
 }) => {
+  const [categories, setCategories] = useState(null);
+  const [subCategories, setSubCategories] = useState(null);
+
+  const getCategory = async () => {
+    try {
+      const data = await getCategoryApiHandler();
+      setCategories(data);
+    } catch (error) {}
+  };
+  useEffect(() => {
+    getCategory();
+  }, []);
+
+  useEffect(() => {
+    if (!categories) return;
+    const filteredCategory = categories?.filter(
+      (item) => item.id === selectedCategory,
+    )[0];
+
+    setSubCategories(filteredCategory?.subCategories || []);
+  }, [selectedCategory]);
+
+  
+
   return (
     <View className="flex flex-col gap-4">
       <View className="">
@@ -101,7 +93,7 @@ const CategoryBox = ({
           Sub-Category
         </Text>
         <FlatList
-          data={categories}
+          data={subCategories}
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
