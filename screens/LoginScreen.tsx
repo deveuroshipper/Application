@@ -4,6 +4,7 @@ import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import SocialButton from "@/components/SocialButton";
 import { loginApiHandler } from "@/helper/Api";
+import { useAuthStore } from "@/store/useAuthStore";
 import React, { useState } from "react";
 import { Image, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
@@ -38,7 +39,20 @@ const LoginScreen = ({ navigation }: any) => {
     try {
       const response = await loginApiHandler(data.email, data.password);
       console.log("response : ", response);
-    } catch (error) {
+      await useAuthStore.getState().login(response.accessToken, response.user);
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "MainScreens",
+            params: {
+              screen: "BottomTabBar",
+              params: { screen: "HomeScreen" },
+            },
+          },
+        ],
+      });
+    } catch (error: any) {
       console.log("error : ", error);
       Toast.show({
         type: "error",
@@ -47,15 +61,6 @@ const LoginScreen = ({ navigation }: any) => {
     } finally {
       setLoading(false);
     }
-    // navigation.reset({
-    //   index: 0,
-    //   routes: [
-    //     {
-    //       name: "MainScreens",
-    //       params: { screen: "BottomTabBar", params: { screen: "HomeScreen" } },
-    //     },
-    //   ],
-    // });
   };
 
   const handelForgotPass = () => {
