@@ -38,7 +38,6 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const response = await loginApiHandler(data.email, data.password);
-      console.log("response : ", response);
       await useAuthStore.getState().login(response.accessToken, response.user);
       navigation.reset({
         index: 0,
