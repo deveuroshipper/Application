@@ -34,11 +34,16 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   loadFromStorage: async () => {
-    const token = await AsyncStorage.getItem("access_token");
-    const userRaw = await AsyncStorage.getItem("user_data");
-    if (token && userRaw) {
-      const user: User = JSON.parse(userRaw);
-      set({ token, user, isAuthenticated: true });
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      const userRaw = await AsyncStorage.getItem("user_data");
+      if (token && userRaw) {
+        const user: User = JSON.parse(userRaw);
+        set({ token, user, isAuthenticated: true });
+      }
+    } catch {
+      // Corrupt storage — clear and stay logged out
+      await AsyncStorage.multiRemove(["access_token", "user_data"]);
     }
   },
 }));
