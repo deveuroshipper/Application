@@ -56,7 +56,7 @@ const LoginScreen = ({ navigation }: any) => {
       console.log("error : ", error);
       Toast.show({
         type: "error",
-        text1: error,
+        text1: typeof error === "string" ? error : error?.message ?? "Something went wrong",
       });
     } finally {
       setLoading(false);
