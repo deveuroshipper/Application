@@ -1,0 +1,10 @@
+export const enum SHIPMENT_TYPE {
+  DROP_AT_WAREHOUSE,
+  DOORSTEP_PICKUP,
+}
+
+export const enum SHIPMENT_ROUTE {
+  AIR_FREIGHT,
+  SEA_FREIGHT,
+}
+  

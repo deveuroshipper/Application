@@ -24,10 +24,15 @@ const BANNER_SLIDES: BannerSlide[] = [
 ];
 
 const HomeScreen = ({ navigation }: any) => {
+
+
+  const handelCartClick = () => {
+    navigation.push("CartScreen");
+  }
   return (
     <ScreenWrapper bg={"#FFFF"} KeyboardAvoiding={false}>
       <View className="flex-1">
-        <Header />
+        <Header CartClick={handelCartClick} />
         <ScrollView
           className="flex-1 flex  gap-10 bg-BgWhite w-full"
           showsVerticalScrollIndicator={false}
@@ -45,7 +50,7 @@ const HomeScreen = ({ navigation }: any) => {
               </Text>
 
               <TouchableOpacity
-                onPress={() => {}}
+                onPress={() => navigation.push("ChooseRoute")}
                 className="h-14 w-full mt-2 bg-gold flex flex-row gap-4 justify-center items-center rounded-full"
               >
                 <Icon name="Box" color="#FFFF" />

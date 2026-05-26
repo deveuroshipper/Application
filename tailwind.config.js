@@ -25,6 +25,7 @@ module.exports = {
       fontSize: {
         cxxl: 46,
         cxl: 32,
+        cml : 30,
         clg: 22,
         csl: 20,
         cmd: 18,

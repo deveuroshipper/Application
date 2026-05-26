@@ -1,6 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const Input = ({
   label,
@@ -12,24 +11,33 @@ const Input = ({
   secureTextEntry,
   secondLabel,
   secondLabelAction,
+  editable = true,
+  multiline = false,
+  numberOfLines = 1,
+  error = "",
 }: {
-  label: String;
-  secondLabel?: String;
+  label?: string;
+  secondLabel?: string;
   secondLabelAction?: any;
-  placeholderTxt: String;
+  placeholderTxt: string;
   value: any;
   onChange: any;
   icon?: any;
   iconAction?: any;
   secureTextEntry?: boolean;
+  editable?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  error?: String;
 }) => {
   return (
     <View>
       <View className="flex flex-row mt-2 mb-3 justify-between">
-        <Text className="text-csm uppercase   text-primary font-inter-medium">
-          {label}
-        </Text>
-
+        {label && (
+          <Text className="text-csm uppercase   text-primary font-inter-medium">
+            {label}
+          </Text>
+        )}
         <TouchableOpacity onPress={secondLabelAction}>
           <Text className="text-csm  w-fit text-center text-primary font-inter">
             {secondLabel}
@@ -37,19 +45,37 @@ const Input = ({
         </TouchableOpacity>
       </View>
 
-      <View className="flex gap-2 flex-row items-center px-6 py-2 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
+      <View
+        className={`flex gap-2 flex-row px-6 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 ${multiline ? "items-start py-3" : "items-center py-1.5"}`}
+      >
         <TextInput
+          className="flex-1"
           value={value}
           onChangeText={(e) => onChange(e)}
-          className="flex-1"
+          style={{
+            flex: 1,
+            ...(multiline
+              ? {
+                  minHeight: (numberOfLines ?? 4) * 24,
+                  textAlignVertical: "top",
+                }
+              : {}),
+          }}
           placeholder={placeholderTxt}
           secureTextEntry={secureTextEntry}
+          editable={editable}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
         />
 
         {icon && (
           <TouchableOpacity onPress={iconAction}>{icon}</TouchableOpacity>
         )}
       </View>
+
+      <Text className="text-[12px] font-inter-medium ml-1  mt-1 text-red-500">
+        {error}
+      </Text>
     </View>
   );
 };

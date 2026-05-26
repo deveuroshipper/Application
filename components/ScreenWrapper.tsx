@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ScreenWrapper = ({ children, bg, KeyboardAvoiding = true }: any) => {
   const top: any = useSafeAreaInsets();
-  const paddingTop = top > 0 ? top + 5 : 30;
+  const paddingTop = top > 0 ? top + 5 : 30; // keep 30
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -40,3 +40,5 @@ const ScreenWrapper = ({ children, bg, KeyboardAvoiding = true }: any) => {
 };
 
 export default ScreenWrapper;
+
+/// confirm

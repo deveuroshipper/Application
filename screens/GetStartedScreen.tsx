@@ -12,7 +12,7 @@ const GetStartedScreen = ({ navigation }: any) => {
       />
       <View className="flex gap-8 flex-col justify-end py-10 absolute z-20 top-0 left-0 right-0 bottom-0 ">
         <LinearGradient
-          colors={["rgba(15, 23, 41, 0.2),rgba(15, 23, 41, 0.6)", "#0F1729"]}
+          colors={["rgba(15, 23, 41, 0.2)","rgba(15, 23, 41, 0.6)", "#0F1729"]}
           locations={[0.4, 0.8, 1]}
           className="flex gap-8 flex-col justify-between py-10 absolute z-20 top-0 left-0 right-0 bottom-0 px-10"
         ></LinearGradient>

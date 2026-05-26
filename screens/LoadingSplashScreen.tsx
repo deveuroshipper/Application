@@ -25,12 +25,12 @@ const LoadingSplashScreen = ({ navigation }: any) => {
       //     {
       //       name: "MainScreens",
       //       params: {
-      //         screen: "BottomTabBar",
-      //         params: { screen: "HomeScreen" },
+      //         screen: "DetailsAndPayment",
       //       },
       //     },
       //   ],
       // });
+      // navigation.push("MainScreens");
     }, 1000);
   }, []);
 

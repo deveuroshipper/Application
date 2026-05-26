@@ -8,7 +8,7 @@ const SocialButton = (props: any) => {
   return (
     <TouchableOpacity
       onPress={props?.action}
-      className="h-16 w-full flex flex-row gap-4 justify-center items-center rounded-2xl border-[2px] border-primary/10"
+      className="h-[60px] w-full flex flex-row gap-4 justify-center items-center rounded-2xl border-[2px] border-primary/10"
       style={{
         backgroundColor: color,
       }}
