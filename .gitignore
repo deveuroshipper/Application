@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Firebase credentials (never commit these)
+GoogleService-Info.plist
+euro-shhiper-firebase-adminsdk-fbsvc-ad752feddb.json

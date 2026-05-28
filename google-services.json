@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "17250417896",
+    "project_id": "euro-shhiper",
+    "storage_bucket": "euro-shhiper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17250417896:android:5a4ccdac524beb4907dd5d",
+        "android_client_info": {
+          "package_name": "com.anonymous.euroshipper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqDIGAh9G8dzTShn5hLB0FwhEYgalSLbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
