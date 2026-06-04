@@ -15,6 +15,7 @@ const Input = ({
   multiline = false,
   numberOfLines = 1,
   error = "",
+  keyboardTypes = "default",
 }: {
   label?: string;
   secondLabel?: string;
@@ -29,6 +30,7 @@ const Input = ({
   multiline?: boolean;
   numberOfLines?: number;
   error?: String;
+  keyboardTypes?: any;
 }) => {
   return (
     <View>
@@ -53,6 +55,7 @@ const Input = ({
           value={value}
           onChangeText={(e) => onChange(e)}
           style={{
+            color: "#0F1729",
             flex: 1,
             ...(multiline
               ? {
@@ -62,10 +65,12 @@ const Input = ({
               : {}),
           }}
           placeholder={placeholderTxt}
+          placeholderTextColor={"#CBD5E1"}
           secureTextEntry={secureTextEntry}
           editable={editable}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          keyboardType={keyboardTypes}
         />
 
         {icon && (
@@ -73,8 +78,8 @@ const Input = ({
         )}
       </View>
 
-      <Text className="text-[12px] font-inter-medium ml-1  mt-1 text-red-500">
-        {error}
+      <Text className="text-[10px] font-inter-medium ml-1  mt-1 text-red-500">
+        {error} 
       </Text>
     </View>
   );

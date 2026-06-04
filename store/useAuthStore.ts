@@ -8,7 +8,7 @@ export interface User {
   phone: String;
   role: String;
   status: String;
-  profileImage: String;
+  profileImage: null | String;
 }
 
 interface AuthState {

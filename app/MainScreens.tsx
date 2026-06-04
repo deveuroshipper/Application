@@ -1,5 +1,11 @@
+import OrderTracking from "@/components/OrderTracking";
 import CartScreen from "@/screens/CartScreen";
+import AboutUs from "@/screens/MainScreens/AboutUs";
+import AccountInformation from "@/screens/MainScreens/AccountInformation";
 import AddNewAddress from "@/screens/MainScreens/AddNewAddress";
+import CreateTickets from "@/screens/MainScreens/CreateTickets";
+import ListAddresses from "@/screens/MainScreens/ListAddresses";
+import NotificationScreen from "@/screens/MainScreens/NotificationScreen";
 import AddShipmentAddresses from "@/screens/MainScreens/OrderCreation/step2/AddShipmentAddresses";
 import ChooseHowShip from "@/screens/MainScreens/OrderCreation/step2/ChooseHowShip";
 import ChooseRoute from "@/screens/MainScreens/OrderCreation/step2/ChooseRoute";
@@ -11,6 +17,11 @@ import ApplyCoupon from "@/screens/MainScreens/OrderCreation/step4/ApplyCoupon";
 import DetailsAndPayment from "@/screens/MainScreens/OrderCreation/step4/DetailsAndPayment";
 import OrderStatus from "@/screens/MainScreens/OrderCreation/step4/OrderStatus";
 import PackageDetails from "@/screens/MainScreens/OrderCreation/step4/PackageDetails";
+import SupportChat from "@/screens/MainScreens/SupportChat";
+import SupportScreen from "@/screens/MainScreens/SupportScreen";
+import TicketList from "@/screens/MainScreens/TicketList";
+import UpdateDetail from "@/screens/MainScreens/UpdateDetail";
+import VerifyUpdateOtp from "@/screens/MainScreens/VerifyUpdateOtp";
 import WeProcureScreen from "@/screens/MainScreens/WeProcureScreen";
 import WeQAScreen from "@/screens/MainScreens/WeQAScreen";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -109,16 +120,25 @@ const MainScreens = () => {
         component={CartScreen}
         options={{ title: "CartScreen" }}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="NotificationScreen"
         component={NotificationScreen}
         options={{ title: "NotificationScreen" }}
-      /> */}
-      {/* <Stack.Screen
-        name="OrderTracking"
-        component={OrderTracking}
-        options={{ title: "OrderTracking" }}
-      /> */}
+      />
+      <Stack.Screen
+        name="ListAddresses"
+        component={ListAddresses}
+        options={{ title: "ListAddresses" }}
+      />
+      <Stack.Screen name="AccountInformation" component={AccountInformation} />
+      <Stack.Screen name="UpdateDetail" component={UpdateDetail} />
+      <Stack.Screen name="VerifyUpdateOtp" component={VerifyUpdateOtp} />
+      <Stack.Screen name="AboutUsScreen" component={AboutUs} />
+      <Stack.Screen name="OrderTrackingScreen" component={OrderTracking} />
+      <Stack.Screen name="SupportScreen" component={SupportScreen} />
+      <Stack.Screen name="CreateTickets" component={CreateTickets} />
+      <Stack.Screen name="TicketList" component={TicketList} />
+      <Stack.Screen name="SupportChat" component={SupportChat} />
     </Stack.Navigator>
   );
 };

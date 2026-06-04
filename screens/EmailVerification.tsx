@@ -4,33 +4,75 @@ import Button from "@/components/Button";
 import OTPInput from "@/components/OTPInput";
 import ResendOTP from "@/components/ResendOTP";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import {
+  forgotPasswordApiHandler,
+  forgotPasswordOtpVerifyApiHandler,
+  resentOtpApiHandler,
+  verificationApiHandler,
+} from "@/helper/Api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const EmailVerification = ({ navigation, route }: any) => {
-  const { screenFor } = route?.params ?? {};
+  const { screenFor, email } = route?.params ?? {};
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  const handelSubmit = () => {
-    if (screenFor == "FORGOT_PASSWORD") {
-      navigation.push("NewPassword");
-    } else {
-      navigation.push("NewPassword");
+  const handelSubmit = async () => {
+    if (otp.length < 4) {
+      Toast.show({ type: "error", text1: "Please enter the 4-digit code." });
+      return;
+    }
+    setLoading(true);
+    try {
+      if (screenFor === "FORGOT_PASSWORD") {
+        const response = await forgotPasswordOtpVerifyApiHandler(email, otp);
+        if (response?.resetToken) {
+          AsyncStorage.setItem("resetPasswordToken", response.resetToken);
+        }
+        navigation.push("NewPassword");
+      } else {
+        await verificationApiHandler(email, otp);
+        navigation.push("LoginScreen");
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    } finally {
+      setLoading(false);
     }
   };
-
-  console.log("SCreen for ==> ", screenFor);
 
   const handleResend = async () => {
     setResendLoading(true);
     try {
-      // TODO: call your resend API here
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (screenFor === "FORGOT_PASSWORD") {
+        await forgotPasswordApiHandler(email);
+      } else {
+        await resentOtpApiHandler(email);
+      }
+      Toast.show({ type: "success", text1: "OTP resent to your email." });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Failed to resend OTP"),
+      });
     } finally {
       setResendLoading(false);
     }
   };
+
   return (
     <ScreenWrapper>
       <View className="px-8 pb-8 flex-1">
@@ -45,7 +87,7 @@ const EmailVerification = ({ navigation, route }: any) => {
             </View>
             <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
               We've sent a 4-digit verification code to your email
-              a••••••@gmail.com
+              {email ? ` ${email}` : ""}
             </Text>
           </View>
 
@@ -55,13 +97,14 @@ const EmailVerification = ({ navigation, route }: any) => {
             <Button
               text="Verify"
               icon={<Icon name="NextArrow" color="#FFFF" size={18} />}
+              loading={loading}
               action={handelSubmit}
             />
 
             <ResendOTP
               text="Didn't receive the code?"
               resendText="Resend OTP"
-              timer={59}
+              timer={10}
               action={handleResend}
               loading={resendLoading}
             />

@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import Icon from "../assets/icons";
 
 export type DropdownOption = {
-  label: string;
+  label: any;
   value: string;
   icon?: string; // icon name from the icons index (e.g. "Box", "Door")
   iconNode?: React.ReactNode; // or pass a custom icon node directly
@@ -25,6 +25,17 @@ const Dropdown = ({
   const [open, setOpen] = useState(false);
 
   const selected = options.find((o) => o.value === value);
+  const renderLabel = (optionLabel: any, selectedLabel = false) => {
+    if (React.isValidElement(optionLabel)) return optionLabel;
+
+    return (
+      <Text
+        className={`${selectedLabel ? "flex-1 " : ""}text-cno font-inter-medium text-primary`}
+      >
+        {optionLabel}
+      </Text>
+    );
+  };
 
   return (
     <View>
@@ -50,9 +61,15 @@ const Dropdown = ({
         {selected?.iconNode && !selected.icon && selected.iconNode}
 
         {/* Selected label / placeholder */}
-        <Text className={`flex-1 text-cno font-inter-medium text-primary `}>
-          {selected ? selected.label : placeholder}
-        </Text>
+        <View className="flex-1">
+          {selected ? (
+            renderLabel(selected.label, true)
+          ) : (
+            <Text className="text-cno font-inter-medium text-primary">
+              {placeholder}
+            </Text>
+          )}
+        </View>
 
         {/* Chevron */}
         <View
@@ -85,9 +102,7 @@ const Dropdown = ({
               )}
               {option.iconNode && !option.icon && option.iconNode}
 
-              <Text className="text-cno font-inter-medium text-primary">
-                {option.label}
-              </Text>
+              {renderLabel(option.label)}
             </TouchableOpacity>
           ))}
         </View>

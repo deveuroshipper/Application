@@ -5,12 +5,15 @@ import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
-import { Image, Platform, Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Image, Platform, Pressable, Text, View, Share } from "react-native";
 
 import DoorPIck from "@/assets/images/DoorPIck.png";
 import earthMap from "@/assets/images/earthmap.png";
+import { getWarehouseApiHandler } from "@/helper/Api";
+import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
+import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
 
@@ -38,6 +41,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   });
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
+  const [warehouseAddress, setWarehouseAddress] = useState(null);
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDate(false);
@@ -57,6 +61,45 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
     });
   };
 
+  const getWarehouseAddress = async () => {
+    try {
+      const routedId = useAddressStore.getState().route ?? null;
+   
+      const data = await getWarehouseApiHandler(routedId);
+      setWarehouseAddress(data);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    }
+  };
+
+  const buildAddress = (data: any) => {
+    return `${data?.name}, ${data?.address}, ${data?.city}, ${data?.country}`;
+  };
+
+  const copyAddressToClipboard = async () => {
+    if (!warehouseAddress) return;
+    const addressText = buildAddress(warehouseAddress);
+    try {
+      await Share.share({
+        message: addressText,
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to copy address",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getWarehouseAddress();
+  }, []);
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
       {showDate && (
@@ -120,16 +163,21 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
                   </Text>
                 </View>
 
-                <View className="flex gap-4 flex-row items-center px-6 py-4 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
-                  <Image
-                    className="w-11 h-8 rounded-md"
-                    source={{ uri: "https://flagcdn.com/w80/gb.png" }}
-                  />
-                  <Text className="w-2/3">
-                    221B Baker Street, London NW1 6XE, United Kingdom
+                <Pressable
+                  onPress={copyAddressToClipboard}
+                  className="flex gap-4 flex-row items-center px-6 py-4 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30"
+                >
+                  {warehouseAddress && (
+                    <Image
+                      className="w-11 h-8 rounded-md"
+                      source={{ uri: CountryImage(warehouseAddress?.country) }}
+                    />
+                  )}
+                  <Text className="w-2/3 capitalize">
+                    {buildAddress(warehouseAddress)}
                   </Text>
                   <Icon name="Copy" />
-                </View>
+                </Pressable>
               </View>
             ) : (
               <View className="w-full overflow-hidden rounded-3xl">

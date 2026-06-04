@@ -4,9 +4,12 @@ import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
+import { getAddressApiHandler } from "@/helper/Api";
+import { useAddressStore } from "@/store/useAddress";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Modal,
@@ -17,50 +20,57 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
+
+type Address = {
+  id: string;
+  fullName: string;
+  number: string;
+  addressLine: string;
+  state: string;
+  city: string;
+  country: string;
+};
 
 const TOTAL_STEP = 4;
-
-const SAVED_ADDRESSES = [
-  {
-    id: "1",
-    number: "9725398019",
-    pincode: "30018",
-    name: "14 Baker Street",
-    state: "Gujarat",
-    city: "Ahmadabad",
-    country: "India",
-    detail: "Marylebone, London W1U 3BW, 654321\nUnited Kingdom",
-  },
-  {
-    id: "2",
-    number: "9725398019",
-    pincode: "30018",
-    name: "150 shreenath app",
-    state: "Gujarat",
-    city: "Ahmadabad",
-    country: "India",
-    detail: "Marylebone, London W1U 3BW, 654321\nUnited Kingdom",
-  },
-];
 
 const AddShipmentAddresses = ({ navigation, route }: any) => {
   const [step, setStep] = useState(2);
   const ShipmentType: SHIPMENT_TYPE = route?.params?.ShipmentType ?? null;
   const IsDropAt = ShipmentType == SHIPMENT_TYPE.DROP_AT_WAREHOUSE;
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressModalTarget, setAddressModalTarget] = useState<
     "pickup" | "delivery"
   >("pickup");
-  const [selectedPickupAddress, setSelectedPickupAddress] = useState<
-    (typeof SAVED_ADDRESSES)[0] | null
-  >(null);
-  const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<
-    (typeof SAVED_ADDRESSES)[0] | null
-  >(null);
+  const [selectedPickupAddress, setSelectedPickupAddress] =
+    useState<Address | null>(null);
+  const [selectedDeliveryAddress, setSelectedDeliveryAddress] =
+    useState<Address | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const slideAnim = useRef(new Animated.Value(400)).current;
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      setLoadingAddresses(true);
+      try {
+        const data = await getAddressApiHandler();
+        setAddresses(data ?? []);
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1:
+            typeof error === "string" ? error : "Failed to load addresses.",
+        });
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+    fetchAddresses();
+  }, []);
 
   const openModal = (target: "pickup" | "delivery") => {
     setAddressModalTarget(target);
@@ -81,7 +91,7 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
     }).start(() => setShowAddressModal(false));
   };
 
-  const handleSelectAddress = (addr: (typeof SAVED_ADDRESSES)[0]) => {
+  const handleSelectAddress = (addr: Address) => {
     if (addressModalTarget === "pickup") {
       setSelectedPickupAddress(addr);
     } else {
@@ -90,13 +100,16 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
     closeModal();
   };
 
-  const filteredAddresses = SAVED_ADDRESSES.filter(
+  const filteredAddresses = addresses.filter(
     (a) =>
-      a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.detail.toLowerCase().includes(searchQuery.toLowerCase()),
+      a.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.addressLine.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handelSubmit = (type: any) => {
+    useAddressStore.getState().setDeliverAddress(selectedDeliveryAddress);
+    useAddressStore.getState().setPickupAddress(selectedPickupAddress);
+
     navigation.push("ConfirmAddressScreen");
   };
 
@@ -105,7 +118,7 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
   };
 
   return (
-    <ScreenWrapper KeyboardAvoiding={false}>
+    <ScreenWrapper>
       {/* Address Select Bottom Sheet Modal */}
       <Modal
         visible={showAddressModal}
@@ -128,7 +141,7 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
             borderTopLeftRadius: 28,
             borderTopRightRadius: 28,
             paddingBottom: 36,
-            maxHeight: "85%",
+            minHeight: "80%",
           }}
         >
           {/* Drag handle */}
@@ -171,27 +184,34 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
           <View className="mx-6 h-[1px] bg-primary/10 mb-2" />
 
           {/* Address list */}
-          <ScrollView showsVerticalScrollIndicator={false} className="mx-6">
-            {filteredAddresses.map((addr) => (
-              <TouchableOpacity
-                key={addr.id}
-                onPress={() => handleSelectAddress(addr)}
-                className="flex flex-row items-center gap-4 py-4 border-b border-primary/5"
-              >
-                <View className="w-10 h-10 rounded-full bg-[#BFCDDE]/30 items-center justify-center flex-shrink-0">
-                  <Ionicons name="location" size={18} color="#0F1729" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-cno font-inter-medium text-primary">
-                    {addr.name}
-                  </Text>
-                  <Text className="text-csm font-inter text-primary/50 mt-0.5">
-                    {addr.detail}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {loadingAddresses ? (
+            <ActivityIndicator size="large" color="#0F1729" className="mt-4" />
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false} className="mx-6">
+              {filteredAddresses.map((addr) => (
+                <TouchableOpacity
+                  key={addr.id}
+                  onPress={() => handleSelectAddress(addr)}
+                  className="flex flex-row items-center gap-4 py-4 border-b border-primary/5"
+                >
+                  <View className="w-10 h-10 rounded-full bg-[#BFCDDE]/30 items-center justify-center flex-shrink-0">
+                    <Ionicons name="location" size={18} color="#0F1729" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-cno font-inter-medium text-primary">
+                      {addr.fullName} - {addr.number}
+                    </Text>
+                    <Text className="text-csm font-inter text-primary/50 mt-0.5">
+                      {addr.addressLine}
+                    </Text>
+                    <Text className="text-csm font-inter text-primary/50 mt-0.5">
+                      {addr.city}, {addr.state}, {addr.country}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </Animated.View>
       </Modal>
 
@@ -244,9 +264,9 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
                     numberOfLines={1}
                   >
                     {selectedPickupAddress
-                      ? selectedPickupAddress.name +
+                      ? selectedPickupAddress.fullName +
                         ", " +
-                        selectedPickupAddress.detail.replace("\n", " ")
+                        selectedPickupAddress.addressLine
                       : "Select Pickup Location"}
                   </Text>
                 </View>
@@ -277,9 +297,9 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
                   numberOfLines={1}
                 >
                   {selectedDeliveryAddress
-                    ? selectedDeliveryAddress.name +
+                    ? selectedDeliveryAddress.fullName +
                       ", " +
-                      selectedDeliveryAddress.detail.replace("\n", " ")
+                      selectedDeliveryAddress.addressLine
                     : "Select Delivery Location"}
                 </Text>
               </View>
@@ -290,7 +310,15 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
           </View>
 
           <View className="mt-auto">
-            <Button text="Continue " action={handelSubmit} />
+            <Button
+              text="Continue "
+              disabled={
+                !selectedDeliveryAddress ||
+                (!selectedPickupAddress &&
+                  IsDropAt == SHIPMENT_TYPE.DOORSTEP_PICKUP)
+              }
+              action={handelSubmit}
+            />
           </View>
         </View>
       </View>

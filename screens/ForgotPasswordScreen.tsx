@@ -3,14 +3,45 @@ import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { forgotPasswordApiHandler } from "@/helper/Api";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const ForgotPasswordScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handelSubmit = () => {
-    navigation.push("EmailVerification", { screenFor: "FORGOT_PASSWORD" });
+  const handelSubmit = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError("Email is required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await forgotPasswordApiHandler(trimmed);
+      navigation.push("EmailVerification", {
+        screenFor: "FORGOT_PASSWORD",
+        email: trimmed,
+      });
+    } catch (err: any) {
+       Toast.show({
+         type: "error",
+         text1:
+           typeof err === "string"
+             ? err
+             : (err?.message ?? "Something went wrong"),
+       });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const BackToLogin = () => {
@@ -38,15 +69,20 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
 
           <View className="mt-10 gap-10">
             <Input
-              label={"Corporate Email"}
-              placeholderTxt={"name@company.com"}
+              label={"Email address"}
+              placeholderTxt={"jen@gmail.com"}
               value={email}
-              onChange={(text: string) => setEmail(text)}
+              onChange={(text: string) => {
+                setEmail(text);
+                if (error) setError("");
+              }}
+              error={error}
             />
             <Button
               text="Continue"
               icon={<Icon name="NextArrow" color="#FFFF" size={18} />}
               action={handelSubmit}
+              loading={loading}
             />
 
             <View className="flex flex-row justify-center gap-2 text-white">

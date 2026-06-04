@@ -38,7 +38,6 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const response = await loginApiHandler(data.email, data.password);
-      console.log("response : ", response);
       await useAuthStore.getState().login(response.token, response.user);
       navigation.reset({
         index: 0,
@@ -53,7 +52,6 @@ const LoginScreen = ({ navigation }: any) => {
         ],
       });
     } catch (error: any) {
-      console.log("error : ", error);
       Toast.show({
         type: "error",
         text1:

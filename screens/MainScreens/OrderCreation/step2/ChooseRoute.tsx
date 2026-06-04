@@ -4,11 +4,18 @@ import earthMap from "@/assets/images/earthmap.png";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { nameMap } from "@/constants/country";
 import { getRoutesApiHandler } from "@/helper/Api";
+import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
 import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
@@ -17,6 +24,20 @@ const ChooseRoute = ({ navigation }: any) => {
   const step = 2;
   const [selected, setSelected] = useState(useAddressStore.getState().route);
   const [routes, setRoutes] = useState();
+
+  const pingProgress = useSharedValue(0);
+
+  useEffect(() => {
+    pingProgress.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+  }, []);
+
+  const pingAnimStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      pingProgress.value,
+      [0, 1],
+      ["#f1f5f9", "#e2e8f0"], // slate-500 → slate-300
+    ),
+  }));
 
   const handelSubmit = () => {
     navigation.push("ChooseHowShip");
@@ -35,11 +56,6 @@ const ChooseRoute = ({ navigation }: any) => {
             : (error?.message ?? "Something went wrong"),
       });
     }
-  };
-
-  const CountryImage = (name: String) => {
-    const code = nameMap[name.toLowerCase()];
-    return `https://flagcdn.com/w80/${code}.png`;
   };
 
   const handelChooseRoute = (routeId: String) => {
@@ -92,12 +108,14 @@ const ChooseRoute = ({ navigation }: any) => {
               className="h-[63%]"
               showsVerticalScrollIndicator={false}
             >
-              <View className="mt-2 flex flex-col gap-4">
-                {routes?.map((route: any, index: Number) => (
+              {routes?.map((route: any, index: Number) => (
+                <View
+                  key={route.id + "-" + index}
+                  className="mt-2 flex flex-col gap-4"
+                >
                   <Pressable
                     onPress={() => handelChooseRoute(route.id)}
                     className="w-full h-fit flex flex-row justify-between items-center gap-2 px-3 py-4 border-[#B5C3E8]/30 border-[2px] bg-white rounded-lg"
-                    key={route.id}
                   >
                     <View className="flex   w-1/3 flex-col items-center gap-2">
                       <Image
@@ -126,8 +144,8 @@ const ChooseRoute = ({ navigation }: any) => {
                       ) : null}
                     </View>
                   </Pressable>
-                ))}
-              </View>
+                </View>
+              ))}
             </ScrollView>
           </View>
 

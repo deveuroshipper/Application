@@ -5,8 +5,12 @@ import largeBox from "@/assets/images/boxes/largeBox.png";
 import BackButton from "@/components/BackButton";
 import Button, { Size, Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import React, { useState } from "react";
+import { removeFromCartApiHandler } from "@/helper/Api";
+import { CountryImage } from "@/helper/buildFlagUrl";
+import { CartItem, useCartStore } from "@/store/useCartStore";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
@@ -14,58 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-type CartItem = {
-  id: string;
-  orderId: string;
-  size: string;
-  maxWeight: string;
-  maxSize: string;
-  price: string;
-  fromCountry: string;
-  fromFlag: string;
-  toCountry: string;
-  toFlag: string;
-};
-
-const MOCK_CART_ITEMS: CartItem[] = [
-  {
-    id: "1",
-    orderId: "#58588",
-    size: "Small",
-    maxWeight: "3 KG",
-    maxSize: "34 X 32 X 10cm",
-    price: "$360.00",
-    fromCountry: "UK",
-    fromFlag: "🇬🇧",
-    toCountry: "Belgium",
-    toFlag: "🇧🇪",
-  },
-  {
-    id: "2",
-    orderId: "#58588",
-    size: "Small",
-    maxWeight: "3 KG",
-    maxSize: "34 X 32 X 10cm",
-    price: "$360.00",
-    fromCountry: "UK",
-    fromFlag: "🇬🇧",
-    toCountry: "Belgium",
-    toFlag: "🇧🇪",
-  },
-  {
-    id: "3",
-    orderId: "#58588",
-    size: "Small",
-    maxWeight: "3 KG",
-    maxSize: "34 X 32 X 10cm",
-    price: "$360.00",
-    fromCountry: "UK",
-    fromFlag: "🇬🇧",
-    toCountry: "Belgium",
-    toFlag: "🇧🇪",
-  },
-];
+import Toast from "react-native-toast-message";
 
 const CartItemCard = ({
   item,
@@ -124,18 +77,20 @@ const CartItemCard = ({
         {/* Order Details */}
         <View className="flex-1 gap-2 flex flex-col justify-between ">
           <Text className="text-csm font-inter-bold text-primary">
-            Order Id :{item.orderId}
+            Order Id :
+            {(item.orderid ?? item.orderId ?? item.id)?.slice(0, 10) + "..."}
           </Text>
           <View className="flex flex-col gap-1.5">
             <Text className="text-[13px] font-inter text-primary">
-              Size: {item.size}
+              Size: {item.boxsize?.name}
             </Text>
             <Text className="text-[13px] font-inter text-primary">
-              Max Weight: {item.maxWeight}
+              Max Weight: {item.boxsize?.weight} KG
             </Text>
 
             <Text className="text-[13px] font-inter text-primary">
-              Max Size: {item.maxSize}
+              Max Size: {item.boxsize?.height} X {item.boxsize?.width} X{" "}
+              {item.boxsize?.length}cm
             </Text>
           </View>
         </View>
@@ -160,7 +115,7 @@ const CartItemCard = ({
         {/* From */}
         <View className="flex-row items-center gap-3">
           <Image
-            source={{ uri: "https://flagcdn.com/w80/gb.png" }}
+            source={{ uri: CountryImage(item?.shippingRoute?.originName) }}
             className="w-11 h-8 rounded-md"
           />
           <Text className="text-csm font-inter-bold text-primary">
@@ -172,7 +127,7 @@ const CartItemCard = ({
 
         <View className="flex-row items-center gap-3">
           <Image
-            source={{ uri: "https://flagcdn.com/w80/be.png" }}
+            source={{ uri: CountryImage(item?.shippingRoute?.destinationName) }}
             className="w-11 h-8 rounded-md"
           />
           <Text className="text-csm font-inter-bold text-primary">
@@ -268,11 +223,11 @@ const DeleteModal = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={onConfirm}
+          onPress={onCancel}
           className="w-full mt-4 flex h-14 border-[1.5px] rounded-lg border-[#0F1729]/10 flex-row gap-4 justify-center items-center"
         >
           <Text className="text-cno text-[#0F1729] font-inter-bold">
-            Delete
+            Cancel
           </Text>
         </TouchableOpacity>
       </View>
@@ -281,9 +236,13 @@ const DeleteModal = ({
 );
 
 const CartScreen = ({ navigation }: any) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>(MOCK_CART_ITEMS);
+  const cartItems = useCartStore((state) => state.cartItems);
+  const isCartLoading = useCartStore((state) => state.isLoading);
+  const fetchCart = useCartStore((state) => state.fetchCart);
+  const removeCartItem = useCartStore((state) => state.removeCartItem);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const IsEmpty = cartItems.length === 0;
 
@@ -303,15 +262,32 @@ const CartScreen = ({ navigation }: any) => {
     setDeleteTargetId(id);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!deleteTargetId) return;
-    setCartItems((prev) => prev.filter((item) => item.id !== deleteTargetId));
-    setSelectedItems((prev) => {
-      const next = new Set(prev);
-      next.delete(deleteTargetId);
-      return next;
-    });
-    setDeleteTargetId(null);
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId || isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await removeFromCartApiHandler(deleteTargetId);
+      removeCartItem(deleteTargetId);
+      setSelectedItems((prev) => {
+        const next = new Set(prev);
+        next.delete(deleteTargetId);
+        return next;
+      });
+      setDeleteTargetId(null);
+      Toast.show({
+        type: "success",
+        text1: "Item removed from cart",
+      });
+    } catch (error: any) {
+    
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to remove item",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleDeleteCancel = () => {
@@ -319,8 +295,21 @@ const CartScreen = ({ navigation }: any) => {
   };
 
   const handleCheckout = () => {};
-  const handleViewDetails = () => {};
-  const handleCreateOrder = () => {};
+  const handleViewDetails = (orderId: String) => {
+    navigation.push("PackageDetails", { orderId: orderId });
+  };
+  const handleCreateOrder = () => {
+    navigation.push("ChooseRoute");
+  };
+
+  useEffect(() => {
+    fetchCart().catch((error: any) => {
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to get to items",
+      });
+    });
+  }, [fetchCart]);
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -334,7 +323,11 @@ const CartScreen = ({ navigation }: any) => {
         </View>
 
         {/* Content */}
-        {IsEmpty ? (
+        {isCartLoading && IsEmpty ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color="#0F1729" />
+          </View>
+        ) : IsEmpty ? (
           <View className="flex-1 px-8 justify-center items-center gap-6">
             {/* Empty Illustration */}
             <View className="w-full h-fit rounded-2xl overflow-hidden">
@@ -376,17 +369,23 @@ const CartScreen = ({ navigation }: any) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 16 }}
             >
-              {cartItems.map((item) => (
-                <CartItemCard
-                  key={item.id}
-                  item={item}
-                  isSelected={selectedItems.has(item.id)}
-                  onToggle={() => handleToggleSelect(item.id)}
-                  onDelete={() => handleDeletePress(item.id)}
-                  onCheckout={handleCheckout}
-                  onViewDetails={handleViewDetails}
-                />
-              ))}
+              {cartItems.map((item, index) => {
+                const itemId =
+                  item.id ?? item.orderid ?? item.orderId ?? String(index);
+                const orderId = item.orderid ?? item.orderId ?? item.id ?? itemId;
+
+                return (
+                  <CartItemCard
+                    key={itemId}
+                    item={item}
+                    isSelected={selectedItems.has(itemId)}
+                    onToggle={() => handleToggleSelect(itemId)}
+                    onDelete={() => handleDeletePress(orderId)}
+                    onCheckout={handleCheckout}
+                    onViewDetails={() => handleViewDetails(orderId)}
+                  />
+                );
+              })}
             </ScrollView>
 
             {/* Bottom Checkout Button */}

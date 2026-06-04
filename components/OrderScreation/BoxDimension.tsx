@@ -6,18 +6,26 @@ import boxDimension from "@/assets/images/customeboxDimention.png";
 import plan from "@/assets/images/plan.png";
 import ship from "@/assets/images/ship.png";
 import { SHIPMENT_ROUTE } from "@/constants/enums";
+import { BoxItem } from "@/screens/MainScreens/OrderCreation/step3/Specification";
+import React, { useState } from "react";
+import {
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import Dropdown from "../Dropdown";
+import Input from "../Input";
 
 const enum SHIPMENT_TYPE {
   DROP_AT_WAREHOUSE,
   DOORSTEP_PICKUP,
 }
 
-import { BoxItem } from "@/screens/MainScreens/OrderCreation/step3/Specification";
-import React, { useState } from "react";
-import { FlatList, Image, Modal, Pressable, Text, View } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
-import Dropdown from "../Dropdown";
-import Input from "../Input";
+export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
 const BoxInfoModal = ({
   item,
@@ -76,12 +84,14 @@ const BoxInfoModal = ({
               Size: {item.name}
             </Text>
             <Text style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}>
-              Max Weight:{" "}
-              <Text style={{ fontWeight: "400" }}>{item.weight} KG</Text>
+              Max Weight:
+              <Text style={{ fontWeight: "600" }}>{item.weight} KG</Text>
             </Text>
             <Text style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}>
               Max Size:{" "}
-              <Text style={{ fontWeight: "400" }}>{item.maxSize}</Text>
+              <Text style={{ fontWeight: "600", opacity: 0.2 }}>
+                {item?.height} X {item?.width} X {item?.length}cm
+              </Text>
             </Text>
           </View>
         </View>
@@ -155,26 +165,34 @@ const BoxDimension = ({
   setTermsConditions,
   shipmentType,
   setShipmentType,
+  detail,
+  setDetail,
+  errors = {},
 }: {
   boxesData: BoxItem;
   selectedBox: any;
   setSelectedBox: any;
   termsConditions: Boolean;
   setTermsConditions: any;
-  shipmentType: SHIPMENT_ROUTE;
+  shipmentType: SHIPMENT_ROUTE | null;
   setShipmentType: any;
+  detail: any;
+  setDetail: any;
+  errors?: {
+    selectedBox?: string;
+    weight?: string;
+    h?: string;
+    w?: string;
+    l?: string;
+    shipmentType?: string;
+    termsConditions?: string;
+  };
 }) => {
   const [infoItem, setInfoItem] = useState<BoxItem | null>(null);
-  const [detail, setDetail] = useState({
-    weight: "",
-    matrix: {
-      h: 0,
-      w: 0,
-      l: 0,
-    },
-    info: "",
-    shipmentType: "",
-  });
+
+  const buildIMageUrl = (path: string) => {
+    return `${IMAGE_URL}/${path}`;
+  };
 
   return (
     <View className="mb-10 mt-4">
@@ -195,7 +213,10 @@ const BoxDimension = ({
           }}
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => setSelectedBox(item)}
+              onPress={() => {
+                setSelectedBox(item);
+                setShipmentType(null);
+              }}
               style={{
                 shadowColor: "#E0A31D",
                 shadowOffset: { width: 0, height: 4 },
@@ -203,7 +224,7 @@ const BoxDimension = ({
                 shadowRadius: 32,
                 elevation: item.id == selectedBox?.id ? 8 : 0,
               }}
-              className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-4`}
+              className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-3`}
             >
               <Pressable
                 onPress={() => setInfoItem(item)}
@@ -212,7 +233,16 @@ const BoxDimension = ({
                 <Icon name="Info" size={24} color="#B5B5B5" />
               </Pressable>
 
-              <Image source={item.image} />
+              <Image
+                className=" bg-cover"
+                height={80}
+                width={120}
+                source={
+                  item.custom
+                    ? item?.image
+                    : { uri: buildIMageUrl(item?.boxImage) }
+                }
+              />
 
               <View>
                 <Text
@@ -221,12 +251,14 @@ const BoxDimension = ({
                 >
                   Size: {item.name}
                 </Text>
-                <Text
-                  className="text-center font-inter-medium text-[12px] text-primary"
-                  numberOfLines={2}
-                >
-                  Max Weight: {item.weight} KG
-                </Text>
+                {!item.custom && (
+                  <Text
+                    className="text-center font-inter-medium text-[12px] text-primary"
+                    numberOfLines={2}
+                  >
+                    Max Weight: {item.weight} KG
+                  </Text>
+                )}
               </View>
             </Pressable>
           )}
@@ -238,78 +270,88 @@ const BoxDimension = ({
               <Image className="w-full" source={boxDimension} />
             </View>
 
-            <View className="flex flex-col gap-4 mt-6">
+            <View className="flex flex-col  mt-6">
               <Input
                 label={"Approx Weight"}
+                keyboardTypes="number-pad"
                 placeholderTxt={"Enter Approx weight"}
                 value={detail.weight}
                 onChange={(text: string) =>
                   setDetail({ ...detail, weight: text })
                 }
+                error={errors.weight}
               />
 
-              <View>
+              <View className="mb-4">
                 <Text className="text-csm uppercase mb-3  text-primary font-inter-medium">
-                  Matrix
+                  Approx Dimensions (H / W / L)
                 </Text>
                 <View className="flex flex-row gap-6">
                   <View
-                    className={`flex flex-1 gap-2 flex-row px-2 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
+                    className={`flex flex-1 gap-2 flex-row px-2 bg-white border-[2.5px] ${errors.h ? "border-red-400" : "border-primary/10"} rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
                   >
                     <TextInput
-                      className="flex-1"
+                      className="flex-1 text-primary"
                       keyboardType="numeric"
-                      value={detail.matrix.h}
+                      value={detail.matrix.h ? String(detail.matrix.h) : ""}
                       onChangeText={(e) =>
                         setDetail({
                           ...detail,
                           matrix: { ...detail.matrix, h: Number(e) },
                         })
                       }
-                      placeholder={"ex.4in(H)"}
+                      placeholderTextColor={"#CBD5E1"}
+                      placeholder={"H (in)"}
                     />
                   </View>
                   <View
-                    className={`flex flex-1 gap-2 flex-row px-3 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
+                    className={`flex flex-1 gap-2 flex-row px-3 bg-white border-[2.5px] ${errors.w ? "border-red-400" : "border-primary/10"} rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
                   >
                     <TextInput
-                      className="flex-1"
+                      className="flex-1 text-primary"
                       keyboardType="numeric"
-                      value={detail.matrix.h}
+                      value={detail.matrix.w ? String(detail.matrix.w) : ""}
                       onChangeText={(e) =>
                         setDetail({
                           ...detail,
-                          matrix: { ...detail.matrix, h: Number(e) },
+                          matrix: { ...detail.matrix, w: Number(e) },
                         })
                       }
-                      placeholder={"ex.4in(H)"}
+                      placeholderTextColor={"#CBD5E1"}
+                      placeholder={"W (in)"}
                     />
                   </View>
                   <View
-                    className={`flex flex-1 gap-2 flex-row px-3 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
+                    className={`flex flex-1 gap-2 flex-row px-3 bg-white border-[2.5px] ${errors.l ? "border-red-400" : "border-primary/10"} rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 items-center py-2`}
                   >
                     <TextInput
-                      className="flex-1"
+                      className="flex-1 text-primary"
                       keyboardType="numeric"
-                      value={detail.matrix.h}
+                      value={detail.matrix.l ? String(detail.matrix.l) : ""}
                       onChangeText={(e) =>
                         setDetail({
                           ...detail,
-                          matrix: { ...detail.matrix, h: Number(e) },
+                          matrix: { ...detail.matrix, l: Number(e) },
                         })
                       }
-                      placeholder={"ex.4in(H)"}
+                      placeholderTextColor={"#CBD5E1"}
+                      placeholder={"L (in)"}
                     />
                   </View>
                 </View>
+                {(errors.h || errors.w || errors.l) && (
+                  <Text className="text-red-500 text-xs mt-1">
+                    {errors.h || errors.w || errors.l}
+                  </Text>
+                )}
               </View>
 
               <Input
-                label={"Additional Information (Additional)"}
+                label={"Additional Information (Optional)"}
                 placeholderTxt={"Enter Additional information"}
-                value={detail.weight}
+                value={detail.info}
                 onChange={(text: string) =>
-                  setDetail({ ...detail, weight: text })
+                  setDetail({ ...detail, info: text })
                 }
               />
 
@@ -319,16 +361,23 @@ const BoxDimension = ({
                 value={shipmentType}
                 onChange={setShipmentType}
                 options={[
-                  { label: "Air Freight", value: "air", icon: "Plan" },
-                  { label: "Sea Freight", value: "sea", icon: "Ship" },
+                  { label: "Air Freight", value: "AIR", icon: "Plan" },
+                  { label: "Sea Freight", value: "SHIP", icon: "Ship" },
                 ]}
               />
+              {errors.shipmentType ? (
+                <Text className="text-red-500 text-xs -mt-2 mb-2">
+                  {errors.shipmentType}
+                </Text>
+              ) : null}
 
               <Pressable
                 onPress={() => setTermsConditions(!termsConditions)}
                 className="mt-4 flex flex-row items-center gap-4"
               >
-                <View className="h-7 w-7 flex overflow-hidden justify-center items-center rounded-md border-primary/40 border-[1px]">
+                <View
+                  className={`h-7 w-7 flex overflow-hidden justify-center items-center rounded-md ${errors.termsConditions ? "border-red-400" : "border-primary/40"} border-[1px]`}
+                >
                   {termsConditions ? (
                     <View className="h-full w-full flex justify-center items-center bg-primary">
                       <Icon name="Check" size={18} color="#FFFF" />
@@ -344,6 +393,11 @@ const BoxDimension = ({
                   </Text>
                 </Text>
               </Pressable>
+              {errors.termsConditions ? (
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.termsConditions}
+                </Text>
+              ) : null}
             </View>
           </View>
         ) : (
@@ -355,7 +409,11 @@ const BoxDimension = ({
               {[SHIPMENT_ROUTE.AIR_FREIGHT, SHIPMENT_ROUTE.SEA_FREIGHT].map(
                 (item) => (
                   <Pressable
-                    onPress={() => setShipmentType(item)}
+                    onPress={() =>
+                      item == selectedBox?.mode
+                        ? setShipmentType(item)
+                        : setShipmentType(null)
+                    }
                     key={item}
                     style={{
                       shadowColor: "#E0A31D",
@@ -363,12 +421,14 @@ const BoxDimension = ({
                       shadowOpacity: 0.02,
                       shadowRadius: 32,
                       elevation: item == shipmentType ? 6 : 0,
+                      opacity: item == selectedBox?.mode ? 1 : 0.4,
                     }}
-                    className={`flex-1 pt-4 h-fit flex flex-col gap-2 relative items-center justify-center rounded-2xl border ${item == shipmentType ? "border-gold" : "border-primary/20"} bg-white px-2 py-4`}
+                    className={`flex-1 pt-4 h-fit flex flex-col gap-2 relative items-center justify-center rounded-2xl border ${item == shipmentType ? "border-gold" : errors.shipmentType ? "border-red-400" : "border-primary/20"} bg-white px-2 py-4`}
                   >
                     <Image
                       source={item == SHIPMENT_ROUTE.AIR_FREIGHT ? plan : ship}
                     />
+
 
                     <View className="flex flex-col mt-2">
                       <Text
@@ -395,6 +455,11 @@ const BoxDimension = ({
                 ),
               )}
             </View>
+            {errors.shipmentType ? (
+              <Text className="text-red-500 text-xs -mt-2">
+                {errors.shipmentType}
+              </Text>
+            ) : null}
           </View>
         )}
       </View>

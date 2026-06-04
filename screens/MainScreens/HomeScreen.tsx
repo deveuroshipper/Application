@@ -28,7 +28,7 @@ const HomeScreen = ({ navigation }: any) => {
     navigation.push("CartScreen");
   };
   const handelNotificationClick = () => {
-    console.log("clicked")
+   
     navigation.push("NotificationScreen");
   };
   return (

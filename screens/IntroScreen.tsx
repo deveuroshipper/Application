@@ -73,7 +73,7 @@ const IntroScreen = ({ navigation }: any) => {
             <Text className="text-cno text-white">Skip</Text>
             <View className="flex flex-row gap-2">
               {[1, 2, 3].map((item, index) => {
-                console.log(item, " - ", step);
+              
                 return (
                   <View
                     key={index}

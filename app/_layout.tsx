@@ -7,7 +7,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Slot />
-      <Toast position="bottom" config={toastConfig} />
+      <Toast position="top" config={toastConfig} />
     </GestureHandlerRootView>
   );
 }

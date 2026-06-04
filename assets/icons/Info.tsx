@@ -4,9 +4,9 @@ import Svg, { Path } from "react-native-svg";
 const Info = (props: any) => {
   return (
     <Svg
-      stroke="currentColor"
-      fill={props?.color || "#0000"}
-      stroke-width="0"
+      stroke={props.color || "#000000"}
+      fill={props.color || "#000000"}
+      strokeWidth="6"
       viewBox="0 0 512 512"
       width={props?.size || 24}
       height={props?.size || 24}

@@ -6,15 +6,16 @@ interface AddressState {
   shipmentType: SHIPMENT_TYPE | null;
   date: Date | String | null;
   time: Date | String | null;
-  pickupAddress: string | null;
-  deliverAddress: string | null;
+  pickupAddress: any | null;
+  deliverAddress: any | null;
+  
 
   setRoute: (route: string | null) => void;
   setShipmentType: (type: SHIPMENT_TYPE | null) => void;
   setDate: (date: Date | String | null) => void;
   setTime: (time: Date | String | null) => void;
-  setPickupAddress: (address: string | null) => void;
-  setDeliverAddress: (address: string | null) => void;
+  setPickupAddress: (address: any | null) => void;
+  setDeliverAddress: (address: any | null) => void;
 }
 
 export const useAddressStore = create<AddressState>()((set) => ({

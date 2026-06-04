@@ -1,15 +1,24 @@
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import LocationPickerInput from "@/components/LocationPickerInput";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import {
+  createNewAddressApiHandler,
+  getAddressByIdApiHandler,
+  updateAddressApiHandler,
+} from "@/helper/Api";
+import { useEffect, useState } from "react";
+import { ScrollView, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
 
 const AddNewAddress = ({ navigation, route }: any) => {
+  const address_id = route?.params?.address_id ?? null;
   const [step, setStep] = useState(2);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState({
     name: "",
     mobile: "",
@@ -25,91 +34,222 @@ const AddNewAddress = ({ navigation, route }: any) => {
     state: "",
     country: "",
   });
+  const [errors, setErrors] = useState({
+    name: "",
+    mobile: "",
+    addressLine1: "",
+    pincode: "",
+    country: "",
+    state: "",
+    city: "",
+  });
 
-  const handelSubmit = () => {};
+  useEffect(() => {
+    if (!address_id) return;
+    getAddressByIdApiHandler(address_id)
+      .then((addr) => {
+        setData((prev) => ({
+          ...prev,
+          name: addr.fullName ?? "",
+          mobile: addr.number ?? "",
+          addressLine1: addr.addressLine ?? "",
+          pincode: addr.pincode ?? "",
+          country: addr.country ?? "",
+          state: addr.state ?? "",
+          city: addr.city ?? "",
+        }));
+      })
+      .catch((error: any) => {
+        Toast.show({
+          type: "error",
+          text1: typeof error === "string" ? error : "Failed to load address.",
+        });
+      });
+  }, [address_id]);
+
+  const validate = (): boolean => {
+    const newErrors = {
+      name: "",
+      mobile: "",
+      addressLine1: "",
+      pincode: "",
+      country: "",
+      state: "",
+      city: "",
+    };
+
+    if (!data.name.trim()) newErrors.name = "Full name is required.";
+
+    if (!data.mobile.trim()) newErrors.mobile = "Mobile number is required.";
+    else if (!/^\d{7,15}$/.test(data.mobile.trim()))
+      newErrors.mobile = "Enter a valid mobile number.";
+
+    if (!data.addressLine1.trim())
+      newErrors.addressLine1 = "Address is required.";
+
+    if (!data.pincode.trim()) newErrors.pincode = "Pin code is required.";
+    else if (!/^\d{4,10}$/.test(data.pincode.trim()))
+      newErrors.pincode = "Enter a valid pin code.";
+
+    if (!data.country) newErrors.country = "Country is required.";
+    if (!data.state) newErrors.state = "State is required.";
+    if (!data.city) newErrors.city = "City is required.";
+
+    setErrors(newErrors);
+    return Object.values(newErrors).every((e) => !e);
+  };
+
+  const handelSubmit = async () => {
+    console.log("------------->");
+
+    if (!validate()) return;
+    setLoading(true);
+    const payload = {
+      fullName: data.name,
+      number: data.mobile,
+      addressLine: data.addressLine1,
+      pincode: data.pincode,
+      state: data.state,
+      city: data.city,
+      country: data.country,
+      dialCode: data?.mobileCode?.dialCode,
+      coname: data?.mobileCode?.name,
+    };
+    console.log("payload : ", payload);
+    try {
+      if (address_id) {
+        await updateAddressApiHandler(address_id, payload);
+        // Toast.show({ type: "success", text1: "Address updated successfully." });
+      } else {
+        await createNewAddressApiHandler(payload);
+        Toast.show({ type: "success", text1: "Address saved successfully." });
+      }
+      navigation.goBack();
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-        <ScreenWrapper KeyboardAvoiding={false}>
-        <View className="flex-1 px-8 pb-8">
-            <View className="flex flex-row items-center justify-between">
-            <BackButton navigation={navigation} />
-            <View className="px-4 py-1  bg-[#BFCDDE] rounded-full">
-                <Text className="text-cno  text-primary font-inter-medium">
-                {step}/{TOTAL_STEP}
-                </Text>
-            </View>
-            </View>
-
-            <View className="mt-10 flex flex-col justify-between content-between flex-1">
-            <ScrollView 
-            showsVerticalScrollIndicator={false}>
-                <View className="flex flex-col gap-4">
-                <Input
-                    label={"Full Name"}
-                    placeholderTxt={"Type your name here"}
-                    value={data?.name}
-                    onChange={(text: string) => setData({ ...data, name: text })}
-                />
-                <PhoneNumberInput
-                    label={"Mobile Number"}
-                    placeholderTxt={"Type your mobile number"}
-                    value={data?.mobile}
-                    selectedCode={data?.mobileCode}
-                    onCodeChange={(e) => setData({ ...data, mobileCode: e })}
-                    onChange={(text: string) => setData({ ...data, mobile: text })}
-                />
-                <Input
-                    label={"Address"}
-                    placeholderTxt={"Type your address here"}
-                    value={data?.addressLine1}
-                    onChange={(text: string) =>
-                    setData({ ...data, addressLine1: text })
-                    }
-                    multiline={true}
-                    numberOfLines={4}
-                />
-                <Input
-                    label={"Pin code"}
-                    placeholderTxt={"Enter Pin code"}
-                    value={data?.pincode}
-                    onChange={(text: string) => setData({ ...data, pincode: text })}
-                />
-                <View className=" flex-row gap-6">
-                    <View className="flex-1">
-                    <Input
-                        label={"City"}
-                        placeholderTxt={"Enter City"}
-                        value={data?.city}
-                        onChange={(text: string) =>
-                        setData({ ...data, city: text })
-                        }
-                    />
-                    </View>
-                    <View className="flex-1">
-                    <Input
-                        label={"State"}
-                        placeholderTxt={"Enter State"}
-                        value={data?.state}
-                        onChange={(text: string) =>
-                        setData({ ...data, state: text })
-                        }
-                    />
-                    </View>
-                </View>
-                <Input
-                    label={"Country"}
-                    placeholderTxt={"UK"}
-                    value={data?.country}
-                    onChange={(text: string) => setData({ ...data, country: text })}
-                />
-                </View>
-            </ScrollView>
-            <View className="mt-10">
-                <Button text="Continue " action={handelSubmit} />
-            </View>
-            </View>
+    <ScreenWrapper KeyboardAvoiding={false}>
+      <View className="flex-1 px-8 pb-8">
+        <View className="flex flex-row items-center justify-between">
+          <BackButton navigation={navigation} />
+          {/* <View className="px-4 py-1  bg-[#BFCDDE] rounded-full">
+            <Text className="text-cno  text-primary font-inter-medium">
+              {step}/{TOTAL_STEP}
+            </Text>
+          </View> */}
         </View>
-        </ScreenWrapper>
+
+        <View className="mt-10 flex flex-col justify-between content-between flex-1">
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View className="flex flex-col">
+              <Input
+                label={"Full Name"}
+                placeholderTxt={"Type your name here"}
+                value={data?.name}
+                onChange={(text: string) => {
+                  setData({ ...data, name: text });
+                  if (errors.name) setErrors((e) => ({ ...e, name: "" }));
+                }}
+                error={errors.name}
+              />
+              <PhoneNumberInput
+                label={"Mobile Number"}
+                placeholderTxt={"Type your mobile number"}
+                value={data?.mobile}
+                selectedCode={data?.mobileCode}
+                onCodeChange={(e) => setData({ ...data, mobileCode: e })}
+                onChange={(text: string) => {
+                  setData({ ...data, mobile: text });
+                  if (errors.mobile) setErrors((e) => ({ ...e, mobile: "" }));
+                }}
+                error={errors.mobile}
+              />
+              <Input
+                label={"Address"}
+                placeholderTxt={"Type your address here"}
+                value={data?.addressLine1}
+                onChange={(text: string) => {
+                  setData({ ...data, addressLine1: text });
+                  if (errors.addressLine1)
+                    setErrors((e) => ({ ...e, addressLine1: "" }));
+                }}
+                multiline={true}
+                numberOfLines={4}
+                error={errors.addressLine1}
+              />
+              <Input
+                label={"Pin code"}
+                placeholderTxt={"Enter Pin code"}
+                value={data?.pincode}
+                onChange={(text: string) => {
+                  setData({ ...data, pincode: text });
+                  if (errors.pincode) setErrors((e) => ({ ...e, pincode: "" }));
+                }}
+                error={errors.pincode}
+              />
+              <LocationPickerInput
+                mode="country"
+                label="Country"
+                placeholder="Select Country"
+                value={data.country}
+                onSelect={(val) => {
+                  setData({ ...data, country: val, state: "", city: "" });
+                  if (errors.country) setErrors((e) => ({ ...e, country: "" }));
+                }}
+                error={errors.country}
+              />
+              <View className="flex flex-row gap-4">
+                <View className="flex-1">
+                  <LocationPickerInput
+                    mode="state"
+                    label="State"
+                    placeholder="Select State"
+                    value={data.state}
+                    country={data.country}
+                    disabled={!data.country}
+                    onSelect={(val) => {
+                      setData({ ...data, state: val, city: "" });
+                      if (errors.state) setErrors((e) => ({ ...e, state: "" }));
+                    }}
+                    error={errors.state}
+                  />
+                </View>
+                <View className="flex-1">
+                  <LocationPickerInput
+                    mode="city"
+                    label="City"
+                    placeholder="Select City"
+                    value={data.city}
+                    country={data.country}
+                    state={data.state}
+                    disabled={!data.state}
+                    onSelect={(val) => {
+                      setData({ ...data, city: val });
+                      if (errors.city) setErrors((e) => ({ ...e, city: "" }));
+                    }}
+                    error={errors.city}
+                  />
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+          <View className="mt-10">
+            <Button text="Continue" loading={loading} action={handelSubmit} />
+          </View>
+        </View>
+      </View>
+    </ScreenWrapper>
   );
 };
 

@@ -2,7 +2,9 @@ import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import Button, { Size, Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import React, { useState } from "react";
+import { addToCartApiHandler, getOrderByIdApiHandler } from "@/helper/Api";
+import { useCartStore } from "@/store/useCartStore";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -11,22 +13,60 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
+export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
-const DetailsAndPayment = ({ navigation }: any) => {
+const DetailsAndPayment = ({ navigation, route }: any) => {
   const [step] = useState(4);
   const [couponCode, setCouponCode] = useState("");
+  const [orderDetail, setOrderDetail] = useState(null);
+  const fetchCart = useCartStore((state) => state.fetchCart);
+  const { orderId } = route?.params ?? {};
+
+
 
   const handleSubmit = () => {
     navigation.push("PackageDetails");
   };
-  const handleSaveToCart = () => {};
+  const handleSaveToCart = async () => {
+    try {
+      const response = await addToCartApiHandler(orderId);
+    
+      await fetchCart();
+      navigation.push("CartScreen");
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to add to cart",
+      });
+    }
+  };
   const handleApplyCoupon = () => {
     navigation.push("ApplyCoupon");
   };
-  const handleViewAllDetails = () => {};
+  const handleViewAllDetails = () => {
+    navigation.push("PackageDetails", { orderId: orderId });
+  };
   const handleAvailableCoupons = () => {};
+
+  const getDetail = async () => {
+    try {
+      const response = await getOrderByIdApiHandler(orderId);
+     
+      setOrderDetail(response);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to get details",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getDetail();
+  }, []);
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -61,41 +101,48 @@ const DetailsAndPayment = ({ navigation }: any) => {
               {/* Box Image + Price */}
               <View className="items-center pr-2">
                 <Image
-                  source={require("@/assets/images/boxes/smallBox.png")}
+                  source={{ uri: `${IMAGE_URL}/${orderDetail?.box?.boxImage}` }}
                   style={{ width: 64, height: 64 }}
                   resizeMode="contain"
                 />
+             
                 <Text className="text-csm font-inter-bold text-primary mt-1">
-                  $360.00
+                  ${orderDetail?.box?.price}
                 </Text>
               </View>
 
               {/* Order Details */}
               <View className="flex-1 gap-1 ">
                 <Text className="text-csm mb-2 font-inter-bold text-primary">
-                  Order Id : #5858
+                  Order Id : {orderDetail?.id?.slice(0, 10) + "..."}
                 </Text>
                 <Text className="text-csm font-inter text-primary/60">
-                  Size: Small
+                  Size: {orderDetail?.box?.name}
                 </Text>
                 <Text className="text-csm font-inter text-primary/60">
-                  Max Weight: 3 KG
+                  Max Weight: {orderDetail?.box?.weight} KG
                 </Text>
                 <Text className="text-csm font-inter text-primary/60">
-                  Max Size: 34 X 32 X 10cm
+                  Max Size: {orderDetail?.box?.height} X{" "}
+                  {orderDetail?.box?.width} X {orderDetail?.box?.length}cm
                 </Text>
               </View>
 
               {/* Airplane / Ship Icon */}
               <View className="w-12 h-12 mb-auto  items-center justify-center bg-[#E3EDFA] rounded-full">
+                {orderDetail?.box?.mode === "SHIP" ? (
+                  <Icon name="ShipOutline" size={26} color="#000000" />
+                ) : (
+                  <Icon name="PlanOutline" size={26} color="#000000" />
+                )}
                 {/* <Icon name="PlanOutline" size={26} color="#000000" /> */}
-                <Icon name="ShipOutline" size={26} color="#000000" />
+                {/* <Icon name="ShipOutline" size={26} color="#000000" /> */}
               </View>
             </View>
 
             <Button
               text="View All Details"
-              action={handleSaveToCart}
+              action={handleViewAllDetails}
               variant={Variant.OUTLINE}
               size={Size.SMALL}
             />

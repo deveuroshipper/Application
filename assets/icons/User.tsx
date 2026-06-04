@@ -1,10 +1,10 @@
 import React from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 
-const User = (props: any)  => {
+const User = (props: any) => {
   return (
     <Svg
-      stroke="currentColor"
+      stroke={props.color || "#000000"}
       fill="none"
       strokeWidth="2"
       viewBox="0 0 24 24"

@@ -52,9 +52,9 @@ const WelcomeScreen = ({ navigation }: any) => {
           </View>
 
           <SocialButton
-            icon={<Icon name="Mail" size={22} />}
+            icon={<Icon name="Mail" size={24} color="#FFFF" />}
             action={() => navigation.push("CreateAccount")}
-            text={"Continue with Google"}
+            text={"Sign up with Email"}
             color="#CF961A"
           />
 

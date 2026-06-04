@@ -1,7 +1,7 @@
+import Icon from "@/assets/icons";
 import notNotification from "@/assets/images/not-notification.png";
 import BackButton from "@/components/BackButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import Icon from "@/assets/icons";
 import React from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 
@@ -95,13 +95,9 @@ const NotificationItem = ({
   isLast: boolean;
 }) => {
   return (
-    <View
-      className={`flex-row items-start py-4 gap-4 ${
-        !isLast ? "border-b border-primary/10" : ""
-      }`}
-    >
+    <View className={`flex-row items-start py-4 bg-white gap-4 mb-5 rounded-xl px-4`}>
       {/* Icon Circle */}
-      <View className="h-12 w-12 rounded-full bg-gold/20 items-center justify-center">
+      <View className="h-12 w-12  bg-[#FEECD3] items-center justify-center rounded-full">
         <Icon name={item.icon} size={22} color="#E0A31D" />
       </View>
 
@@ -111,10 +107,12 @@ const NotificationItem = ({
           <Text className="text-csm font-inter-bold text-primary flex-1 pr-2">
             {item.title}
           </Text>
-          <Text className="text-cxs font-inter text-primary/40">{item.time}</Text>
+          <Text className="text-cxs font-inter-medium text-[#55658B]">
+            {item.time}
+          </Text>
         </View>
         <Text
-          className="text-cxs font-inter text-primary/50 mt-0.5"
+          className="text-[11px] font-inter-medium text-[#3F4C6E] mt-0.5"
           numberOfLines={2}
         >
           {item.subtitle}
@@ -140,7 +138,7 @@ const NotificationScreen = ({ navigation }: any) => {
         {hasNotifications ? (
           /* ── List State ── */
           <ScrollView
-            className="flex-1"
+            className="flex-1 mt-6"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 24 }}
           >
@@ -149,9 +147,7 @@ const NotificationScreen = ({ navigation }: any) => {
                 <View key={section.label}>
                   {/* Section Label */}
                   <Text
-                    className={`text-cno font-inter-bold text-primary mb-2 ${
-                      sectionIndex === 0 ? "mt-4" : "mt-6"
-                    }`}
+                    className={`text-cno font-inter-bold text-primary my-4`}
                   >
                     {section.label}
                   </Text>
@@ -165,7 +161,7 @@ const NotificationScreen = ({ navigation }: any) => {
                     />
                   ))}
                 </View>
-              )
+              ),
             )}
           </ScrollView>
         ) : (

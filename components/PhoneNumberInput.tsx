@@ -41,6 +41,7 @@ const PhoneNumberInput = ({
   onChange,
   selectedCode,
   onCodeChange,
+  error = "",
 }: {
   label: String;
   placeholderTxt: String;
@@ -48,6 +49,7 @@ const PhoneNumberInput = ({
   onChange: any;
   selectedCode?: SelectedCountry;
   onCodeChange?: (country: SelectedCountry) => void;
+  error?: string;
 }) => {
   const [countries, setCountries] = useState<SelectedCountry[]>([]);
   const [filtered, setFiltered] = useState<SelectedCountry[]>([]);
@@ -141,8 +143,13 @@ const PhoneNumberInput = ({
           className="flex-1"
           placeholder={placeholderTxt as string}
           keyboardType="phone-pad"
+          placeholderTextColor={"#CBD5E1"}
         />
       </View>
+
+      <Text className="text-[12px] font-inter-medium ml-1 mt-1 text-red-500">
+        {error}
+      </Text>
 
       <Modal
         visible={modalVisible}

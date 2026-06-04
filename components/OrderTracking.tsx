@@ -1,11 +1,27 @@
 import Icon from "@/assets/icons";
-import React, { useState } from "react";
+import { getOrderByIdApiHandler } from "@/helper/Api";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import Toast from "react-native-toast-message";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type StepStatus = "done" | "active" | "hold" | "pending";
+
+type OrderStatus =
+  | "PLACED"
+  | "RECEIVED"
+  | "SHIPPED"
+  | "REACHEDTOLOCALPARTNER"
+  | "DELIVERED"
+  | "HOLD";
+
+type TimelineItem = {
+  event: string;
+  location: string;
+  time: string;
+};
 
 type TrackingStep = {
   id: string;
@@ -15,38 +31,121 @@ type TrackingStep = {
   status: StepStatus;
 };
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const TRACKING_STEPS: TrackingStep[] = [
-  {
-    id: "1",
+const STATUS_CONFIG: Record<
+  OrderStatus,
+  { label: string; dot: string; bg: string; text: string }
+> = {
+  PLACED: {
     label: "Placed",
-    date: "20 May 2026, 09:30AM",
-    location: "Manchester, United Kingdom",
-    status: "done",
+    dot: "#2563EB",
+    bg: "#DBEAFE",
+    text: "#1D4ED8",
   },
-  {
-    id: "2",
+  RECEIVED: {
+    label: "Received",
+    dot: "#7C3AED",
+    bg: "#EDE9FE",
+    text: "#6D28D9",
+  },
+  SHIPPED: {
     label: "Shipped",
-    date: "20 May 2026, 09:30AM",
-    location: "Manchester, United Kingdom",
-    status: "done",
+    dot: "#0891B2",
+    bg: "#CFFAFE",
+    text: "#0E7490",
   },
-  {
-    id: "3",
-    label: "In Transit",
-    date: "20 May 2026, 09:30AM",
-    location: "Manchester, United Kingdom",
-    status: "hold",
+  REACHEDTOLOCALPARTNER: {
+    label: "Reached to Local Partner",
+    dot: "#16A34A",
+    bg: "#DCFCE7",
+    text: "#15803D",
   },
-  {
-    id: "4",
+  DELIVERED: {
     label: "Delivered",
-    date: "20 May 2026, 09:30AM",
-    location: "Manchester, United Kingdom",
-    status: "pending",
+    dot: "#16A34A",
+    bg: "#DCFCE7",
+    text: "#15803D",
   },
-];
+  HOLD: {
+    label: "On Hold",
+    dot: "#D97706",
+    bg: "#FEF3C7",
+    text: "#B45309",
+  },
+};
+
+const normalizeOrderStatus = (status?: string): OrderStatus | null => {
+  const normalized = status?.replace(/[\s_-]/g, "").toUpperCase();
+
+  return normalized && normalized in STATUS_CONFIG
+    ? (normalized as OrderStatus)
+    : null;
+};
+
+const StatusBadge = ({ status }: { status?: string }) => {
+  const normalizedStatus = normalizeOrderStatus(status);
+  const config = normalizedStatus
+    ? STATUS_CONFIG[normalizedStatus]
+    : {
+        label: status ?? "Status Pending",
+        dot: "#94A3B8",
+        bg: "#F1F5F9",
+        text: "#64748B",
+      };
+
+  return (
+    <View
+      style={{ backgroundColor: config.bg }}
+      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full w-fit"
+    >
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: config.dot,
+        }}
+      />
+      <Text
+        className="text-[12px] font-inter-bold w-fit"
+        style={{ color: config.text }}
+      >
+        {config.label}
+      </Text>
+    </View>
+  );
+};
+
+const getTimelineStepStatus = (
+  item: TimelineItem,
+  index: number,
+  timeline: TimelineItem[],
+  orderStatus?: string,
+): StepStatus => {
+  const eventText = item?.event?.toUpperCase?.() ?? "";
+  const isLast = index === timeline.length - 1;
+  const normalizedOrderStatus = normalizeOrderStatus(orderStatus);
+
+  if (
+    eventText.includes("HOLD") ||
+    (isLast && normalizedOrderStatus === "HOLD")
+  ) {
+    return "hold";
+  }
+
+  return "done";
+};
+
+const buildTrackingSteps = (
+  timeline: TimelineItem[] = [],
+  orderStatus?: string,
+): TrackingStep[] =>
+  timeline.map((item, index) => ({
+    id: `${index}-${item?.time ?? ""}`,
+    label: item?.event ?? "",
+    date: item?.time ?? "",
+    location: item?.location ?? "",
+    status: getTimelineStepStatus(item, index, timeline, orderStatus),
+  }));
 
 // ─── Step icon ────────────────────────────────────────────────────────────────
 
@@ -192,25 +291,6 @@ const TrackingStepRow = ({
             >
               {step.label}
             </Text>
-
-            {/* ON HOLD badge */}
-            {isHold && (
-              <View
-                style={{
-                  backgroundColor: "#FEF3C7",
-                  borderRadius: 4,
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                }}
-              >
-                <Text
-                  style={{ color: "#D97706", fontSize: 9 }}
-                  className="font-inter-bold"
-                >
-                  ON HOLD
-                </Text>
-              </View>
-            )}
           </View>
 
           <Text
@@ -230,7 +310,7 @@ const TrackingStepRow = ({
         {/* Arrow for active/hold step */}
         {isHold && (
           <TouchableOpacity onPress={onPress} className="mt-1">
-            <Icon name="NextArrow" size={18} color="#D97706" />
+            <Icon name="Arrow" size={18} color="#D97706" />
           </TouchableOpacity>
         )}
       </View>
@@ -238,172 +318,186 @@ const TrackingStepRow = ({
   );
 };
 
-// ─── On-hold info card ─────────────────────────────────────────────────────────
-
-const OnHoldCard = ({ onPayNow }: { onPayNow: () => void }) => (
+const HoldWarningCard = ({ onPayNow }: { onPayNow: () => void }) => (
   <View
-    style={{ backgroundColor: "#FFFBEB", borderRadius: 16, padding: 16 }}
-    className="mb-4 mx-8"
+    className="mx-8 mb-5 rounded-[28px] border-[1.5px] px-6 py-7"
+    style={{
+      backgroundColor: "#FFFCF5",
+      borderColor: "#F9D28A",
+    }}
   >
-    <View className="flex-row items-start gap-3">
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: "#FEF3C7",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ fontSize: 16 }}>⚠️</Text>
-      </View>
-
-      <View className="flex-1">
-        <Text className="text-csm font-space-grotesk-bold text-primary mb-1">
-          Why is your parcel on hold?
-        </Text>
-        <Text className="text-cxs font-inter text-primary/60 mb-3">
-          Your parcel is currently on hold due to pending payment. Complete the
-          payment to resume shipment processing and continue delivery.
-        </Text>
-        <TouchableOpacity
-          onPress={onPayNow}
-          className="flex-row items-center gap-1"
-        >
-          <Text className="text-csm font-inter-bold text-lightBlue">
-            Pay Now
-          </Text>
-          <Icon name="NextArrow" size={13} color="#5CA6DA" />
-        </TouchableOpacity>
-      </View>
+    <View
+      className="mb-4 items-center justify-center rounded-full border-[2px]"
+      style={{
+        width: 36,
+        height: 36,
+        borderColor: "#E8A20C",
+      }}
+    >
+      <Icon name="Warning" size={24} color="#E8A20C" />
     </View>
+
+    <Text className="mb-2 text-csm   font-inter-bold text-black">
+      Why is your parcel on hold?
+    </Text>
+
+    <Text className="mb-5 text-[12px] font-inter text-black">
+      Your parcel is currently on hold due to pending payment. Complete the
+      payment to resume shipment processing and continue delivery.
+    </Text>
+
+    <TouchableOpacity
+      onPress={onPayNow}
+      className="flex-row items-center gap-1"
+    >
+      <Text className="text-csm font-inter-bold text-[#2673DD]">Pay Now</Text>
+      <Icon name="Arrow" size={18} color="#2673DD" />
+    </TouchableOpacity>
   </View>
 );
 
 // ─── Accordion row ─────────────────────────────────────────────────────────────
 
-const AccordionRow = ({
-  label,
-  children,
-}: {
-  label: string;
-  children?: React.ReactNode;
-}) => {
-  const [open, setOpen] = useState(false);
+const AccordionRow = ({ label, onclick }: { label: string; onclick?: any }) => {
   return (
-    <View
-      className="bg-white mx-8 rounded-2xl mb-3 overflow-hidden"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-      }}
-    >
+    <View className="bg-white mx-8 rounded-2xl mb-3 overflow-hidden border-[1.5px] border-primary/10">
       <TouchableOpacity
-        onPress={() => setOpen((v) => !v)}
+        onPress={() => onclick()}
         className="flex-row justify-between items-center px-5 py-4"
       >
-        <Text className="text-csm font-space-grotesk-bold text-primary">
-          {label}
-        </Text>
-        <Text
+        <Text className="text-cno font-inter-medium text-primary">{label}</Text>
+        <View
           style={{
             fontSize: 18,
             color: "#64748B",
-            transform: [{ rotate: open ? "180deg" : "0deg" }],
+            transform: [{ rotate: "0deg" }],
           }}
         >
-          ⌄
-        </Text>
+          <Icon name="Arrow" />
+        </View>
       </TouchableOpacity>
-
-      {open && children && <View className="px-5 pb-4">{children}</View>}
     </View>
   );
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const OrderTracking = ({
-  trackingId = "TRK123456",
-  status = "Packed",
-  hasHold = true,
-  onPayNow,
-}: {
-  trackingId?: string;
-  status?: string;
-  hasHold?: boolean;
-  onPayNow?: () => void;
-}) => {
+const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
+  const [orderDetail, setOrderDetail] = useState(null);
+  const orderId = route?.params?.orderId ?? orderIdProp;
+  const trackingSteps = buildTrackingSteps(
+    orderDetail?.timeline,
+    orderDetail?.status,
+  );
+  const currentStatus = normalizeOrderStatus(orderDetail?.status);
+
+  useEffect(() => {
+    const getOrderDetail = async () => {
+      if (!orderId) return;
+
+      try {
+        const response = await getOrderByIdApiHandler(orderId);
+        console.log("response. : ", response);
+        setOrderDetail(response);
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1:
+            typeof error === "string"
+              ? error
+              : (error?.message ?? "Failed to load order details"),
+        });
+      }
+    };
+
+    getOrderDetail();
+  }, [orderId]);
   return (
-    <ScrollView>
-      <View className="flex-1 mt-6 mb-10">
-        {/* Tracking ID + Status */}
-        <View className=" px-8 py-4">
-          <View className="flex-row justify-between items-start mb-1">
-            <Text className="text-[12px] font-inter-medium text-[#818DA9]">
-              Tracking ID
-            </Text>
-            <Text className="text-[12px] font-inter-medium text-[#818DA9]">
-              Status
-            </Text>
-          </View>
-          <View className="flex-row justify-between items-center">
-            <Text className="text-[24px] font-space-grotesk-bold text-primary">
-              {trackingId}
-            </Text>
-            {/* Status badge */}
-            <View
-              style={{ backgroundColor: "#DCFCE7" }}
-              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full"
-            >
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#16A34A",
-                }}
-              />
-              <Text
-                className="text-[12px] font-inter-bold"
-                style={{ color: "#15803D" }}
-              >
-                {status}
-              </Text>
+    <View>
+      <View className="pt-14 pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary">
+        <Text className="text-white text-[24px] font-space-grotesk-bold">
+          Track Shipment
+        </Text>
+        <Text className="text-white text-csm font-thin w-1/2 text-center">
+          Enter tracking number to get real-time updates
+        </Text>
+      </View>
+      <ScrollView className="mb-40">
+        <View className="flex-1 mt-6 mb-20">
+          {/* Tracking ID + Status */}
+          <View className=" px-8 py-4">
+            <View className="flex-row justify-between items-start mb-1"></View>
+            <View className="flex-col gap-2 justify-between">
+              <View>
+                <Text className="text-[12px] font-inter-medium text-[#818DA9]">
+                  Tracking ID
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  className="text-[24px] uppercase font-space-grotesk-bold text-primary"
+                >
+                  {orderId}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-        <View className="px-8">
-          <View className="h-0.5 w-full  bg-[#0F1729]/15" />
-        </View>
+          <View className="px-8">
+            <View className="h-0.5 w-full  bg-[#0F1729]/15" />
+          </View>
 
-        {/* Tracking History */}
-        <View className="px-8 pt-4 pb-2 mb-4">
-          <Text className="text-cno font-space-grotesk-bold text-primary mb-4">
-            Tracking History
-          </Text>
+          {/* Tracking History */}
+          <View className="px-8 pt-4 pb-2 mb-4">
+            <View className="flex flex-row justify-between mb-4">
+              <Text className="text-cno font-space-grotesk-bold text-primary mb-4">
+                Tracking History
+              </Text>
+              <View>
+                {/* <Text className="text-[12px] font-inter-medium text-[#818DA9]">
+                Status
+              </Text> */}
+                <StatusBadge status={orderDetail?.status} />
+              </View>
+            </View>
 
-          {TRACKING_STEPS.map((step, index) => (
-            <TrackingStepRow
-              key={step.id}
-              step={step}
-              isLast={index === TRACKING_STEPS.length - 1}
+            {trackingSteps.length > 0 ? (
+              trackingSteps.map((step, index) => (
+                <TrackingStepRow
+                  key={step.id}
+                  step={step}
+                  isLast={index === trackingSteps.length - 1}
+                />
+              ))
+            ) : (
+              <Text className="text-csm font-inter text-primary/50">
+                No tracking history available.
+              </Text>
+            )}
+          </View>
+
+          {currentStatus === "HOLD" && (
+            <HoldWarningCard
+              onPayNow={() =>
+                navigation.push("DetailsAndPayment", { orderId: orderId })
+              }
             />
-          ))}
+          )}
+
+          {/* Accordions */}
+          <AccordionRow
+            label="Address"
+            onclick={() =>
+              navigation.push("PackageDetails", { orderId: orderId })
+            }
+          />
+          <AccordionRow
+            onclick={() =>
+              navigation.push("PackageDetails", { orderId: orderId })
+            }
+            label="Package Details"
+          />
         </View>
-
-        {/* On-hold info card */}
-        {hasHold && <OnHoldCard onPayNow={onPayNow ?? (() => {})} />}
-
-        {/* Accordions */}
-        <AccordionRow label="Address" />
-        <AccordionRow label="Package Details" />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

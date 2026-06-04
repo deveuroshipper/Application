@@ -14,7 +14,7 @@ const ChooseHowShip = ({ navigation }: any) => {
   const step = 2;
 
   const handelClick = (type: SHIPMENT_TYPE) => {
-    console.log("type : ", type);
+ 
     useAddressStore.getState().setShipmentType(type);
     navigation.push("DateAndTimeSubmission", {
       ShipmentType: type,

@@ -1,19 +1,27 @@
 import Icon from "@/assets/icons";
-import SmallBox from "@/assets/images/boxes/smallBox.png";
 import BackButton from "@/components/BackButton";
 import Button, { Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import React, { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { getOrderByIdApiHandler } from "@/helper/Api";
+import { CountryImage } from "@/helper/buildFlagUrl";
+import { formatDate, formatTimeRange } from "@/helper/formateDateTime";
+import React, { useEffect, useState } from "react";
+import { Image, ScrollView, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 const TOTAL_STEP = 4;
 
 export const enum ORDER_STATUS {
   SUCCESS,
   FAILED,
 }
+export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
-const PackageDetails = ({ navigation }: any) => {
+const PackageDetails = ({ navigation, route }: any) => {
   const [step] = useState(4);
+  const { orderId } = route?.params ?? {};
+  // const orderId = "34009bcf-e9c6-4b01-bc46-588c0c2fbe5f";
+
+  const [orderDetail, setOrderDetail] = useState(null);
   const [selectedShipment, setSelectedShipment] = useState<"air" | "sea">(
     "air",
   );
@@ -21,6 +29,31 @@ const PackageDetails = ({ navigation }: any) => {
   const handleCheckout = () => {
     navigation.push("OrderStatus", { status: ORDER_STATUS.FAILED });
   };
+
+  const getDetail = async () => {
+    try {
+      const response = await getOrderByIdApiHandler(orderId);
+    
+      setOrderDetail(response);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to copy address",
+      });
+    }
+  };
+
+  const buildAddress = (data) => {
+    return [
+      `${data?.fullName} : ${data?.dialCode}${data?.number}`,
+      `${data?.addressLine} ${data?.city}, ${data?.state} ${data?.pincode}, ${data?.country}`,
+      CountryImage(data?.country),
+    ];
+  };
+
+  useEffect(() => {
+    getDetail();
+  }, []);
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -55,31 +88,67 @@ const PackageDetails = ({ navigation }: any) => {
                 </Text>
               </View>
               <Text className="text-csm font-inter-bold text-primary mb-0.5">
-                Order id :#58588
+                Order id :#{orderDetail?.id.slice(0, 4) + "..."}
               </Text>
             </View>
           </View>
 
           {/* Delivery Address Card */}
-          <View className="bg-white rounded-2xl p-4 gap-4 mt-2">
-            <View className="flex flex-row items-center justify-between">
-              <View className="flex flex-row items-center gap-2">
-                <View className="w-10 h-10 rounded-full bg-[#E3EDFA] items-center justify-center">
-                  <Icon name="MapPin" size={22} color="#001C4E" />
+          <View>
+            {orderDetail?.deliveryType !== "DROP" ? (
+              <View className="bg-white rounded-2xl p-4 gap-2 mt-2">
+                <View className="flex flex-row items-center justify-between">
+                  <View className="flex flex-row items-center gap-2">
+                    <View className="w-10 h-10 rounded-full bg-[#E3EDFA] items-center justify-center">
+                      <Icon name="MapPin" size={22} color="#001C4E" />
+                    </View>
+                    <Text className="text-cno font-inter-bold text-primary">
+                      Pickup
+                    </Text>
+                  </View>
+                  {/* Belgium flag */}
+                  <Image
+                    source={{
+                      uri: buildAddress(orderDetail?.pickupAddress)[2],
+                    }}
+                    className="w-11 h-8 rounded-md"
+                  />
                 </View>
-                <Text className="text-cno font-inter-bold text-primary">
-                  Delivery
+                <View>
+                  <Text className="text-csm capitalize font-inter-bold text-primary/80 ml-1">
+                    {buildAddress(orderDetail?.pickupAddress)[0]}
+                  </Text>
+                  <Text className="text-csm font-inter-medium text-primary/80 ml-1">
+                    {buildAddress(orderDetail?.pickupAddress)[1]}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+            <View className="bg-white rounded-2xl p-4 gap-4 mt-4">
+              <View className="flex flex-row items-center justify-between">
+                <View className="flex flex-row items-center gap-2">
+                  <View className="w-10 h-10 rounded-full bg-[#E3EDFA] items-center justify-center">
+                    <Icon name="MapPin" size={22} color="#001C4E" />
+                  </View>
+                  <Text className="text-cno font-inter-bold text-primary">
+                    Delivery
+                  </Text>
+                </View>
+                {/* Belgium flag */}
+                <Image
+                  source={{ uri: buildAddress(orderDetail?.dropAddress)[2] }}
+                  className="w-11 h-8 rounded-md"
+                />
+              </View>
+              <View>
+                <Text className="text-csm capitalize font-inter-bold text-primary/80 ml-1">
+                  {buildAddress(orderDetail?.dropAddress)[0]}
+                </Text>
+                <Text className="text-csm font-inter-medium text-primary/80 ml-1">
+                  {buildAddress(orderDetail?.dropAddress)[1]}
                 </Text>
               </View>
-              {/* Belgium flag */}
-              <Image
-                source={{ uri: "https://flagcdn.com/w80/se.png" }}
-                className="w-11 h-8 rounded-md"
-              />
             </View>
-            <Text className="text-csm font-inter-medium text-primary/80 ml-1">
-              45 King Street, Manchester M2 4WU, Belgium
-            </Text>
           </View>
 
           {/* Category / Sub-Category / Wgt.Dim row */}
@@ -95,12 +164,18 @@ const PackageDetails = ({ navigation }: any) => {
                   className={`mb-3 h-14 w-14 items-center justify-center  bg-[#D6E0EE] rounded-full`}
                 >
                   {/* <Ionicons name={item.icon} size={22} color="#0F1729" /> */}
+                  <Image
+                    source={{
+                      uri: `${IMAGE_URL}/${orderDetail?.category?.image}`,
+                    }}
+                    className="w-10 h-10 rounded-md"
+                  />
                 </View>
                 <Text
-                  className="text-center font-inter-bold text-csm text-primary"
+                  className="text-center capitalize font-inter-bold text-csm text-primary"
                   numberOfLines={2}
                 >
-                  Furniture Home Decor
+                  {orderDetail?.category?.name}
                 </Text>
               </View>
             </View>
@@ -115,12 +190,18 @@ const PackageDetails = ({ navigation }: any) => {
                   className={`mb-3 h-14 w-14 items-center justify-center  bg-[#D6E0EE] rounded-full`}
                 >
                   {/* <Ionicons name={item.icon} size={22} color="#0F1729" /> */}
+                  <Image
+                    source={{
+                      uri: `${IMAGE_URL}/${orderDetail?.subCategory?.image}`,
+                    }}
+                    className="w-10 h-10 rounded-md"
+                  />
                 </View>
                 <Text
                   className="text-center font-inter-bold text-csm text-primary"
                   numberOfLines={2}
                 >
-                  Baby Car Toys
+                  {orderDetail?.subCategory?.name}
                 </Text>
               </View>
             </View>
@@ -132,18 +213,19 @@ const PackageDetails = ({ navigation }: any) => {
                 className={`flex-1 flex justify-center items-center rounded-2xl border-[1.5px] border-[#B5C3E8]/30 bg-white px-3 py-2`}
               >
                 <Image
-                  className={`w-full  items-center justify-center  bg-[#D6E0EE] rounded-full`}
-                  source={SmallBox}
+                  className={`w-16 h-12  items-center justify-center  bg-[#D6E0EE]`}
+                  source={{ uri: `${IMAGE_URL}/${orderDetail?.box?.boxImage}` }}
                 />
+          
 
                 <Text
                   className="text-center font-inter-bold text-csm text-primary"
                   numberOfLines={2}
                 >
-                  Size: Medium
+                  {orderDetail?.box?.name}
                 </Text>
                 <Text className="text-center font-inter text-[12px] text-primary/80">
-                  Max Weight: 3 KG
+                  Max Weight: {orderDetail?.box?.weight} KG
                 </Text>
               </View>
             </View>
@@ -157,9 +239,11 @@ const PackageDetails = ({ navigation }: any) => {
               <Text className="text-csm font-inter-bold text-primary mt-1">
                 Date Submission
               </Text>
-              <Text className="text-csm font-inter-medium text-primary/80">
-                May 25, 2026
-              </Text>
+              {orderDetail?.submissionDateOnly ? (
+                <Text className="text-csm font-inter-medium text-primary/80">
+                  {formatDate(orderDetail?.submissionDateOnly)}
+                </Text>
+              ) : null}
             </View>
 
             {/* Time */}
@@ -168,9 +252,11 @@ const PackageDetails = ({ navigation }: any) => {
               <Text className="text-csm font-inter-bold text-primary mt-1">
                 Time Submission
               </Text>
-              <Text className="text-csm font-inter-medium text-primary/80">
-                10 AM - 12 PM
-              </Text>
+              {orderDetail?.submissionTime ? (
+                <Text className="text-csm font-inter-medium text-primary/80">
+                  {formatTimeRange(orderDetail?.submissionTime)}
+                </Text>
+              ) : null}
             </View>
           </View>
 
@@ -181,15 +267,21 @@ const PackageDetails = ({ navigation }: any) => {
             </Text>
 
             {/* Air Freight Option */}
-            <TouchableOpacity
-              onPress={() => setSelectedShipment("air")}
-              className="flex flex-row items-center gap-3 border-[1.5px] border-[#B5C3E8]/30 bg-[#F4F9FF] rounded-2xl px-4 py-4"
-            >
-              <Icon name="Plan" size={22} color="#BFCDDE" />
-              <Text className="text-cno font-inter-medium text-primary">
-                Air Freight
-              </Text>
-            </TouchableOpacity>
+            {orderDetail?.mode == "AIR" ? (
+              <View className="flex flex-row items-center gap-3 border-[1.5px] border-[#B5C3E8]/30 bg-[#F4F9FF] rounded-2xl px-4 py-4">
+                <Icon name="Plan" size={22} color="#BFCDDE" />
+                <Text className="text-cno font-inter-medium text-primary">
+                  Air Freight
+                </Text>
+              </View>
+            ) : (
+              <View className="flex flex-row items-center gap-3 border-[1.5px] border-[#B5C3E8]/30 bg-[#F4F9FF] rounded-2xl px-4 py-4">
+                <Icon name="Ship" size={22} color="#BFCDDE" />
+                <Text className="text-cno font-inter-medium text-primary">
+                  Ship
+                </Text>
+              </View>
+            )}
           </View>
         </ScrollView>
 

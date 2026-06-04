@@ -46,13 +46,13 @@ const LoadingSplashScreen = ({ navigation }: any) => {
     // Verify the stored token is still valid by fetching fresh profile data
     getProfileApiHandler()
       .then((userData) => {
-        console.log("user data : ", userData);
         setUser(userData);
-        navigation.reset({ index: 0, routes: [{ name: "MainScreens" }] });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainScreens" }],
+        });
       })
       .catch((err) => {
-        console.log("user data : ", err);
-
         if (err?.status === 401) {
           logout();
         }
