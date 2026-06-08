@@ -42,7 +42,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
         status: userData?.status,
         profileImage: null,
       };
-      console.log("payload : ", payload);
       useAuthStore?.getState().setUser(payload);
 
       setUser(payload);
@@ -58,17 +57,14 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
     try {
       var response;
       setLoading(true);
-      console.log("is form. : ", data?.isFor);
       switch (data?.isFor) {
         case INFO_UPDATE.EMAIL_UPDATE:
-          console.log("in email update");
           response = await verifyUpdateInfoApiHandler({
             code: otp,
             type: "emailupdate",
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-          console.log("in phone update");
 
           response = await verifyUpdateInfoApiHandler({
             code: otp,
@@ -78,7 +74,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
       }
       getProfile();
       setShowModel(true);
-      console.log("verification response ---------> ", response);
     } catch (error) {
       Toast.show({
         type: "error",
@@ -95,7 +90,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
       setResendLoading(true);
       switch (data?.isFor) {
         case INFO_UPDATE.EMAIL_UPDATE:
-          console.log("in email update");
           response = await updateInfoApiHandler({
             old: data?.oldEmail,
             new: data?.newEmail,
@@ -103,7 +97,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-          console.log("in phone update");
 
           response = await updateInfoApiHandler({
             old: data?.oldNumber,

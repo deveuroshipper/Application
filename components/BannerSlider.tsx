@@ -1,3 +1,4 @@
+import { getDashboardImagesApiHandler } from "@/helper/Api";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -10,9 +11,10 @@ import {
   Text,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
+export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 const SLIDE_WIDTH = SCREEN_WIDTH - 48;
 const SLIDE_GAP = 12;
 const SLIDE_INTERVAL = 4000;
@@ -27,8 +29,9 @@ type Props = {
   slides: BannerSlide[];
 };
 
-const BannerSlider = ({ slides }: Props) => {
+const BannerSlider = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slides, setSlides] = useState<null | any>(null);
   const flatListRef = useRef<FlatList<BannerSlide>>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -46,9 +49,26 @@ const BannerSlider = ({ slides }: Props) => {
         return next;
       });
     }, SLIDE_INTERVAL);
-  }, [slides.length]);
+  }, [slides?.length]);
+
+  const getSliderImages = async () => {
+    try {
+      const response = await getDashboardImagesApiHandler();
+      console.log("Slider data", response);
+      setSlides(response);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    }
+  };
 
   useEffect(() => {
+    getSliderImages();
     startAutoSlide();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -70,7 +90,7 @@ const BannerSlider = ({ slides }: Props) => {
       className="rounded-3xl overflow-hidden"
     >
       <Image
-        source={item.image}
+        source={{ uri: `${IMAGE_URL}/${item.image}` }}
         className="w-full h-full"
         style={{ height: 200 }}
         resizeMode="cover"
@@ -120,7 +140,7 @@ const BannerSlider = ({ slides }: Props) => {
 
       {/* Dot Indicators */}
       <View className="flex-row justify-center items-center mt-6 gap-1.5">
-        {slides.map((_, index) => (
+        {slides?.map((_, index) => (
           <View
             key={index}
             style={{

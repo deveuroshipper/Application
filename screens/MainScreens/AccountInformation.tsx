@@ -61,7 +61,7 @@ const AccountInformation = ({ navigation }: any) => {
     }
   };
 
-  console.log(user);
+ 
 
   useEffect(() => {
     setUser(useAuthStore.getState().user);

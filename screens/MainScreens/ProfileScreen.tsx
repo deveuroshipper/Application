@@ -107,7 +107,7 @@ const ProfileScreen = ({ navigation, route }: any) => {
             </View>
           </TouchableOpacity>
         </View>
-      </View>{" "}
+      </View>
     </View>
   );
 };

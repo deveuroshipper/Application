@@ -280,7 +280,6 @@ const CartScreen = ({ navigation }: any) => {
         text1: "Item removed from cart",
       });
     } catch (error: any) {
-    
       Toast.show({
         type: "error",
         text1: error ?? "Failed to remove item",
@@ -294,7 +293,9 @@ const CartScreen = ({ navigation }: any) => {
     setDeleteTargetId(null);
   };
 
-  const handleCheckout = () => {};
+  const handleCheckout = (orderId: String) => {
+    navigation.push("DetailsAndPayment", { orderId: orderId });
+  };
   const handleViewDetails = (orderId: String) => {
     navigation.push("PackageDetails", { orderId: orderId });
   };
@@ -372,7 +373,8 @@ const CartScreen = ({ navigation }: any) => {
               {cartItems.map((item, index) => {
                 const itemId =
                   item.id ?? item.orderid ?? item.orderId ?? String(index);
-                const orderId = item.orderid ?? item.orderId ?? item.id ?? itemId;
+                const orderId =
+                  item.orderid ?? item.orderId ?? item.id ?? itemId;
 
                 return (
                   <CartItemCard
@@ -381,7 +383,7 @@ const CartScreen = ({ navigation }: any) => {
                     isSelected={selectedItems.has(itemId)}
                     onToggle={() => handleToggleSelect(itemId)}
                     onDelete={() => handleDeletePress(orderId)}
-                    onCheckout={handleCheckout}
+                    onCheckout={() => handleCheckout(orderId)}
                     onViewDetails={() => handleViewDetails(orderId)}
                   />
                 );

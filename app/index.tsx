@@ -20,23 +20,33 @@ import {
   SpaceGrotesk_700Bold,
 } from "@expo-google-fonts/space-grotesk";
 import { createStackNavigator } from "@react-navigation/stack";
+import { StripeProvider } from "@stripe/stripe-react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import React from "react";
-import "../global.css";
-import MainScreens from "./MainScreens";
 import { Platform } from "react-native";
+import "../global.css";
+import { getAppTokenApiHandler, setAppTokenApiHandler } from "../helper/Api";
+import { useAuthStore } from "../store/useAuthStore";
+import MainScreens from "./MainScreens";
+
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+
 const Stack = createStackNavigator();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
 });
 
 const Layout = () => {
+  const accessToken = useAuthStore((state) => state.token);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -47,13 +57,34 @@ const Layout = () => {
   });
 
   const [expoPushToken, setExpoPushToken] = React.useState("");
-  const [notification, setNotification] = React.useState(false);
+  const [, setNotification] = React.useState<Notifications.Notification | null>(
+    null,
+  );
 
-  const notificationListener = React.useRef();
-  const responseListener = React.useRef();
+  const notificationListener =
+    React.useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = React.useRef<Notifications.EventSubscription | null>(
+    null,
+  );
+  const lastSyncedPushToken = React.useRef<string | null>(null);
 
-  async function registerForPushNotificationsAsync() {
-    let token;
+  const getStoredAppToken = (data: any) => {
+    if (typeof data === "string") return data;
+
+    return (
+      data?.appToken ||
+      data?.token ||
+      data?.data?.appToken ||
+      data?.data?.token ||
+      data?.data?.appToken?.appToken ||
+      data?.appToken?.appToken
+    );
+  };
+
+  async function registerForPushNotificationsAsync(): Promise<
+    string | undefined
+  > {
+    let token: string | undefined;
 
     if (Device.isDevice) {
       const { status: existingStatus } =
@@ -97,7 +128,7 @@ const Layout = () => {
 
   React.useEffect(() => {
     registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token),
+      setExpoPushToken(token ?? ""),
     );
 
     // This listener is fired whenever a notification is received while the app is foregrounded
@@ -109,17 +140,8 @@ const Layout = () => {
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        const {
-          notification: {
-            request: {
-              content: {
-                data: { screen },
-              },
-            },
-          },
-        } = response;
-
         // When the user taps on the notification, this line checks if they //are suppose to be taken to a particular screen
+        // const screen = response.notification.request.content.data.screen;
         // if (screen) {
         //   props.navigation.navigate(screen);
         // }
@@ -133,71 +155,95 @@ const Layout = () => {
     // };
   }, []);
 
+  React.useEffect(() => {
+    if (!expoPushToken || !isAuthenticated || !accessToken) return;
+    if (lastSyncedPushToken.current === expoPushToken) return;
+
+    const syncPushToken = async () => {
+      try {
+        const storedTokenData = await getAppTokenApiHandler();
+        const storedAppToken = getStoredAppToken(storedTokenData);
+
+        if (storedAppToken !== expoPushToken) {
+          await setAppTokenApiHandler(expoPushToken);
+        }
+
+        lastSyncedPushToken.current = expoPushToken;
+      } catch (error) {
+        console.log("Failed to sync app token", error);
+      }
+    };
+
+    syncPushToken();
+  }, [accessToken, expoPushToken, isAuthenticated]);
+
   if (!fontsLoaded) return null;
   return (
-    <Stack.Navigator
-      initialRouteName="LoadingSplashScreen"
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen
-        name="LoadingSplashScreen"
-        component={LoadingSplashScreen}
-        options={{ title: "LoadingSplashScreen" }}
-      />
-      <Stack.Screen
-        name="LetsBeginScreen"
-        component={LetsBeginScreen}
-        options={{ title: "LetsBeginScreen" }}
-      />
-      <Stack.Screen
-        name="IntroScreen"
-        component={IntroScreen}
-        options={{ title: "IntroScreen" }}
-      />
-      <Stack.Screen
-        name="GetStartedScreen"
-        component={GetStartedScreen}
-        options={{ title: "GetStartedScreen" }}
-      />
-      <Stack.Screen
-        name="WelcomeScreen"
-        component={WelcomeScreen}
-        options={{ title: "WelcomeScreen" }}
-      />
-      <Stack.Screen
-        name="CreateAccount"
-        component={CreateAccount}
-        options={{ title: "CreateAccount" }}
-      />
-      <Stack.Screen
-        name="EmailVerification"
-        component={EmailVerification}
-        options={{ title: "EmailVerification" }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        component={LoginScreen}
-        options={{ title: "LoginScreen" }}
-      />
-      <Stack.Screen
-        name="ForgotPasswordScreen"
-        component={ForgotPasswordScreen}
-        options={{ title: "ForgotPasswordScreen" }}
-      />
-      <Stack.Screen
-        name="NewPassword"
-        component={NewPassword}
-        options={{ title: "NewPassword" }}
-      />
+    <StripeProvider publishableKey="pk_test_51T8IHvGmnpqm6UPOoqXKCWrbx0jnFhqcxITexjsNuhgPocGNJ9EWc6qJWZxUnaSBko7pMTGVf8ZTL52bJ13rN7om00gUVTM9D4">
+      <Stack.Navigator
+        initialRouteName="LoadingSplashScreen"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen
+          name="LoadingSplashScreen"
+          component={LoadingSplashScreen}
+          options={{ title: "LoadingSplashScreen" }}
+        />
+        <Stack.Screen
+          name="LetsBeginScreen"
+          component={LetsBeginScreen}
+          options={{ title: "LetsBeginScreen" }}
+        />
+        <Stack.Screen
+          name="IntroScreen"
+          component={IntroScreen}
+          options={{ title: "IntroScreen" }}
+        />
+        <Stack.Screen
+          name="GetStartedScreen"
+          component={GetStartedScreen}
+          options={{ title: "GetStartedScreen" }}
+        />
+        <Stack.Screen
+          name="WelcomeScreen"
+          component={WelcomeScreen}
+          options={{ title: "WelcomeScreen" }}
+        />
+        <Stack.Screen
+          name="CreateAccount"
+          component={CreateAccount}
+          options={{ title: "CreateAccount" }}
+        />
+        <Stack.Screen
+          name="EmailVerification"
+          component={EmailVerification}
+          options={{ title: "EmailVerification" }}
+        />
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{ title: "LoginScreen" }}
+        />
+        <Stack.Screen
+          name="ForgotPasswordScreen"
+          component={ForgotPasswordScreen}
+          options={{ title: "ForgotPasswordScreen" }}
+        />
+        <Stack.Screen
+          name="NewPassword"
+          component={NewPassword}
+          options={{ title: "NewPassword" }}
+        />
 
-      <Stack.Screen
-        name="MainScreens"
-        component={MainScreens}
-        options={{ title: "MainScreens" }}
-      />
-    </Stack.Navigator>
+        <Stack.Screen
+          name="MainScreens"
+          component={MainScreens}
+          options={{ title: "MainScreens" }}
+        />
+      </Stack.Navigator>
+    </StripeProvider>
   );
 };
 

@@ -6,18 +6,20 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { getTicketsApiHandler } from "@/helper/Api";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 
 const TicketList = ({ navigation }: any) => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleBackToDashboard = () => {
     navigation.push("SubmitShipment");
@@ -113,11 +115,10 @@ const TicketList = ({ navigation }: any) => {
     });
   };
 
-  const getTicket = async () => {
-    setLoading(true);
+  const getTicket = async (showLoader = true) => {
+    if (showLoader) setLoading(true);
     try {
       const response = await getTicketsApiHandler();
-      console.log("tickets ==> ", response);
       const ticketList = Array.isArray(response)
         ? response
         : (response?.tickets ?? response?.data ?? []);
@@ -131,8 +132,14 @@ const TicketList = ({ navigation }: any) => {
             : (error?.message ?? "Failed to resend OTP"),
       });
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    getTicket(false);
   };
 
   useEffect(() => {
@@ -140,6 +147,88 @@ const TicketList = ({ navigation }: any) => {
   }, []);
 
   const hasTickets = tickets.length > 0;
+
+  const renderTicket = ({ item: ticket }: { item: any }) => {
+    const updatedAt = ticket?.updatedAt || ticket?.createdAt;
+    const statusStyle = getStatusStyle(ticket?.status);
+    const supportName =
+      ticket?.updatedBy?.fullName ||
+      ticket?.supportAgent?.fullName ||
+      ticket?.supportSpecialist ||
+      "Support";
+
+    return (
+      <View className="bg-white border border-[#E5ECF7] rounded-3xl overflow-hidden">
+        <View className="p-6">
+          <View className="flex flex-row items-center justify-between mb-6">
+            <View className="flex flex-row items-center gap-4">
+              <View
+                className="w-14 h-14 rounded-md items-center justify-center"
+                style={{ backgroundColor: statusStyle.iconBg }}
+              >
+                <Icon
+                  name={statusStyle.icon}
+                  size={statusStyle?.iconSize}
+                  color={statusStyle.iconColor}
+                />
+              </View>
+              <Text className="text-cno font-inter-medium text-[#94A3B8]">
+                {getTicketNumber(ticket)}
+              </Text>
+            </View>
+
+            <View
+              className="px-4 py-1 rounded-full"
+              style={{ backgroundColor: statusStyle.pillBg }}
+            >
+              <Text
+                className="text-[11px] font-inter-bold"
+                style={{ color: statusStyle.pillText }}
+              >
+                {getStatusLabel(ticket?.status)}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-cmd font-inter-bold text-primary">
+            {ticket?.subject || "Support Ticket"}
+          </Text>
+          <Text className="mt-2 text-csm font-inter text-primary/70">
+            Last update: {getRelativeTime(updatedAt)} by {supportName}
+          </Text>
+        </View>
+
+        <View className="border-t border-[#E5ECF7] px-6 py-5 flex flex-row items-center justify-between">
+          <Text className="text-[12px] font-inter-medium text-[#64748B]">
+            {formatTicketDate(ticket?.createdAt || updatedAt)}
+          </Text>
+
+          {ticket?.status !== "resolved" ? (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() =>
+                navigation.push("SupportChat", {
+                  ticketId: ticket?.id,
+                })
+              }
+              className="flex flex-row items-center gap-2"
+            >
+              <Text className="text-[13px] font-inter-bold text-[#8A5A00]">
+                View Thread
+              </Text>
+              <Icon name="NextArrow" size={12} color="#8A5A00" />
+            </TouchableOpacity>
+          ) : (
+            <View className="flex flex-row items-center gap-2">
+              <Text className="text-[13px] font-inter-bold text-[rgba(226, 232, 240, 1)]">
+                Archive Detail
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -155,103 +244,23 @@ const TicketList = ({ navigation }: any) => {
             <ActivityIndicator color="#0F1729" size="large" />
           </View>
         ) : hasTickets ? (
-          <ScrollView
+          <FlatList
+            data={tickets}
+            keyExtractor={(item) => item?.id ?? getTicketNumber(item)}
+            renderItem={renderTicket}
             className="flex-1"
             contentContainerStyle={{ paddingTop: 40, paddingBottom: 16 }}
             showsVerticalScrollIndicator={false}
-          >
-            <View className="flex flex-col gap-4">
-              {tickets.map((ticket: any) => {
-                const updatedAt = ticket?.updatedAt || ticket?.createdAt;
-                const statusStyle = getStatusStyle(ticket?.status);
-                const supportName =
-                  ticket?.updatedBy?.fullName ||
-                  ticket?.supportAgent?.fullName ||
-                  ticket?.supportSpecialist ||
-                  "Support";
-
-                return (
-                  <View
-                    key={ticket?.id ?? getTicketNumber(ticket)}
-                    className="bg-white border border-[#E5ECF7] rounded-3xl overflow-hidden"
-                  >
-                    <View className="p-6">
-                      <View className="flex flex-row items-center justify-between mb-6">
-                        <View className="flex flex-row items-center gap-4">
-                          <View
-                            className="w-14 h-14 rounded-md items-center justify-center"
-                            style={{ backgroundColor: statusStyle.iconBg }}
-                          >
-                            <Icon
-                              name={statusStyle.icon}
-                              size={statusStyle?.iconSize}
-                              color={statusStyle.iconColor}
-                            />
-                          </View>
-                          <Text className="text-cno font-inter-medium text-[#94A3B8]">
-                            {getTicketNumber(ticket)}
-                          </Text>
-                        </View>
-
-                        <View
-                          className="px-4 py-1 rounded-full"
-                          style={{ backgroundColor: statusStyle.pillBg }}
-                        >
-                          <Text
-                            className="text-[11px] font-inter-bold"
-                            style={{ color: statusStyle.pillText }}
-                          >
-                            {getStatusLabel(ticket?.status)}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <Text className="text-cmd font-inter-bold text-primary">
-                        {ticket?.subject || "Support Ticket"}
-                      </Text>
-                      <Text className="mt-2 text-csm font-inter text-primary/70">
-                        Last update: {getRelativeTime(updatedAt)} by{" "}
-                        {supportName}
-                      </Text>
-                    </View>
-
-                    <View className="border-t border-[#E5ECF7] px-6 py-5 flex flex-row items-center justify-between">
-                      <Text className="text-[12px] font-inter-medium text-[#64748B]">
-                        {formatTicketDate(ticket?.createdAt || updatedAt)}
-                      </Text>
-
-                      {ticket?.status !== "resolved" ? (
-                        <TouchableOpacity
-                          activeOpacity={0.75}
-                          onPress={() =>
-                            navigation.push("SupportChat", {
-                              ticketId: ticket?.id,
-                            })
-                          }
-                          className="flex flex-row items-center gap-2"
-                        >
-                          <Text className="text-[13px] font-inter-bold text-[#8A5A00]">
-                            View Thread
-                          </Text>
-                          <Icon name="NextArrow" size={12} color="#8A5A00" />
-                        </TouchableOpacity>
-                      ) : (
-                        <View
-                          activeOpacity={0.75}
-                          className="flex flex-row items-center gap-2"
-                        >
-                          <Text className="text-[13px] font-inter-bold text-[rgba(226, 232, 240, 1)]">
-                            Archive Detail
-                          </Text>
-                          {/* <Icon name="NextArrow" size={12} color="#8A5A00" /> */}
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </ScrollView>
+            ItemSeparatorComponent={() => <View className="h-4" />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor="#0F1729"
+                colors={["#0F1729"]}
+              />
+            }
+          />
         ) : (
           <View className="flex-1 justify-center  gap-6">
             {/* Success Illustration Card */}

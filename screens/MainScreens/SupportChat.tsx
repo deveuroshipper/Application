@@ -1,8 +1,21 @@
 import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import React, { useState } from "react";
 import {
+    BASE_URL,
+    getTicketByIdApiHandler,
+    sendTicketMessageApiHandler,
+} from "@/helper/Api";
+import { useAuthStore } from "@/store/useAuthStore";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import {
+    ActivityIndicator,
     FlatList,
     KeyboardAvoidingView,
     Platform,
@@ -11,6 +24,23 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import Toast from "react-native-toast-message";
+import { io, Socket } from "socket.io-client";
+
+type TicketMessage = {
+  id: string;
+  ticketId?: string;
+  senderId?: string;
+  message: string;
+  createdAt?: string;
+  sender?: {
+    fullName?: string;
+    role?: string;
+  };
+  senderName?: string;
+  senderRole?: string;
+  newStatus?: string;
+};
 
 type ChatItem =
   | {
@@ -27,83 +57,182 @@ type ChatItem =
       label: string;
     };
 
-const initialMessages: ChatItem[] = [
-  {
-    id: "1",
-    type: "message",
-    sender: "user",
-    name: "You",
-    time: "10:00 AM",
-    text: "Hi, I need you help",
-  },
-  {
-    id: "2",
-    type: "message",
-    sender: "support",
-    name: "John",
-    time: "10:00 AM",
-    text: "Hi How can i help you, what's your problem",
-  },
-  {
-    id: "3",
-    type: "date",
-    label: "Monday, 20 May",
-  },
-  {
-    id: "4",
-    type: "message",
-    sender: "user",
-    name: "You",
-    time: "10:00 AM",
-    text: "Hi How can i help you, what's your problem",
-  },
-  {
-    id: "5",
-    type: "message",
-    sender: "support",
-    name: "John",
-    time: "10:00 AM",
-    text: "Let me check that for you. Could you confirm your tracking ID?",
-  },
-  {
-    id: "6",
-    type: "date",
-    label: "Tuesday, 21 May",
-  },
-  {
-    id: "7",
-    type: "message",
-    sender: "user",
-    name: "You",
-    time: "10:00 AM",
-    text: "TRK123456",
-  },
-];
+const SOCKET_URL = BASE_URL?.replace(/\/api\/?$/, "") ?? "";
+
+const formatMessageTime = (dateValue?: string) => {
+  const date = dateValue ? new Date(dateValue) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const formatDateLabel = (dateValue?: string) => {
+  const date = dateValue ? new Date(dateValue) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  });
+};
+
+const getTicketNumber = (ticketId?: string) =>
+  ticketId ? `#TK-${ticketId.replaceAll("-", "").slice(0, 12)}` : "#TK";
+
+const getStatusLabel = (status?: string) => {
+  const normalized = status?.replace(/_/g, "-").toUpperCase();
+  if (normalized === "IN-PROGRESS") return "In Progress";
+  if (normalized === "RESOLVED" || normalized === "CLOSED") return "Resolved";
+  return "Open";
+};
 
 const SupportChat = ({ navigation, route }: any) => {
-  const [chatData, setChatData] = useState<ChatItem[]>(initialMessages);
+  const flatListRef = useRef<FlatList<ChatItem>>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const currentUser = useAuthStore((state) => state.user);
+  const [ticket, setTicket] = useState<any>(null);
+  const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [message, setMessage] = useState("");
-  const TicketId = route?.params?.ticketId;
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const ticketId = route?.params?.ticketId;
 
-  const handleSend = () => {
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) return;
+  const chatData = useMemo(() => {
+    const items: ChatItem[] = [];
+    let lastDateLabel = "";
 
-    setChatData((prev) => [
-      ...prev,
-      {
-        id: `${Date.now()}`,
+    messages.forEach((msg) => {
+      const dateLabel = formatDateLabel(msg.createdAt);
+      const isCurrentUser =
+        msg.senderId === currentUser?.id ||
+        msg.sender?.role === "user" ||
+        msg.senderRole === "user";
+
+      if (dateLabel && dateLabel !== lastDateLabel) {
+        items.push({
+          id: `date-${dateLabel}-${msg.id}`,
+          type: "date",
+          label: dateLabel,
+        });
+        lastDateLabel = dateLabel;
+      }
+
+      items.push({
+        id: msg.id,
         type: "message",
-        sender: "user",
-        name: "You",
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-        }),
-        text: trimmedMessage,
-      },
-    ]);
-    setMessage("");
+        sender: isCurrentUser ? "user" : "support",
+        name:
+          (isCurrentUser ? "You" : msg.sender?.fullName || msg.senderName) ||
+          "Support",
+        time: formatMessageTime(msg.createdAt),
+        text: msg.message,
+      });
+    });
+
+    return items;
+  }, [currentUser?.id, messages]);
+
+  const loadTicket = useCallback(async () => {
+    if (!ticketId) return;
+
+    setLoading(true);
+    try {
+      const response = await getTicketByIdApiHandler(ticketId);
+      setTicket(response);
+      setMessages(Array.isArray(response?.messages) ? response.messages : []);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Failed to load ticket chat"),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId]);
+
+  useEffect(() => {
+    loadTicket();
+  }, [loadTicket]);
+
+  useEffect(() => {
+    if (!ticketId || !SOCKET_URL) return;
+
+    const socket = io(SOCKET_URL, {
+      autoConnect: false,
+      transports: ["websocket"],
+    });
+    socketRef.current = socket;
+
+    socket.connect();
+    socket.emit("joinTicket", ticketId);
+
+    const handleNewMessage = (newMessage: TicketMessage) => {
+      if (newMessage.ticketId && newMessage.ticketId !== ticketId) return;
+
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === newMessage.id)) return prev;
+        return [...prev, newMessage];
+      });
+
+      if (newMessage.newStatus) {
+        setTicket((prev: any) =>
+          prev ? { ...prev, status: newMessage.newStatus } : prev,
+        );
+      }
+    };
+
+    const handleStatusUpdated = (payload: any) => {
+      if (payload?.ticketId !== ticketId) return;
+      setTicket((prev: any) =>
+        prev ? { ...prev, status: payload.status } : prev,
+      );
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    socket.on("statusUpdated", handleStatusUpdated);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("statusUpdated", handleStatusUpdated);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (!chatData.length) return;
+
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [chatData.length]);
+
+  const handleSend = async () => {
+    const trimmedMessage = message.trim();
+    if (!ticketId || !trimmedMessage || sending) return;
+
+    setSending(true);
+    try {
+      await sendTicketMessageApiHandler(ticketId, trimmedMessage);
+      setMessage("");
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Failed to send message"),
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const renderChatItem = ({ item }: { item: ChatItem }) => {
@@ -124,7 +253,7 @@ const SupportChat = ({ navigation, route }: any) => {
         className={`mb-5 flex-row items-end ${isUser ? "justify-end" : "justify-start"}`}
       >
         {!isUser && (
-          <View className="w-10 h-10  bg-[#334155] items-center justify-center mr-3 rounded-full">
+          <View className="w-10 h-10 bg-[#334155] items-center justify-center mr-3 rounded-full">
             <Icon name="User" size={18} color="#FFFFFF" />
           </View>
         )}
@@ -147,8 +276,8 @@ const SupportChat = ({ navigation, route }: any) => {
           <View
             className={`px-4 py-3 ${
               isUser
-                ? "bg-[#DBE5E6]  rounded-tr-sm rounded-2xl"
-                : "bg-[#334155]  rounded-tl-sm rounded-2xl"
+                ? "bg-[#DBE5E6] rounded-tr-sm rounded-2xl"
+                : "bg-[#334155] rounded-tl-sm rounded-2xl"
             }`}
           >
             <Text
@@ -170,43 +299,58 @@ const SupportChat = ({ navigation, route }: any) => {
         className="flex-1 px-8 pb-8"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Header */}
         <View className="flex flex-row items-center justify-between">
           <BackButton navigation={navigation} />
-          <View className="px-4 py-2  bg-green-200 text-green-900 rounded-full font-inter-medium">
-            <Text>Open</Text>
+          <View className="px-4 py-2 bg-green-200 rounded-full">
+            <Text className="text-green-900 font-inter-medium">
+              {getStatusLabel(ticket?.status)}
+            </Text>
           </View>
         </View>
 
         <View className="mt-6 mb-4">
           <Text numberOfLines={1} className="text-csl font-inter-bold">
-            #TK-{TicketId?.replaceAll("-", "")}
+            {getTicketNumber(ticketId)}
           </Text>
           <Text className="text-csl font-inter-bold">
-            Shipment Delay: Rotterdam port
+            {ticket?.subject || "Support Ticket"}
           </Text>
         </View>
 
-        <FlatList
-          data={chatData}
-          keyExtractor={(item) => item.id}
-          renderItem={renderChatItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "flex-end",
-            paddingTop: 12,
-            paddingBottom: 8,
-          }}
-        />
+        {loading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator color="#0F1729" size="large" />
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={chatData}
+            keyExtractor={(item) => item.id}
+            renderItem={renderChatItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "flex-end",
+              paddingTop: 12,
+              paddingBottom: 8,
+            }}
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center">
+                <Text className="text-csm font-inter text-primary/50">
+                  No messages yet
+                </Text>
+              </View>
+            }
+          />
+        )}
 
         <View className="pt-3 flex-row items-center gap-3">
-          <TouchableOpacity
+          {/* <TouchableOpacity
             activeOpacity={0.75}
             className="w-16 h-16 rounded-full bg-[#E2E8F0] items-center justify-center"
           >
             <Icon name="BoxArrowUp" size={28} color="#0F1729" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View className="flex-1 h-16 px-6 rounded-full border border-[#BFD0E6] bg-white flex-row items-center">
             <TextInput
@@ -217,10 +361,20 @@ const SupportChat = ({ navigation, route }: any) => {
               className="flex-1 text-[13px] font-inter text-primary"
               returnKeyType="send"
               onSubmitEditing={handleSend}
+              editable={!sending}
             />
 
-            <TouchableOpacity activeOpacity={0.75} onPress={handleSend}>
-              <Icon name="PaperPlane" size={24} color="#34445D" />
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={handleSend}
+              disabled={sending || !message.trim()}
+              style={{ opacity: sending || !message.trim() ? 0.45 : 1 }}
+            >
+              {sending ? (
+                <ActivityIndicator color="#34445D" size="small" />
+              ) : (
+                <Icon name="PaperPlane" size={24} color="#34445D" />
+              )}
             </TouchableOpacity>
           </View>
         </View>

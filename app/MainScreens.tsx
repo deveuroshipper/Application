@@ -28,6 +28,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 import "../global.css";
 import MyTabs from "./BottomTab";
+import AboutUsDetails from "@/screens/MainScreens/AboutUsDetail";
 // import NotificationScreen from "@/screens/MainScreens/NOtificationScreen";
 
 const Stack = createStackNavigator();
@@ -131,6 +132,7 @@ const MainScreens = () => {
         options={{ title: "ListAddresses" }}
       />
       <Stack.Screen name="AccountInformation" component={AccountInformation} />
+        <Stack.Screen name="AboutUsDetails" component={AboutUsDetails} />
       <Stack.Screen name="UpdateDetail" component={UpdateDetail} />
       <Stack.Screen name="VerifyUpdateOtp" component={VerifyUpdateOtp} />
       <Stack.Screen name="AboutUsScreen" component={AboutUs} />

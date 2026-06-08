@@ -148,7 +148,7 @@ const OrdersScreen = ({ navigation }: any) => {
   const getOrders = async () => {
     try {
       const response = await getOrdersApiHandler();
-      console.log("orders =========> ", response);
+      
       setOrders(response);
       setIsEmpty((response?.length ?? 0) === 0);
     } catch (error: any) {

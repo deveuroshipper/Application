@@ -1,9 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import axios from "axios";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Platform } from "react-native";
 
 export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
-const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
+export const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
 const getAccessToken = () => {
   return AsyncStorage.getItem("access_token");
@@ -434,7 +440,6 @@ export const createTicketApiHandler = async (data: any) => {
   }
 };
 
-
 export const getTicketsApiHandler = async () => {
   try {
     const response = await api.get(`/tickets`);
@@ -443,5 +448,200 @@ export const getTicketsApiHandler = async () => {
   } catch (error: any) {
     console.log(error.response.data);
     throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getTicketByIdApiHandler = async (id: string) => {
+  try {
+    const response = await api.get(`/tickets/${id}`);
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const sendTicketMessageApiHandler = async (
+  id: string,
+  message: string,
+) => {
+  try {
+    const response = await api.post(`/tickets/${id}/messages`, { message });
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const applyCouponApiHandler = async (data: any) => {
+  try {
+    const response = await api.post(`/coupons/apply`, data);
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getCouponsApiHandler = async () => {
+  try {
+    const response = await api.get(`/coupons`);
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const priceCalculationsApiHandler = async (
+  orderId: string[],
+  couponCode: any,
+) => {
+  try {
+    console.log("payloed is : ", {
+      orderIds: orderId,
+      couponCode,
+    });
+    const response = await api.post(`/orders/calculate-multiple`, {
+      orderIds: orderId,
+      couponCode,
+    });
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getNotificationApiHandler = async () => {
+  try {
+    const response = await api.get(`/notifications`);
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getAppTokenApiHandler = async () => {
+  try {
+    const response = await api.get(`/apptoken/get`);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+export const setAppTokenApiHandler = async (appToken: string) => {
+  try {
+    const response = await api.post(`/apptoken/set`, { appToken });
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+export const notificationsStatusApiHandler = async () => {
+  try {
+    const response = await api.get(`/notifications/status`);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+export const readNotificationsApiHandler = async (
+  notificationIds: string[],
+) => {
+  try {
+    const response = await api.patch(`/notifications/read`, {
+      notificationIds,
+    });
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+export const getDashboardImagesApiHandler = async () => {
+  try {
+    const response = await api.get(`/webcms/contents`);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+GoogleSignin.configure({
+  webClientId:
+    "757637884994-e25tj39trrsmir28oobf9p77tnb4lr51.apps.googleusercontent.com",
+});
+
+export const signInWithGoogle = async () => {
+  try {
+    await GoogleSignin.hasPlayServices({
+      showPlayServicesUpdateDialog: true,
+    });
+    await GoogleSignin.signOut();
+    const userInfo = await GoogleSignin.signIn();
+    console.log("Google user:", userInfo);
+
+    return userInfo;
+  } catch (error: any) {
+    console.log("Google error:", error);
+
+    if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      console.log("User cancelled Google login");
+    } else if (error.code === statusCodes.IN_PROGRESS) {
+      console.log("Google login already in progress");
+    } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      console.log("Google Play Services not available");
+    } else {
+      console.log("Google login error:", error);
+    }
+  }
+};
+
+export const signInWithApple = async () => {
+  if (Platform.OS !== "ios") {
+    console.log("Apple login only works on iOS");
+    return;
+  }
+
+  const isAvailable = await AppleAuthentication.isAvailableAsync();
+
+  if (!isAvailable) {
+    console.log("Apple login not available");
+    return;
+  }
+
+  try {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    console.log("Apple credential:", credential);
+
+    const identityToken = credential.identityToken;
+    const email = credential.email;
+    const fullName = credential.fullName;
+
+    // Send identityToken to your backend
+    return credential;
+  } catch (error: any) {
+    if (error.code === "ERR_REQUEST_CANCELED") {
+      console.log("User cancelled Apple login");
+    } else {
+      console.log("Apple login error:", error);
+    }
   }
 };

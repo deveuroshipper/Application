@@ -6,7 +6,7 @@ import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { createTicketApiHandler, getOrdersApiHandler } from "@/helper/Api";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const CreateTickets = ({ navigation }: any) => {
@@ -103,15 +103,15 @@ const CreateTickets = ({ navigation }: any) => {
         text1: "Ticket created successfully",
       });
       handleBackToDashboard();
-    } catch (error: any) {
-      Toast.show({
-        type: "error",
-        text1:
-          typeof error === "string"
-            ? error
-            : (error?.message ?? "Something went wrong"),
-      });
-    } finally {
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1:
+            typeof error === "string"
+              ? error
+              : (error?.message ?? "Something went wrong"),
+        });
+      } finally {
       setLoading(false);
     }
   };
@@ -142,11 +142,14 @@ const CreateTickets = ({ navigation }: any) => {
         {/* Header */}
         <View className="flex flex-row items-center justify-between">
           <BackButton navigation={navigation} />
-          <View className="px-4 py-1  bg-[#BFCDDE] rounded-full">
+          <TouchableOpacity
+            onPress={() => navigation.push("TicketList")}
+            className="px-4 py-1  bg-[#BFCDDE] rounded-full"
+          >
             <Text className="text-cno  text-primary font-inter-medium">
               View Ticket
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <ScrollView>

@@ -100,7 +100,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
   };
 
   const handelSubmit = async () => {
-    console.log("------------->");
+
 
     if (!validate()) return;
     setLoading(true);
@@ -115,7 +115,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
       dialCode: data?.mobileCode?.dialCode,
       coname: data?.mobileCode?.name,
     };
-    console.log("payload : ", payload);
+    
     try {
       if (address_id) {
         await updateAddressApiHandler(address_id, payload);

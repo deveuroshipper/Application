@@ -139,7 +139,7 @@ const buildTrackingSteps = (
   timeline: TimelineItem[] = [],
   orderStatus?: string,
 ): TrackingStep[] =>
-  timeline.map((item, index) => ({
+  timeline?.map((item, index) => ({
     id: `${index}-${item?.time ?? ""}`,
     label: item?.event ?? "",
     date: item?.time ?? "",

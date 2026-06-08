@@ -151,7 +151,6 @@ const UpdateDetail = ({ navigation, route }: any) => {
         status: userData?.status,
         profileImage: null,
       };
-      console.log("payload : ", payload);
       useAuthStore?.getState().setUser(payload);
       setDetail({
         ...detail,
@@ -173,10 +172,8 @@ const UpdateDetail = ({ navigation, route }: any) => {
     try {
       var response;
       setLoading(true);
-      console.log("is form. : ", isFor);
       switch (isFor) {
         case INFO_UPDATE.EMAIL_UPDATE:
-          console.log("in email update");
           response = await updateInfoApiHandler({
             old: detail?.oldEmail,
             new: detail?.newEmail,
@@ -184,7 +181,6 @@ const UpdateDetail = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-          console.log("in phone update");
 
           response = await updateInfoApiHandler({
             old: detail?.oldNumber,
@@ -193,7 +189,6 @@ const UpdateDetail = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PASSWORD_UPDATE:
-          console.log("in password update");
 
           response = await changePasswordApiHandler({
             oldPassword: detail?.oldPassword,
@@ -204,7 +199,6 @@ const UpdateDetail = ({ navigation, route }: any) => {
       getProfile();
       if (isFor === INFO_UPDATE.PASSWORD_UPDATE) {
         setShowModel(true);
-        console.log("update response ==> ", response);
         return;
       }
 
@@ -223,7 +217,6 @@ const UpdateDetail = ({ navigation, route }: any) => {
       navigation.push("VerifyUpdateOtp", {
         data: payload,
       });
-      console.log("update response ==> ", response);
     } catch (error) {
       Toast.show({
         type: "error",

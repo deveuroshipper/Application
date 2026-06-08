@@ -1,9 +1,22 @@
 import Icon from "@/assets/icons";
 import SocialButton from "@/components/SocialButton";
+import { signInWithApple, signInWithGoogle } from "@/helper/Api";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const WelcomeScreen = ({ navigation }: any) => {
+  const handelGoogleLogin = async () => {
+    try {
+      const AuthResponse = await signInWithGoogle();
+      console.log("auth response : ", AuthResponse);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to remove item",
+      });
+    }
+  };
   return (
     <View className="relative flex-1  w-full">
       <Image
@@ -35,10 +48,12 @@ const WelcomeScreen = ({ navigation }: any) => {
 
         <View className="w-full  flex flex-col gap-6 items-center">
           <SocialButton
+            action={signInWithApple}
             icon={<Icon name="Apple" size={22} />}
             text={"Continue with Apple"}
           />
           <SocialButton
+            action={handelGoogleLogin}
             icon={<Icon name="Google" size={22} />}
             text={"Continue with Google"}
           />

@@ -1,7 +1,8 @@
 import Icon from "@/assets/icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 const IntroScreen = ({ navigation }: any) => {
   const [step, setStep] = useState(1);
 
@@ -13,11 +14,9 @@ const IntroScreen = ({ navigation }: any) => {
     }
   };
 
-  const previous = () => {
-    if (step == 1) {
-    } else {
-      setStep(step - 1);
-    }
+  const skip = async () => {
+    await AsyncStorage.setItem("intro_complete", "true");
+    navigation.reset({ index: 0, routes: [{ name: "WelcomeScreen" }] });
   };
 
   const imageUrl = () => {
@@ -70,10 +69,11 @@ const IntroScreen = ({ navigation }: any) => {
           </View>
 
           <View className="flex flex-row h-fit justify-between items-center">
-            <Text className="text-cno text-white">Skip</Text>
+            <TouchableOpacity onPress={skip}>
+              <Text className="text-cno text-white">Skip</Text>
+            </TouchableOpacity>
             <View className="flex flex-row gap-2">
               {[1, 2, 3].map((item, index) => {
-              
                 return (
                   <View
                     key={index}

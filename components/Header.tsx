@@ -1,6 +1,7 @@
 import Icon from "@/assets/icons";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import React, { useEffect } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
@@ -8,13 +9,20 @@ const Header = ({ CartClick, NotificationClick }: any) => {
   const user = useAuthStore((state) => state.user);
   const cartCount = useCartStore((state) => state.cartCount);
   const fetchCart = useCartStore((state) => state.fetchCart);
+  const hasUnreadNotification = useNotificationStore(
+    (state) => state.hasUnreadNotification,
+  );
+  const fetchNotificationStatus = useNotificationStore(
+    (state) => state.fetchStatus,
+  );
 
   const displayName = user?.fullName?.split(" ")[0]?.split("-")[0] ?? "Guest";
   const profileImageUri = user?.profileImage ? String(user.profileImage) : null;
 
   useEffect(() => {
     fetchCart().catch(() => {});
-  }, [fetchCart]);
+    fetchNotificationStatus().catch(() => {});
+  }, [fetchCart, fetchNotificationStatus]);
 
   return (
     <View className="bg-white flex flex-row justify-between items-center px-8 py-6">
@@ -57,7 +65,9 @@ const Header = ({ CartClick, NotificationClick }: any) => {
           onPress={NotificationClick}
           className="relative h-9 w-9 flex justify-center items-center"
         >
-          <View className="absolute top-0.5 z-10 right-1 h-4 w-4 border-2 border-white aspect-square flex justify-center items-center rounded-full bg-red-500" />
+          {hasUnreadNotification && (
+            <View className="absolute top-0.5 z-10 right-1 h-4 w-4 border-2 border-white aspect-square flex justify-center items-center rounded-full bg-red-500" />
+          )}
           <Icon name="Bell" size={25} />
         </Pressable>
       </View>

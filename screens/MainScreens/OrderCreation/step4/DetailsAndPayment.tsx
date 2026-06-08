@@ -1,10 +1,20 @@
 import Icon from "@/assets/icons";
+import OrderFail from "@/assets/images/orderFail.png";
+import OrderSuccessfully from "@/assets/images/orderSuccess.png";
 import BackButton from "@/components/BackButton";
 import Button, { Size, Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { addToCartApiHandler, getOrderByIdApiHandler } from "@/helper/Api";
+import SuccessModel from "@/components/SuccessModel";
+import {
+  addToCartApiHandler,
+  api,
+  applyCouponApiHandler,
+  getOrderByIdApiHandler,
+  priceCalculationsApiHandler,
+} from "@/helper/Api";
 import { useCartStore } from "@/store/useCartStore";
-import React, { useEffect, useState } from "react";
+import { useStripe } from "@stripe/stripe-react-native";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -18,22 +28,42 @@ import Toast from "react-native-toast-message";
 const TOTAL_STEP = 4;
 export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
+type PaymentModalState = {
+  type: "success" | "fail";
+  title: string;
+  message: string;
+} | null;
+
 const DetailsAndPayment = ({ navigation, route }: any) => {
   const [step] = useState(4);
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
   const fetchCart = useCartStore((state) => state.fetchCart);
-  const { orderId } = route?.params ?? {};
+  const [pricing, setPricing] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [paymentModal, setPaymentModal] = useState<PaymentModalState>(null);
+  const { orderId, selectedCoupon } = route?.params ?? {};
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-
-
-  const handleSubmit = () => {
-    navigation.push("PackageDetails");
+  const handleBackToHome = () => {
+    setPaymentModal(null);
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: "BottomTabBar",
+          params: { screen: "HomeScreen" },
+        },
+      ],
+    });
   };
+
   const handleSaveToCart = async () => {
     try {
-      const response = await addToCartApiHandler(orderId);
-    
+      await addToCartApiHandler(orderId);
+
       await fetchCart();
       navigation.push("CartScreen");
     } catch (error: any) {
@@ -43,18 +73,41 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       });
     }
   };
-  const handleApplyCoupon = () => {
-    navigation.push("ApplyCoupon");
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code || couponLoading) return;
+
+    setCouponLoading(true);
+    try {
+      const response = await applyCouponApiHandler({ code });
+      setAppliedCoupon({
+        code,
+        applyResponse: response,
+      });
+    } catch (error: any) {
+      setAppliedCoupon(null);
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to apply coupon",
+      });
+    } finally {
+      setCouponLoading(false);
+    }
   };
   const handleViewAllDetails = () => {
     navigation.push("PackageDetails", { orderId: orderId });
   };
-  const handleAvailableCoupons = () => {};
+  const handleAvailableCoupons = () => {
+    navigation.push("ApplyCoupon", {
+      orderId,
+      couponCode,
+    });
+  };
 
-  const getDetail = async () => {
+  const getDetail = useCallback(async () => {
     try {
       const response = await getOrderByIdApiHandler(orderId);
-     
+
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({
@@ -62,15 +115,137 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
         text1: error ?? "Failed to get details",
       });
     }
+  }, [orderId, couponCode]);
+
+  const getPricing = useCallback(async () => {
+    try {
+      const response = await priceCalculationsApiHandler([orderId], couponCode);
+      setPricing(response);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: error ?? "Failed to get details",
+      });
+    }
+  }, [orderId, couponCode]);
+
+  const payNow = async () => {
+    if (checkoutLoading) return;
+    setCheckoutLoading(true);
+    try {
+      const res = await api.post("/payments/checkout", {
+        orderId,
+        couponCode,
+        paymentMethod: "STRIPE",
+      });
+      const clientSecret = res.data?.data?.clientSecret;
+      if (!clientSecret) {
+        setPaymentModal({
+          type: "fail",
+          title: "Payment Failed",
+          message: "Payment client secret missing. Please try again.",
+        });
+        return;
+      }
+      const init = await initPaymentSheet({
+        merchantDisplayName: "EuroShipper",
+        paymentIntentClientSecret: clientSecret,
+      });
+      if (init.error) {
+        setPaymentModal({
+          type: "fail",
+          title: "Payment Failed",
+          message: init.error.message,
+        });
+        return;
+      }
+      const payment = await presentPaymentSheet();
+      if (payment.error) {
+        setPaymentModal({
+          type: "fail",
+          title: "Payment Failed",
+          message: payment.error.message,
+        });
+      } else {
+        try {
+          await removeFromCartApiHandler(orderId);
+          await fetchCart();
+        } catch (cartError) {}
+        setPaymentModal({
+          type: "success",
+          title: "Payment Successful",
+          message: "Your payment has been completed successfully.",
+        });
+      }
+    } catch (error: any) {
+      setPaymentModal({
+        type: "fail",
+        title: "Payment Failed",
+        message:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Unable to start payment."),
+      });
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   useEffect(() => {
     getDetail();
-  }, []);
+    getPricing();
+  }, [getDetail, getPricing]);
+
+  useEffect(() => {
+    getPricing();
+  }, [couponCode, getPricing]);
+
+  useEffect(() => {
+    if (!selectedCoupon?.code) return;
+
+    setCouponCode(selectedCoupon.code);
+    setAppliedCoupon(selectedCoupon);
+  }, [selectedCoupon]);
+
+  const isCouponApplied =
+    Boolean(appliedCoupon?.code) &&
+    appliedCoupon?.code === couponCode.trim() &&
+    !couponLoading;
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
       <View className="flex-1 pb-8 ">
+        <SuccessModel
+          show={Boolean(paymentModal)}
+          onclose={handleBackToHome}
+          body={
+            <View className="flex-1 bg-black/40 justify-center px-8">
+              <View className="bg-white rounded-3xl p-6 items-center gap-5">
+                <Image
+                  source={
+                    paymentModal?.type === "success"
+                      ? OrderSuccessfully
+                      : OrderFail
+                  }
+                  className="w-full h-56 rounded-3xl"
+                  resizeMode="contain"
+                />
+
+                <View className="items-center gap-2">
+                  <Text className="text-cmd font-space-grotesk-bold text-primary text-center">
+                    {paymentModal?.title}
+                  </Text>
+                  <Text className="text-csm font-inter text-primary/50 text-center">
+                    {paymentModal?.message}
+                  </Text>
+                </View>
+
+                <Button text="Done" action={handleBackToHome} />
+              </View>
+            </View>
+          }
+        />
+
         {/* Header */}
         <View className="flex flex-row items-center justify-between px-8">
           <BackButton navigation={navigation} />
@@ -105,7 +280,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
                   style={{ width: 64, height: 64 }}
                   resizeMode="contain"
                 />
-             
+
                 <Text className="text-csm font-inter-bold text-primary mt-1">
                   ${orderDetail?.box?.price}
                 </Text>
@@ -159,11 +334,23 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
                 placeholder="Enter Coupon Code"
                 placeholderTextColor="#9CA3AF"
                 value={couponCode}
-                onChangeText={setCouponCode}
+                onChangeText={(text) => {
+                  setCouponCode(text);
+                  setAppliedCoupon(null);
+                }}
               />
-              <TouchableOpacity onPress={handleApplyCoupon}>
+              <TouchableOpacity
+                onPress={handleApplyCoupon}
+                disabled={
+                  !couponCode.trim() || couponLoading || isCouponApplied
+                }
+              >
                 <Text className="text-cno font-inter-medium text-[#2373CD]">
-                  Apply
+                  {isCouponApplied
+                    ? "Applied"
+                    : couponLoading
+                      ? "Applying"
+                      : "Apply"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -190,9 +377,23 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
                 Sub Total
               </Text>
               <Text className="text-csm font-inter-bold text-primary/60">
-                $70.00
+                ${pricing?.subtotal ?? "N/A"}
               </Text>
             </View>
+
+            {pricing?.discount > 0 ? (
+              <View className="flex flex-row justify-between items-center py-1">
+                <Text className="text-csm font-inter-bold text-primary/60">
+                  Discount
+                </Text>
+                <Text className="text-csm font-inter-bold text-primary/60">
+                  ${pricing?.discount ?? "N/A"}{" "}
+                  {!pricing?.isFlated
+                    ? `(${pricing?.discountPercentage}%)`
+                    : null}
+                </Text>
+              </View>
+            ) : null}
 
             {/* Dashed Separator */}
 
@@ -202,7 +403,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
                 Tax & Fee
               </Text>
               <Text className="text-csm font-inter-bold text-primary/60">
-                $5.00
+                ${pricing?.tax ?? "N/A"}
               </Text>
             </View>
 
@@ -221,7 +422,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
                 Total
               </Text>
               <Text className="text-cno font-inter-bold text-primary">
-                $105.00
+                ${pricing?.total ?? "N/A"}
               </Text>
             </View>
           </View>
@@ -236,7 +437,9 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
           />
           <Button
             text="Quick Checkout"
-            action={handleSubmit}
+            action={() => payNow()}
+            loading={checkoutLoading}
+            disabled={checkoutLoading}
             variant={Variant.DEFAULT}
           />
         </View>
