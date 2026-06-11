@@ -1,6 +1,10 @@
 import CustomBox from "@/assets/images/boxes/CustomBox.png";
 import FullContainer from "@/assets/images/boxes/FullContainer.png";
 import LessContainer from "@/assets/images/boxes/LessContainer.png";
+import boxDimension from "@/assets/images/customeboxDimention.png";
+import LessFullContainer from "@/assets/images/fclfullImage.png";
+import FullDetailedContainer from "@/assets/images/lclFullImage.png";
+
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import BoxDimension from "@/components/OrderScreation/BoxDimension";
@@ -65,6 +69,7 @@ const Specification = ({ navigation, route }: any) => {
       name: "Custom Box",
       weight: 3,
       image: CustomBox,
+      fullImage: boxDimension,
       maxSize: "34 X 32 X 10cm",
       custom: true,
       inquiry: true,
@@ -74,6 +79,7 @@ const Specification = ({ navigation, route }: any) => {
       name: "Full Container Load (FCL)",
       weight: 3,
       image: FullContainer,
+      fullImage: FullDetailedContainer,
       maxSize: "34 X 32 X 10cm",
       custom: true,
       inquiry: true,
@@ -83,6 +89,7 @@ const Specification = ({ navigation, route }: any) => {
       name: "Less than Container Load (LCL)",
       weight: 3,
       image: LessContainer,
+      fullImage: LessFullContainer,
       maxSize: "34 X 32 X 10cm",
       custom: true,
       inquiry: true,
@@ -140,14 +147,14 @@ const Specification = ({ navigation, route }: any) => {
     if (!category) return true;
     if (!subCategory) return true;
     if (!selectedBox) return true;
+    if (!termsConditions) return true;
     if (selectedBox.inquiry) {
       return (
         !detail.weight.trim() ||
         !detail.matrix.h ||
         !detail.matrix.w ||
         !detail.matrix.l ||
-        !detail.shipmentType ||
-        !termsConditions
+        !detail.shipmentType
       );
     }
     return !shipmentType;
@@ -189,13 +196,12 @@ const Specification = ({ navigation, route }: any) => {
           pickupAddressId: useAddressStore.getState().pickupAddress?.id,
           dropAddressId: useAddressStore.getState().deliverAddress?.id,
         };
-       
+
         const response = await createOrderApiHandler(payload);
-       
+
         navigation.push("DetailsAndPayment", { orderId: response?.id });
       }
     } catch (error: any) {
-    
       Toast.show({
         type: "error",
         text1:
@@ -213,7 +219,10 @@ const Specification = ({ navigation, route }: any) => {
       const response = await getBoxesApiHandler(
         useAddressStore.getState().route,
       );
-    
+      if(response?.length > 0) {
+        setSelectedBox(response[0])
+      }
+      console.log("boxes data : ", response);
       setBoxes([...response, ...staticBoxes]);
     } catch (error: any) {
       Toast.show({
@@ -266,7 +275,6 @@ const Specification = ({ navigation, route }: any) => {
               }}
               shipmentType={shipmentType}
               setShipmentType={(val: any) => {
-            
                 setShipmentType(val);
                 setDetail((d: any) => ({ ...d, shipmentType: val }));
                 if (errors.shipmentType)

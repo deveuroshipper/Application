@@ -48,13 +48,14 @@ const Input = ({
       </View>
 
       <View
-        className={`flex gap-2 flex-row px-6 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 ${multiline ? "items-start py-3" : "items-center py-1.5"}`}
+        className={`flex gap-2 flex-row px-6 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-bold text-cno placeholder:color-primary/30 ${multiline ? "items-start py-3" : "items-center py-1.5"}`}
       >
         <TextInput
           className="flex-1"
           value={value}
           onChangeText={(e) => onChange(e)}
           style={{
+            paddingVertical : multiline ? 8 : 10,
             color: "#0F1729",
             flex: 1,
             ...(multiline
@@ -65,7 +66,7 @@ const Input = ({
               : {}),
           }}
           placeholder={placeholderTxt}
-          placeholderTextColor={"#CBD5E1"}
+          placeholderTextColor={"#C3C5C9"}
           secureTextEntry={secureTextEntry}
           editable={editable}
           multiline={multiline}

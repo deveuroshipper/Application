@@ -56,23 +56,24 @@ const ResendOTP = ({
       <Text className="text-csm text-primary font-inter-medium">{text}</Text>
 
       <TouchableOpacity
+      
         onPress={isEnabled ? action : undefined}
         activeOpacity={isEnabled ? 0.7 : 1}
-        className="flex-row items-center justify-center gap-3 px-8 py-4 bg-white border-[2.5px] border-primary/10 rounded-2xl"
+        className="flex-row items-center justify-center gap-3 px-8 py-4 bg-white border-[1.5px] border-primary/10 rounded-full"
       >
         {loading ? (
           <ActivityIndicator size="small" color="#000" />
         ) : (
           <>
             <Text
-              className={`text-csm font-inter-bold uppercase ${isEnabled ? "text-primary" : "text-primary/40"}`}
+              className={`text-csm font-inter-bold  ${isEnabled ? "text-primary" : "text-primary/40"}`}
             >
               {resendText}
             </Text>
 
             {!isEnabled && (
               <>
-                <View className="w-1 h-1 rounded-full bg-primary/40" />
+                <View className="w-2 h-2 rounded-full bg-primary/40" />
                 <Text className="text-csm font-inter-bold text-primary">
                   {formatted}
                 </Text>
@@ -86,3 +87,5 @@ const ResendOTP = ({
 };
 
 export default ResendOTP;
+
+

@@ -45,7 +45,7 @@ const OTPInput = ({
         {Array.from({ length }).map((_, i) => (
           <View
             key={i}
-            className="size-20 aspect-square items-center justify-center bg-white border-[2.5px] border-primary/10 rounded-2xl"
+            className="size-20 aspect-square items-center justify-center bg-white border-[1.8px] border-[#B5C3E8]/30 rounded-2xl"
           >
             <TextInput
               ref={(el) => (inputs.current[i] = el)}
@@ -55,6 +55,7 @@ const OTPInput = ({
                 handleKeyPress(nativeEvent.key, i)
               }
               placeholder="_"
+              placeholderTextColor={"#6B7280"}
               keyboardType="number-pad"
               maxLength={2}
               className="w-full h-full text-center text-clg font-inter-bold text-primary "

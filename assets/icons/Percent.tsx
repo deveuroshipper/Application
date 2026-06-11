@@ -6,7 +6,7 @@ const Percent = (props: any) => {
     <Svg
       stroke="currentColor"
       fill={props.color || "#000000"}
-      stroke-width="0"
+      strokeWidth="1.5"
       viewBox="0 0 256 256"
       width={props.size || 24}
       height={props.size || 24}

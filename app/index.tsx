@@ -9,14 +9,22 @@ import LoginScreen from "@/screens/LoginScreen";
 import NewPassword from "@/screens/NewPassword";
 import WelcomeScreen from "@/screens/WelcomeScreen";
 import {
+  Inter_300Light,
   Inter_400Regular,
   Inter_500Medium,
+  Inter_600SemiBold,
   Inter_700Bold,
+  Inter_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/inter";
 import {
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
+import {
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from "@expo-google-fonts/space-grotesk";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -26,11 +34,13 @@ import * as Notifications from "expo-notifications";
 import React from "react";
 import { Platform } from "react-native";
 import "../global.css";
-import { getAppTokenApiHandler, setAppTokenApiHandler } from "../helper/Api";
+import {
+  getAppTokenApiHandler,
+  getProfileApiHandler,
+  setAppTokenApiHandler,
+} from "../helper/Api";
 import { useAuthStore } from "../store/useAuthStore";
 import MainScreens from "./MainScreens";
-
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const Stack = createStackNavigator();
 
@@ -47,13 +57,21 @@ Notifications.setNotificationHandler({
 const Layout = () => {
   const accessToken = useAuthStore((state) => state.token);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
+  const logout = useAuthStore((state) => state.logout);
   const [fontsLoaded] = useFonts({
+    Inter_300Light,
     Inter_400Regular,
     Inter_500Medium,
     Inter_700Bold,
+    Inter_800ExtraBold,
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,
     SpaceGrotesk_700Bold,
+    SpaceGrotesk_600SemiBold,
+    Inter_600SemiBold,
+    Manrope_700Bold,
+    Manrope_600SemiBold,
   });
 
   const [expoPushToken, setExpoPushToken] = React.useState("");
@@ -67,6 +85,7 @@ const Layout = () => {
     null,
   );
   const lastSyncedPushToken = React.useRef<string | null>(null);
+  const lastSyncedProfileToken = React.useRef<string | null>(null);
 
   const getStoredAppToken = (data: any) => {
     if (typeof data === "string") return data;
@@ -154,6 +173,27 @@ const Layout = () => {
     //   Notifications?.removeNotificationSubscription(responseListener.current);
     // };
   }, []);
+
+  React.useEffect(() => {
+    if (!isAuthenticated || !accessToken) return;
+    if (lastSyncedProfileToken.current === accessToken) return;
+
+    const syncProfile = async () => {
+      try {
+        const profile = await getProfileApiHandler();
+        await setUser(profile);
+        lastSyncedProfileToken.current = accessToken;
+      } catch (error: any) {
+        console.log("Failed to sync profile", error);
+
+        if (error?.status === 401) {
+          await logout();
+        }
+      }
+    };
+
+    syncProfile();
+  }, [accessToken, isAuthenticated, logout, setUser]);
 
   React.useEffect(() => {
     if (!expoPushToken || !isAuthenticated || !accessToken) return;

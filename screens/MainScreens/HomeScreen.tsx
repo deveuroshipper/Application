@@ -1,34 +1,15 @@
 import Icon from "@/assets/icons";
-import BannerSlider, { BannerSlide } from "@/components/BannerSlider";
+import BannerSlider from "@/components/BannerSlider";
 import Header from "@/components/Header";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-const BANNER_SLIDES: BannerSlide[] = [
-  {
-    id: "1",
-    image: require("../../assets/images/slide1.png"),
-    title: "Next Day Delivery to Zurich",
-  },
-  {
-    id: "2",
-    image: require("../../assets/images/slide1.png"),
-    title: "Express Shipping Across Europe",
-  },
-  {
-    id: "3",
-    image: require("../../assets/images/slide1.png"),
-    title: "Safe & Tracked Freight Solutions",
-  },
-];
 
 const HomeScreen = ({ navigation }: any) => {
   const handelCartClick = () => {
     navigation.push("CartScreen");
   };
   const handelNotificationClick = () => {
-   
     navigation.push("NotificationScreen");
   };
   return (
@@ -42,14 +23,14 @@ const HomeScreen = ({ navigation }: any) => {
           className="flex-1 flex  gap-10 bg-BgWhite w-full"
           showsVerticalScrollIndicator={false}
         >
-          <BannerSlider slides={BANNER_SLIDES} />
+          <BannerSlider />
 
           <View className="px-8 mt-6 ">
             <View className="flex flex-col gap-2 bg-primary px-6 pt-6 rounded-3xl ">
-              <Text className="text-white text-center text-csl font-inter-bold">
+              <Text className="text-white text-center text-[22px] font-manrope-Bold">
                 Start a Shipment
               </Text>
-              <Text className="text-csm text-center  text-white/60">
+              <Text className="text-csm text-center font-manrope-SemiBold  text-[#828282]">
                 Start your shipment in minutes — add the details and we’ll
                 handle the delivery.
               </Text>
@@ -71,7 +52,7 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
 
           <View className="px-8 mt-6 mb-10 flex flex-col gap-4">
-            <Text className="text-cno font-inter-medium text-primary/60">
+            <Text className="text-cno font-manrope-SemiBold text-[#969696]">
               Order Service
             </Text>
             <View className="flex flex-row gap-4">

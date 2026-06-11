@@ -62,12 +62,12 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
                 Password?
               </Text>
             </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
+             <Text className="text-csm mt-2 mb-6 text-[#242646]/70 font-inter">
               Enter your email to receive a reset code.
             </Text>
           </View>
 
-          <View className="mt-10 gap-10">
+          <View className="mt-8 gap-10">
             <Input
               label={"Email address"}
               placeholderTxt={"jen@gmail.com"}

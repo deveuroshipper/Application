@@ -1,7 +1,11 @@
 import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { applyCouponApiHandler, getCouponsApiHandler } from "@/helper/Api";
+import {
+  applyCouponApiHandler,
+  getCouponsApiHandler,
+  priceCalculationsApiHandler,
+} from "@/helper/Api";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,6 +18,9 @@ import {
 import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
+
+const getErrorMessage = (error: any, fallback: string) =>
+  typeof error === "string" ? error : (error?.message ?? fallback);
 
 const ApplyCoupon = ({ navigation, route }: any) => {
   const [step] = useState(4);
@@ -67,6 +74,7 @@ const ApplyCoupon = ({ navigation, route }: any) => {
     setApplyLoading(true);
     try {
       const response = await applyCouponApiHandler({ code });
+      const pricing = await priceCalculationsApiHandler([orderId], code);
 
       const selectedCoupon =
         coupons.find((coupon) => getCouponCode(coupon) === code) ?? {
@@ -83,6 +91,7 @@ const ApplyCoupon = ({ navigation, route }: any) => {
             ...selectedCoupon,
             code,
             applyResponse: response,
+            pricing,
           },
         },
         merge: true,
@@ -90,10 +99,7 @@ const ApplyCoupon = ({ navigation, route }: any) => {
     } catch (error: any) {
       Toast.show({
         type: "error",
-        text1:
-          typeof error === "string"
-            ? error
-            : (error?.message ?? "Invalid coupon"),
+        text1: getErrorMessage(error, "Invalid coupon"),
       });
     } finally {
       setApplyLoading(false);

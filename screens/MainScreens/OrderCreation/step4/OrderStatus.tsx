@@ -1,5 +1,5 @@
 import OrderFail from "@/assets/images/orderFail.png";
-  import OrderSuccessfully from "@/assets/images/orderSuccess.png";
+import OrderSuccessfully from "@/assets/images/orderSuccess.png";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -9,7 +9,7 @@ import { ORDER_STATUS } from "./PackageDetails";
 
 const OrderStatus = ({ navigation, route }: any) => {
   const handleBackToDashboard = () => {
-    navigation.push("SubmitShipment");
+    navigation.push("BottomTabBar");
   };
   const IsSuccess: Boolean = route?.params?.status == ORDER_STATUS.SUCCESS;
 
@@ -34,15 +34,15 @@ const OrderStatus = ({ navigation, route }: any) => {
 
           {/* Text */}
           <View className="items-center gap-2 ">
-            <Text className="text-cmd  font-space-grotesk-bold text-primary text-center">
+            <Text className="text-csl leading-[22px]  font-space-grotesk-bold text-primary text-center">
               {IsSuccess ? "Your Order Has Been" : "Your Order Failed!"}
             </Text>
             {IsSuccess ? (
-              <Text className="text-cmd  font-space-grotesk-bold text-primary text-center">
+              <Text className="text-csl leading-[22px]  font-space-grotesk-bold text-primary text-center">
                 Successfully Created
               </Text>
             ) : null}
-            <Text className="text-csm font-inter text-primary/50 text-center">
+            <Text className="text-csm mt-3 font-inter px-4 text-black text-center">
               {IsSuccess
                 ? "Your shipment has been created. We’ll keep you updated every step of the way."
                 : "Something went wrong while creating your order. Please try again or contact support."}

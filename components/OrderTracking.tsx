@@ -397,7 +397,7 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
 
       try {
         const response = await getOrderByIdApiHandler(orderId);
-        console.log("response. : ", response);
+
         setOrderDetail(response);
       } catch (error: any) {
         Toast.show({
@@ -413,7 +413,7 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
     getOrderDetail();
   }, [orderId]);
   return (
-    <View>
+    <View className="flex-1 bg-BgWhite">
       <View className="pt-14 pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary">
         <Text className="text-white text-[24px] font-space-grotesk-bold">
           Track Shipment
@@ -483,15 +483,21 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
           )}
 
           {/* Accordions */}
-          <AccordionRow
+          {/* <AccordionRow
             label="Address"
             onclick={() =>
-              navigation.push("PackageDetails", { orderId: orderId })
+              navigation.push("PackageDetails", {
+                orderId: orderId,
+                showCheckOut: false,
+              })
             }
-          />
+          /> */}
           <AccordionRow
             onclick={() =>
-              navigation.push("PackageDetails", { orderId: orderId })
+              navigation.push("PackageDetails", {
+                orderId: orderId,
+                showCheckOut: false,
+              })
             }
             label="Package Details"
           />

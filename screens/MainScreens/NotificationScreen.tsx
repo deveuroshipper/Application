@@ -151,19 +151,19 @@ const NotificationItem = ({ item }: { item: ApiNotification }) => {
           <Text className="text-csm font-inter-bold text-primary flex-1 pr-2">
             {item.title}
           </Text>
-          <Text className="text-cxs font-inter-medium text-[#55658B]">
+          <Text className="text-cxs font-inter-semibold text-[#55658B]">
             {formatNotificationTime(item)}
           </Text>
         </View>
         <Text
-          className="text-[11px] font-inter-medium text-[#3F4C6E] mt-0.5"
+          className="text-[11px] font-inter-semibold text-[#3F4C6E] mt-0.5"
           numberOfLines={2}
         >
           {item.message}
         </Text>
-        <Text className="text-[10px] font-inter-bold text-primary/40 mt-1">
+        {/* <Text className="text-[10px] font-inter-bold text-primary/40 mt-1">
           {item.type?.replace(/_/g, " ")}
-        </Text>
+        </Text> */}
       </View>
     </View>
   );
@@ -216,7 +216,7 @@ const NotificationScreen = ({ navigation }: any) => {
     getNotification();
   }, []);
 
-  console.log("notificationSections : ", notificationSections);
+  
 
   const markVisibleNotificationsRead = useCallback(
     async (viewableItems: ViewToken<ApiNotification>[]) => {
@@ -242,7 +242,7 @@ const NotificationScreen = ({ navigation }: any) => {
         fetchNotificationStatus().catch(() => {});
       } catch (error) {
         notificationIds.forEach((id) => sentReadIdsRef.current.delete(id));
-        console.log("Failed to mark notifications as read", error);
+       
       }
     },
     [fetchNotificationStatus],

@@ -28,7 +28,7 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
   const [showModel, setShowModel] = useState(false);
   const getErrorMessage = (error: any, fallback = "Something went wrong") =>
     typeof error === "string" ? error : (error?.message ?? fallback);
-
+  console.log("update data : ", data);
   const getProfile = async () => {
     try {
       const response = await getProfileApiHandler();
@@ -65,7 +65,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-
           response = await verifyUpdateInfoApiHandler({
             code: otp,
             type: "phoneupdate",
@@ -97,7 +96,6 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-
           response = await updateInfoApiHandler({
             old: data?.oldNumber,
             new: data?.newNumber,
@@ -178,7 +176,7 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           </View>
           <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
             We've sent a 4-digit verification code to your email
-            {user?.email ? ` ${user?.email}` : ""}
+            {data?.newEmail ? ` ${data?.newEmail}` :  ` ${user?.email}`}
           </Text>
         </View>
 

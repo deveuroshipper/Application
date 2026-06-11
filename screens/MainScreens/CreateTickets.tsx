@@ -103,15 +103,15 @@ const CreateTickets = ({ navigation }: any) => {
         text1: "Ticket created successfully",
       });
       handleBackToDashboard();
-      } catch (error: any) {
-        Toast.show({
-          type: "error",
-          text1:
-            typeof error === "string"
-              ? error
-              : (error?.message ?? "Something went wrong"),
-        });
-      } finally {
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -135,6 +135,8 @@ const CreateTickets = ({ navigation }: any) => {
   useEffect(() => {
     getOrders();
   }, []);
+
+  console.log("orders : ", orders);
 
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
@@ -223,7 +225,7 @@ const CreateTickets = ({ navigation }: any) => {
                           return {
                             label: (
                               <View
-                                className="flex-1 flex flex-col gap-1"
+                                className="flex-1 flex flex-col gap-1 "
                                 key={item?.id}
                               >
                                 <View className="flex-1  w-full flex flex-row justify-between">
@@ -231,10 +233,10 @@ const CreateTickets = ({ navigation }: any) => {
                                     <Icon name="Box" />
                                     <View className="flex flex-row items-center justify-center">
                                       <Text className="text-cno font-inter-medium text-primary">
-                                        Order
+                                        
                                       </Text>
                                       <Text className="text-cno font-inter-medium text-primary">
-                                        #{item?.id.slice(0, 10)}...
+                                        {item?.id.slice(0, 10)}...
                                       </Text>
                                     </View>
                                   </View>
@@ -247,7 +249,7 @@ const CreateTickets = ({ navigation }: any) => {
                                 </View>
                                 <View className="flex flex-row gap-4 items-center">
                                   <Text className="text-[15px] font-inter-medium text-primary/80">
-                                    India
+                                    {item?.route?.originName}
                                   </Text>
                                   <View
                                     style={{
@@ -257,7 +259,7 @@ const CreateTickets = ({ navigation }: any) => {
                                     <Icon size={12} name="BackArrow" />
                                   </View>
                                   <Text className="text-[15px] font-inter-medium text-primary/80">
-                                    India
+                                    {item?.route?.destinationName}
                                   </Text>
                                 </View>
                               </View>

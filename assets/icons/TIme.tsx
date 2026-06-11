@@ -6,7 +6,7 @@ const TIme = (props: any) => {
     <Svg
       stroke={props.color || "#000000"}
       fill="currentColor"
-      strokeWidth="0.8"
+      strokeWidth="0.4"
       id="Layer_1"
       x="0px"
       y="0px"

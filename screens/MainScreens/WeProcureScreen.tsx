@@ -96,7 +96,7 @@ const WeProcureScreen = ({ navigation }: any) => {
         <View className="mt-10 flex flex-col justify-between content-between flex-1">
           <View className="w-full">
             <View
-              className="w-full h-40 mb-8 overflow-hidden rounded-lg"
+              className="w-full max-h-80 min-h-52 mb-8 overflow-hidden rounded-lg"
               style={{
                 shadowColor: "#e3e6e9",
                 shadowOffset: { width: 0, height: 4 },
@@ -106,7 +106,7 @@ const WeProcureScreen = ({ navigation }: any) => {
               }}
             >
               <Image
-                className="w-full h-full flex items-start bg-cover"
+                className="flex-1 w-full flex items-start bg-cover"
                 source={require("../../assets/images/WeProcurePage.png")}
               />
             </View>
@@ -116,7 +116,7 @@ const WeProcureScreen = ({ navigation }: any) => {
                 WeProcure{" "}
               </Text>
             </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
+            <Text className="text-csm mt-2 mb-6 text-[#5C6574] font-inter">
               Tell us what you need we’ll help you procure it from trusted
               suppliers.
             </Text>

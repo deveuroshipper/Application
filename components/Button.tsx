@@ -1,5 +1,10 @@
 import React from "react";
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 
 export const enum Variant {
   DEFAULT,
@@ -42,13 +47,26 @@ const Button = ({
           height: size == Size.NORMAL ? 60 : 48,
           borderRadius: size == Size.NORMAL ? 16 : 10,
           backgroundColor: variant == Variant.DEFAULT ? color : "transparent",
-          borderColor: variant == Variant.DEFAULT && color,
+          // borderColor: variant == Variant.DEFAULT && color,
           borderWidth: variant == Variant.DEFAULT ? 0 : 1.5,
-          shadowColor: variant == Variant.DEFAULT ? "#000" : "white",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 8,
-          elevation: 5,
+          // shadowColor: variant == Variant.DEFAULT ? "#0F1729" : "white",
+          // shadowOffset: { width: 0, height: 4 },
+          // shadowOpacity: 1,
+          // shadowRadius: 8,
+          // elevation: 16,
+
+          ...Platform.select({
+            ios: {
+              shadowColor: variant == Variant.DEFAULT ? "#0F1729" : "white",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.5,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 10,
+              shadowColor: variant == Variant.DEFAULT ? "#0F1729" : "white",
+            },
+          }),
         }}
       >
         {frontIcon && frontIcon}

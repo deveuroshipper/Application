@@ -35,6 +35,7 @@ const CartItemCard = ({
   onCheckout: () => void;
   onViewDetails: () => void;
 }) => {
+ 
   return (
     <View
       className="bg-white rounded-2xl p-4 mb-6"
@@ -76,38 +77,42 @@ const CartItemCard = ({
 
         {/* Order Details */}
         <View className="flex-1 gap-2 flex flex-col justify-between ">
-          <Text className="text-csm font-inter-bold text-primary">
-            Order Id :
-            {(item.orderid ?? item.orderId ?? item.id)?.slice(0, 10) + "..."}
-          </Text>
-          <View className="flex flex-col gap-1.5">
-            <Text className="text-[13px] font-inter text-primary">
+          <View className="flex justify-between flex-row items-center">
+            <Text className="text-csm mb-2 font-inter-semibold text-[#334155]">
+              Order Id :
+              {(item.orderid ?? item.orderId ?? item.id)
+                ?.toUpperCase()
+                ?.slice(0, 10)
+                ?.replaceAll("-", "")
+                ?.slice(0, 10) + "..."}
+            </Text>
+            <TouchableOpacity
+              onPress={onDelete}
+              className="p-1 w-fit"
+              style={{
+                borderWidth: 1,
+                borderColor: "#D3D8E7",
+                borderRadius: 8,
+                padding: 6,
+              }}
+            >
+              <Icon name="Trash" size={20} color="#334155" />
+            </TouchableOpacity>
+          </View>
+          <View className="flex flex-col gap-1.5 flex-1">
+            <Text className="text-csm font-inter text-[#334155]">
               Size: {item.boxsize?.name}
             </Text>
-            <Text className="text-[13px] font-inter text-primary">
+            <Text className="text-csm font-inter text-[#334155]">
               Max Weight: {item.boxsize?.weight} KG
             </Text>
 
-            <Text className="text-[13px] font-inter text-primary">
+            <Text className="text-csm font-inter text-[#334155]">
               Max Size: {item.boxsize?.height} X {item.boxsize?.width} X{" "}
               {item.boxsize?.length}cm
             </Text>
           </View>
         </View>
-
-        {/* Trash Icon */}
-        <TouchableOpacity
-          onPress={onDelete}
-          className="p-1"
-          style={{
-            borderWidth: 1,
-            borderColor: "#D3D8E7",
-            borderRadius: 8,
-            padding: 6,
-          }}
-        >
-          <Icon name="Trash" size={20} color="#334155" />
-        </TouchableOpacity>
       </View>
 
       {/* Route Row */}
@@ -119,7 +124,7 @@ const CartItemCard = ({
             className="w-11 h-8 rounded-md"
           />
           <Text className="text-csm font-inter-bold text-primary">
-            {item.fromCountry}
+            {item.fromCountry?.originName}
           </Text>
         </View>
 
@@ -131,7 +136,7 @@ const CartItemCard = ({
             className="w-11 h-8 rounded-md"
           />
           <Text className="text-csm font-inter-bold text-primary">
-            {item.toCountry}
+            {item.destinationName}
           </Text>
         </View>
       </View>
@@ -240,22 +245,19 @@ const CartScreen = ({ navigation }: any) => {
   const isCartLoading = useCartStore((state) => state.isLoading);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const removeCartItem = useCartStore((state) => state.removeCartItem);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<any>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const IsEmpty = cartItems.length === 0;
 
   const handleToggleSelect = (id: string) => {
-    setSelectedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    if (selectedItems == id) {
+      setSelectedItems(null);
+    } else {
+      // setSelectedItems([...selectedItems, id]);
+      setSelectedItems(id);
+    }
   };
 
   const handleDeletePress = (id: string) => {
@@ -269,11 +271,7 @@ const CartScreen = ({ navigation }: any) => {
       setIsDeleting(true);
       await removeFromCartApiHandler(deleteTargetId);
       removeCartItem(deleteTargetId);
-      setSelectedItems((prev) => {
-        const next = new Set(prev);
-        next.delete(deleteTargetId);
-        return next;
-      });
+      setSelectedItems(null);
       setDeleteTargetId(null);
       Toast.show({
         type: "success",
@@ -294,7 +292,16 @@ const CartScreen = ({ navigation }: any) => {
   };
 
   const handleCheckout = (orderId: String) => {
-    navigation.push("DetailsAndPayment", { orderId: orderId });
+   
+    navigation.push("DetailsAndPayment", {
+      orderId: orderId,
+    });
+  };
+
+  const handelSelectedCheckout = () => {
+    navigation.push("DetailsAndPayment", {
+      orderId: selectedItems?.[0],
+    });
   };
   const handleViewDetails = (orderId: String) => {
     navigation.push("PackageDetails", { orderId: orderId });
@@ -380,8 +387,8 @@ const CartScreen = ({ navigation }: any) => {
                   <CartItemCard
                     key={itemId}
                     item={item}
-                    isSelected={selectedItems.has(itemId)}
-                    onToggle={() => handleToggleSelect(itemId)}
+                    isSelected={selectedItems == orderId}
+                    onToggle={() => handleToggleSelect(orderId)}
                     onDelete={() => handleDeletePress(orderId)}
                     onCheckout={() => handleCheckout(orderId)}
                     onViewDetails={() => handleViewDetails(orderId)}
@@ -394,7 +401,8 @@ const CartScreen = ({ navigation }: any) => {
             <View className="pt-2 px-8">
               <Button
                 text="Checkout"
-                action={handleCheckout}
+                disabled={!selectedItems}
+                action={handelSelectedCheckout}
                 frontIcon={null}
               />
             </View>

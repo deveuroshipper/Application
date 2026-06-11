@@ -26,22 +26,22 @@ const Header = ({ CartClick, NotificationClick }: any) => {
 
   return (
     <View className="bg-white flex flex-row justify-between items-center px-8 py-6">
-      <View className="flex flex-row gap-4">
-        <View className="h-12 w-12 overflow-hidden bg-gold/20 rounded-md">
-          <Image
-            className="h-full w-full bg-cover"
-            source={
-              profileImageUri
-                ? { uri: profileImageUri }
-                : require("../assets/images/user.jpg")
-            }
-          />
+      <View className="flex flex-1  flex-row gap-4">
+        <View className="h-12 w-12 flex justify-center items-center overflow-hidden bg-slate-200 rounded-md">
+          {profileImageUri ? (
+            <Image
+              className={`h-12 w-12 bg-cover`}
+              source={{ uri: profileImageUri }}
+            />
+          ) : (
+            <Text className="text-csl font-inter-bold">{displayName.charAt(0)}</Text>
+          )}
         </View>
         <View>
-          <Text className="text-cxs font-inter text-primary/50">
+          <Text className="text-cxs font-inter-semibold uppercase text-[#1A1C1E]/50">
             Welcome to Euro Shipper
           </Text>
-          <Text className="text-csl font-inter-bold text-primary capitalize">
+          <Text className="text-csl font-inter-bold text-[#1A1C1E] capitalize">
             Hi, {displayName}
           </Text>
         </View>
@@ -53,7 +53,7 @@ const Header = ({ CartClick, NotificationClick }: any) => {
           className="relative h-9 w-9 flex justify-center items-center"
         >
           {cartCount > 0 && (
-            <View className="absolute -top-1 z-10 -right-1 h-5 w-5 border-2 border-white aspect-square flex justify-center items-center rounded-full bg-gold">
+            <View className="absolute -top-1 z-10 -right-1 h-5 w-5  aspect-square flex justify-center items-center rounded-full bg-gold">
               <Text className="text-cxs text-white font-inter-bold z-20">
                 {cartCount}
               </Text>

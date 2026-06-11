@@ -1,15 +1,39 @@
 import Icon from "@/assets/icons";
-import submitSuccessfully from "@/assets/images/submitSuccessfully.png";
+import submitSuccessfully from "@/assets/images/support.png";
 import BackButton from "@/components/BackButton";
 import Button, { Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Image, Text, View } from "react-native";
 
 const SupportScreen = ({ navigation }: any) => {
-  const handleBackToDashboard = () => {
-    navigation.push("SubmitShipment");
+  const [loading, setLoading] = useState(false);
+  const navigatingRef = useRef(false);
+
+  const navigateOnce = (screen: string) => {
+    if (navigatingRef.current) return;
+
+    navigatingRef.current = true;
+    setLoading(true);
+    navigation.navigate(screen);
   };
+
+  const viewTicket = () => {
+    navigateOnce("TicketList");
+  };
+
+  const createTicket = () => {
+    navigateOnce("CreateTickets");
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      navigatingRef.current = false;
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -46,15 +70,17 @@ const SupportScreen = ({ navigation }: any) => {
           </View>
           <View className=" flex flex-col gap-6">
             <Button
+              disabled={loading}
               text="Start Conversion"
               frontIcon={<Icon name="ChatTeardrop" color="#FFFF" size={28} />}
-              action={() => navigation.push("CreateTickets")}
+              action={() => createTicket()}
             />
 
             <Button
               text="View Tickets"
+              disabled={loading}
               variant={Variant.OUTLINE}
-              action={() => navigation.push("TicketList")}
+              action={() => viewTicket()}
             />
           </View>
         </View>

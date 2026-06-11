@@ -7,7 +7,7 @@
 
   const SubmitShipment = ({ navigation }: any) => {
     const handleBackToDashboard = () => {
-      navigation.push("SubmitShipment");
+      navigation.push("BottomTabBar");
     };
 
     return (

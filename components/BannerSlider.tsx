@@ -29,6 +29,24 @@ type Props = {
   slides: BannerSlide[];
 };
 
+// const BANNER_SLIDES: BannerSlide[] = [
+//   {
+//     id: "1",
+//     image: require("../../assets/images/slide1.png"),
+//     title: "Next Day Delivery to Zurich",
+//   },
+//   {
+//     id: "2",
+//     image: require("../../assets/images/slide1.png"),
+//     title: "Express Shipping Across Europe",
+//   },
+//   {
+//     id: "3",
+//     image: require("../../assets/images/slide1.png"),
+//     title: "Safe & Tracked Freight Solutions",
+//   },
+// ];
+
 const BannerSlider = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [slides, setSlides] = useState<null | any>(null);
@@ -54,7 +72,6 @@ const BannerSlider = () => {
   const getSliderImages = async () => {
     try {
       const response = await getDashboardImagesApiHandler();
-      console.log("Slider data", response);
       setSlides(response);
     } catch (error) {
       Toast.show({
@@ -96,7 +113,7 @@ const BannerSlider = () => {
         resizeMode="cover"
       />
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.72)"]}
+        colors={["transparent", "rgba(0,0,0,0.40)"]}
         style={{
           position: "absolute",
           bottom: 0,
@@ -120,7 +137,7 @@ const BannerSlider = () => {
     <View className="mt-4">
       <FlatList
         ref={flatListRef}
-        data={slides}
+        data={ slides}
         keyExtractor={(item) => item.id}
         renderItem={renderSlide}
         horizontal
@@ -144,10 +161,10 @@ const BannerSlider = () => {
           <View
             key={index}
             style={{
-              width: index === activeIndex ? 24 : 8,
+              width: index === activeIndex ? 30 : 10,
               height: 4,
               borderRadius: 3,
-              backgroundColor: index === activeIndex ? "#CF961A" : "#D1D5DB",
+              backgroundColor: index === activeIndex ? "#E0A31D" : "#D4C4AE",
             }}
           />
         ))}

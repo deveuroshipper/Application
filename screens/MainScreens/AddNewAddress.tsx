@@ -9,11 +9,23 @@ import {
   getAddressByIdApiHandler,
   updateAddressApiHandler,
 } from "@/helper/Api";
-import { useEffect, useState } from "react";
+import { CommonActions } from "@react-navigation/native";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
+
+const COUNTRY_CODE_OVERRIDES: Record<string, string> = {
+  "united states": "US",
+  "united kingdom": "GB",
+  "south korea": "KR",
+  "north korea": "KP",
+  "united arab emirates": "AE",
+  russia: "RU",
+  "czech republic": "CZ",
+  "south africa": "ZA",
+};
 
 const AddNewAddress = ({ navigation, route }: any) => {
   const address_id = route?.params?.address_id ?? null;
@@ -43,6 +55,80 @@ const AddNewAddress = ({ navigation, route }: any) => {
     state: "",
     city: "",
   });
+
+  const pincodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const getCountryIso2 = async (
+    countryName: string,
+  ): Promise<string | null> => {
+    const override = COUNTRY_CODE_OVERRIDES[countryName.toLowerCase()];
+    if (override) return override;
+    try {
+      const res = await fetch(
+        "https://countriesnow.space/api/v0.1/countries/codes",
+      );
+      const json = await res.json();
+      const found = (json.data as any[])?.find(
+        (c) => c.name?.toLowerCase() === countryName.toLowerCase(),
+      );
+      return found?.code ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (!data.country || !data.pincode.trim()) return;
+
+    if (pincodeDebounceRef.current) clearTimeout(pincodeDebounceRef.current);
+    pincodeDebounceRef.current = setTimeout(async () => {
+      const pincode = data.pincode.trim();
+
+      try {
+        if (data.country.toLowerCase() === "india") {
+          const res = await fetch(
+            `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode)}`,
+          );
+          if (!res.ok) return;
+          const json = await res.json();
+          const postOffice = json?.[0]?.PostOffice?.[0];
+          if (!postOffice) return;
+
+          setData((prev) => ({
+            ...prev,
+            state: postOffice.State ?? prev.state,
+            city: postOffice.District ?? prev.city,
+          }));
+          setErrors((e) => ({ ...e, state: "", city: "" }));
+          return;
+        }
+
+        const iso2 = await getCountryIso2(data.country);
+        if (!iso2) return;
+
+        const res = await fetch(
+          `https://api.zippopotam.us/${iso2}/${encodeURIComponent(pincode)}`,
+        );
+        if (!res.ok) return;
+        const json = await res.json();
+        const place = json?.places?.[0];
+        if (!place) return;
+
+        setData((prev) => ({
+          ...prev,
+          state: place["state"] ?? prev.state,
+          city: place["place name"] ?? prev.city,
+        }));
+        setErrors((e) => ({ ...e, state: "", city: "" }));
+      } catch {
+        // ignore lookup errors, allow manual selection
+      }
+    }, 600);
+
+    return () => {
+      if (pincodeDebounceRef.current) clearTimeout(pincodeDebounceRef.current);
+    };
+  }, [data.pincode, data.country]);
 
   useEffect(() => {
     if (!address_id) return;
@@ -88,7 +174,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
       newErrors.addressLine1 = "Address is required.";
 
     if (!data.pincode.trim()) newErrors.pincode = "Pin code is required.";
-    else if (!/^\d{4,10}$/.test(data.pincode.trim()))
+    else if (!/^[A-Za-z0-9\s-]{4,10}$/.test(data.pincode.trim()))
       newErrors.pincode = "Enter a valid pin code.";
 
     if (!data.country) newErrors.country = "Country is required.";
@@ -100,8 +186,6 @@ const AddNewAddress = ({ navigation, route }: any) => {
   };
 
   const handelSubmit = async () => {
-
-
     if (!validate()) return;
     setLoading(true);
     const payload = {
@@ -115,7 +199,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
       dialCode: data?.mobileCode?.dialCode,
       coname: data?.mobileCode?.name,
     };
-    
+
     try {
       if (address_id) {
         await updateAddressApiHandler(address_id, payload);
@@ -123,6 +207,14 @@ const AddNewAddress = ({ navigation, route }: any) => {
       } else {
         await createNewAddressApiHandler(payload);
         Toast.show({ type: "success", text1: "Address saved successfully." });
+      }
+      const routes = navigation.getState()?.routes ?? [];
+      const previousRoute = routes[routes.length - 2];
+      if (previousRoute?.key) {
+        navigation.dispatch({
+          ...CommonActions.setParams({ refreshAddress: Date.now() }),
+          source: previousRoute.key,
+        });
       }
       navigation.goBack();
     } catch (error: any) {
@@ -188,16 +280,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
                 numberOfLines={4}
                 error={errors.addressLine1}
               />
-              <Input
-                label={"Pin code"}
-                placeholderTxt={"Enter Pin code"}
-                value={data?.pincode}
-                onChange={(text: string) => {
-                  setData({ ...data, pincode: text });
-                  if (errors.pincode) setErrors((e) => ({ ...e, pincode: "" }));
-                }}
-                error={errors.pincode}
-              />
+
               <LocationPickerInput
                 mode="country"
                 label="Country"
@@ -208,6 +291,16 @@ const AddNewAddress = ({ navigation, route }: any) => {
                   if (errors.country) setErrors((e) => ({ ...e, country: "" }));
                 }}
                 error={errors.country}
+              />
+              <Input
+                label={"Pin code"}
+                placeholderTxt={"Enter Pin code"}
+                value={data?.pincode}
+                onChange={(text: string) => {
+                  setData({ ...data, pincode: text });
+                  if (errors.pincode) setErrors((e) => ({ ...e, pincode: "" }));
+                }}
+                error={errors.pincode}
               />
               <View className="flex flex-row gap-4">
                 <View className="flex-1">

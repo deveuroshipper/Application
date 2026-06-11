@@ -30,7 +30,6 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
     try {
       const routedId = useAddressStore.getState().route ?? null;
       const data = await getWarehouseApiHandler(routedId);
-    
 
       setWarehouseAddress(data);
     } catch (error: any) {
@@ -91,7 +90,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                 }}
                 className=" flex flex-col gap-2"
               >
-                <Text className="text-csm font-inter-bold uppercase">
+                <Text className="text-csm text-[#334155] font-inter-semibold uppercase">
                   Pickup Address
                 </Text>
                 <View className="px-4 py-6 pb-4 flex flex-col gap-4 rounded-3xl bg-white">
@@ -133,7 +132,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
 
                   <View className="flex flex-row justify-between items-end">
                     <View>
-                      <Text className="w-2/3 text-csm font-inter text-primary/60 capitalize">
+                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
                         {pickupAddress?.addressLine.slice(0, 100)}
                       </Text>
                       <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">
@@ -158,7 +157,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                 }}
                 className=" flex flex-col gap-2"
               >
-                <Text className="text-csm font-inter-bold uppercase">
+                <Text className="text-csm text-[#334155] font-inter-semibold uppercase">
                   DroP-off Address
                 </Text>
                 {warehouseAddress && (
@@ -181,7 +180,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
 
                     <View className="flex flex-row justify-between items-end">
                       <View className="flex-1">
-                        <Text className="w-2/3 text-csm font-inter text-primary/60 capitalize">
+                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
                           {buildAddress(warehouseAddress)}
                         </Text>
                         <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">
@@ -210,7 +209,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
               }}
               className=" flex flex-col gap-2"
             >
-              <Text className="text-csm font-inter-bold uppercase">
+              <Text className="text-csm text-[#334155] font-inter-semibold uppercase">
                 DELIVERY ADDRESS
               </Text>
               {/* <View className="px-4 py-6 flex flex-col gap-4 rounded-3xl bg-white">
@@ -281,7 +280,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
 
                 <View className="flex flex-row justify-between items-end ">
                   <View className="flex-1">
-                    <Text className="w-2/3 text-csm font-inter text-primary/60 capitalize">
+                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
                       {dropAddress?.addressLine.slice(0, 100)}
                     </Text>
                     <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">

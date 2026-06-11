@@ -15,12 +15,16 @@ module.exports = {
         BgWhite: "#F8FAFC",
       },
       fontFamily: {
-        inter: ["Inter_400Regular"],
+         inter: ["Inter_400Regular"],
         "inter-medium": ["Inter_500Medium"],
         "inter-bold": ["Inter_700Bold"],
+         "inter-semibold": ["Inter_600SemiBold"],
         "space-grotesk": ["SpaceGrotesk_400Regular"],
         "space-grotesk-medium": ["SpaceGrotesk_500Medium"],
         "space-grotesk-bold": ["SpaceGrotesk_700Bold"],
+         "space-grotesk-extrabold": ["SpaceGrotesk_600SemiBold"],
+         "manrope-Bold" : [" Manrope_700Bold"],
+         "manrope-SemiBold" : ["Manrope_600SemiBold"]
       },
       fontSize: {
         cxxl: 46,

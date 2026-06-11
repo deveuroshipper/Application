@@ -1,7 +1,6 @@
 import Icon from "@/assets/icons";
 
 import verifiedBox from "@/assets/images/boxes/verifiyedBox.png";
-import boxDimension from "@/assets/images/customeboxDimention.png";
 
 import plan from "@/assets/images/plan.png";
 import ship from "@/assets/images/ship.png";
@@ -196,7 +195,8 @@ const BoxDimension = ({
 
   return (
     <View className="mb-10 mt-4">
-      <Text className="text-csm font-inter-bold text-primary/80 tracking-wider uppercase">
+              <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
+      
         Select Weight & Dimension
       </Text>
       <View>
@@ -224,7 +224,7 @@ const BoxDimension = ({
                 shadowRadius: 32,
                 elevation: item.id == selectedBox?.id ? 8 : 0,
               }}
-              className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-3`}
+              className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-6`}
             >
               <Pressable
                 onPress={() => setInfoItem(item)}
@@ -246,14 +246,14 @@ const BoxDimension = ({
 
               <View>
                 <Text
-                  className="text-center font-inter-bold text-[12.5px] text-primary"
+                  className="text-center font-inter-semibold text-[12.5px] text-primary"
                   numberOfLines={2}
                 >
                   Size: {item.name}
                 </Text>
                 {!item.custom && (
                   <Text
-                    className="text-center font-inter-medium text-[12px] text-primary"
+                    className="text-center mt-1 font-inter-medium text-[12px] text-primary"
                     numberOfLines={2}
                   >
                     Max Weight: {item.weight} KG
@@ -267,7 +267,7 @@ const BoxDimension = ({
         {selectedBox && selectedBox?.custom ? (
           <View>
             <View className="mt-4 w-full rounded-3xl overflow-hidden">
-              <Image className="w-full" source={boxDimension} />
+              <Image className="w-full" source={selectedBox?.fullImage} />
             </View>
 
             <View className="flex flex-col  mt-6">
@@ -402,7 +402,8 @@ const BoxDimension = ({
           </View>
         ) : (
           <View className="flex flex-col gap-4">
-            <Text className="text-csm font-inter-bold text-primary/80 tracking-wider uppercase">
+                 <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
+         
               Type of Shipment
             </Text>
             <View className="flex flex-row gap-4">
@@ -429,7 +430,6 @@ const BoxDimension = ({
                       source={item == SHIPMENT_ROUTE.AIR_FREIGHT ? plan : ship}
                     />
 
-
                     <View className="flex flex-col mt-2">
                       <Text
                         className="text-center uppercase font-inter-bold text-[15px] text-primary"
@@ -445,7 +445,7 @@ const BoxDimension = ({
                           : "Lower Cost"}
                       </Text>
                       <Text className="text-center mt-3 font-inter-bold text-cno text-primary">
-                        $595.54
+                      {selectedBox?.mode == item ? `$${selectedBox?.price}` : "Not Available"}
                       </Text>
                       <Text className="px-4 py-2  mt-3 text-csm font-inter-bold rounded-full bg-[#CBD5E1]">
                         5-8 Days
@@ -455,6 +455,33 @@ const BoxDimension = ({
                 ),
               )}
             </View>
+            <Pressable
+                onPress={() => setTermsConditions(!termsConditions)}
+                className="mt-4 flex flex-row items-center gap-4"
+              >
+                <View
+                  className={`h-7 w-7 flex overflow-hidden justify-center items-center rounded-md ${errors.termsConditions ? "border-red-400" : "border-primary/40"} border-[1px]`}
+                >
+                  {termsConditions ? (
+                    <View className="h-full w-full flex justify-center items-center bg-primary">
+                      <Icon name="Check" size={18} color="#FFFF" />
+                    </View>
+                  ) : null}
+                </View>
+                <Text className="text-csm text-primary/60">
+                  I agree to the{" "}
+                  <Text className=" font-inter-medium text-primary">Terms</Text>{" "}
+                  and{" "}
+                  <Text className=" font-inter-medium text-primary">
+                    Conditions
+                  </Text>
+                </Text>
+              </Pressable>
+              {errors.termsConditions ? (
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.termsConditions}
+                </Text>
+              ) : null}
             {errors.shipmentType ? (
               <Text className="text-red-500 text-xs -mt-2">
                 {errors.shipmentType}

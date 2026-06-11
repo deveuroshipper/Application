@@ -1,19 +1,20 @@
+import Icon from "@/assets/icons";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Modal,
   Pressable,
-  Text,
   TextInput as RNTextInput,
+  Text,
   View,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 
 interface Country {
-  name: { common: string };
-  idd: { root: string; suffixes?: string[] };
-  flag: string;
+  name: string;
+  dial_code?: string;
+  code?: string;
 }
 
 interface SelectedCountry {
@@ -22,10 +23,12 @@ interface SelectedCountry {
   name: string;
 }
 
-const getDialCode = (idd: Country["idd"]): string => {
-  if (!idd?.root) return "";
-  if (idd.suffixes?.length === 1) return idd.root + idd.suffixes[0];
-  return idd.root;
+const getFlagEmoji = (countryCode?: string) => {
+  if (!countryCode || countryCode.length !== 2) return "🏳️";
+
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 };
 
 const DEFAULT_COUNTRY: SelectedCountry = {
@@ -33,6 +36,14 @@ const DEFAULT_COUNTRY: SelectedCountry = {
   flag: "🇺🇸",
   name: "United States",
 };
+
+const FALLBACK_COUNTRIES: SelectedCountry[] = [
+  DEFAULT_COUNTRY,
+  { name: "United Kingdom", dialCode: "+44", flag: "🇬🇧" },
+  { name: "India", dialCode: "+91", flag: "🇮🇳" },
+  { name: "Belgium", dialCode: "+32", flag: "🇧🇪" },
+  { name: "United Arab Emirates", dialCode: "+971", flag: "🇦🇪" },
+];
 
 const PhoneNumberInput = ({
   label,
@@ -57,7 +68,7 @@ const PhoneNumberInput = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SelectedCountry>(
-    selectedCode ?? DEFAULT_COUNTRY
+    selectedCode ?? DEFAULT_COUNTRY,
   );
 
   useEffect(() => {
@@ -72,22 +83,25 @@ const PhoneNumberInput = ({
     setLoading(true);
     try {
       const res = await fetch(
-        "https://restcountries.com/v3.1/all?fields=name,idd,flag"
+        "https://countriesnow.space/api/v0.1/countries/codes",
       );
-      const data: Country[] = await res.json();
+      const json = await res.json();
+      const data: Country[] = Array.isArray(json?.data) ? json.data : [];
       const mapped: SelectedCountry[] = data
-        .filter((c) => c.idd?.root)
+        .filter((c) => c.name && c.dial_code)
         .map((c) => ({
-          name: c.name.common,
-          flag: c.flag,
-          dialCode: getDialCode(c.idd),
+          name: c.name,
+          flag: getFlagEmoji(c.code),
+          dialCode: c.dial_code ?? "",
         }))
         .filter((c) => c.dialCode)
         .sort((a, b) => a.name.localeCompare(b.name));
-      setCountries(mapped);
-      setFiltered(mapped);
+      const countryList = mapped.length > 0 ? mapped : FALLBACK_COUNTRIES;
+      setCountries(countryList);
+      setFiltered(countryList);
     } catch {
-      // silently fall back to current selection
+      setCountries(FALLBACK_COUNTRIES);
+      setFiltered(FALLBACK_COUNTRIES);
     } finally {
       setLoading(false);
       setModalVisible(true);
@@ -99,9 +113,8 @@ const PhoneNumberInput = ({
     const q = text.toLowerCase();
     setFiltered(
       countries.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) || c.dialCode.includes(q)
-      )
+        (c) => c.name.toLowerCase().includes(q) || c.dialCode.includes(q),
+      ),
     );
   };
 
@@ -119,7 +132,7 @@ const PhoneNumberInput = ({
         {label}
       </Text>
 
-      <View className="flex gap-2 flex-row items-center px-6 py-2 bg-white border-[2.5px] border-primary/10 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
+      <View className="flex gap-2 flex-row items-center px-6 py-2 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/80">
         <Pressable
           onPress={fetchCountries}
           className="flex-row items-center gap-1 pr-2 border-r border-primary/20"
@@ -143,7 +156,8 @@ const PhoneNumberInput = ({
           className="flex-1"
           placeholder={placeholderTxt as string}
           keyboardType="phone-pad"
-          placeholderTextColor={"#CBD5E1"}
+          placeholderTextColor={"#C3C5C9"}
+          style={{ paddingVertical: 10 }}
         />
       </View>
 
@@ -157,21 +171,28 @@ const PhoneNumberInput = ({
         presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 bg-white px-4 pt-6">
+        <View className="flex-1 bg-white px-4 pt-10">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-primary font-space-grotesk-bold text-lg">
+            <Text className="text-primary font-space-grotesk-bold text-csl">
               Select Country
             </Text>
-            <Pressable onPress={() => setModalVisible(false)}>
-              <Text className="text-primary/50 text-base">✕</Text>
+            <Pressable
+              style={{ transform: [{ rotate: "45deg" }] }}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text className="text-primary/50 text-base">
+                {" "}
+                <Icon size={20} name="Plus" />
+              </Text>
             </Pressable>
           </View>
 
           <RNTextInput
             value={search}
             onChangeText={handleSearch}
+            style={{ paddingVertical: 20 }}
             placeholder="Search country or code..."
-            className="bg-primary/5 rounded-xl px-4 py-3 mb-4 text-primary font-inter-medium"
+            className={`flex mb-6 gap-2 flex-row px-6 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter text-cno placeholder:color-primary/30 `}
             autoFocus
           />
 
@@ -179,6 +200,13 @@ const PhoneNumberInput = ({
             data={filtered}
             keyExtractor={(item) => item.name + item.dialCode}
             keyboardShouldPersistTaps="handled"
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center py-10">
+                <Text className="text-primary/40 font-inter-medium">
+                  No countries found
+                </Text>
+              </View>
+            }
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => handleSelect(item)}

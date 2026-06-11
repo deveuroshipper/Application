@@ -13,17 +13,17 @@ const LetsBeginScreen = ({ navigation }: any) => {
         <View className="h-fit  flex flex-col gap-6 items-center ">
           <View className="mt-28">
             <Image
-              source={require("../assets/logos/Logo.png")}
+              source={require("../assets/images/transperentLogo.png")}
               resizeMode="cover"
-              className="h-fit w-32"
+              className="h-32 w-32"
             />
           </View>
           <View className="flex gap-1 flex-col items-center w-full">
             <View className="flex  flex-row justify-center items-center gap-4 w-full">
-              <Text className="text-cxxl w-fit text-white font-space-grotesk-bold">
+              <Text className="text-cxxl leading-11 w-fit text-white font-space-grotesk-bold">
                 EURO
               </Text>
-              <Text className="text-gold w-fit text-cxxl font-space-grotesk-bold">
+              <Text className="text-gold leading-11 w-fit text-cxxl font-space-grotesk-bold">
                 SHIPPER
               </Text>
             </View>
@@ -34,7 +34,7 @@ const LetsBeginScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        <View className="w-full  flex flex-col gap-16 items-center">
+        <View className="w-full  flex flex-col gap-12 items-center">
           <TouchableOpacity
             onPress={() => navigation.push("IntroScreen")}
             className="bg-gold h-16 w-full flex justify-center items-center rounded-md"

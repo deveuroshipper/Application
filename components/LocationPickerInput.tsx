@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Modal,
   Pressable,
   Text,
@@ -13,6 +14,11 @@ import {
 const BASE = "https://countriesnow.space/api/v0.1";
 
 type Mode = "country" | "state" | "city";
+
+type LocationItem = {
+  name: string;
+  iso2?: string;
+};
 
 interface Props {
   mode: Mode;
@@ -39,10 +45,10 @@ const LocationPickerInput = ({
 }: Props) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<string[]>([]);
-  const [filtered, setFiltered] = useState<string[]>([]);
+  const [items, setItems] = useState<LocationItem[]>([]);
+  const [filtered, setFiltered] = useState<LocationItem[]>([]);
   const [search, setSearch] = useState("");
-  const cacheRef = useRef<Record<string, string[]>>({});
+  const cacheRef = useRef<Record<string, LocationItem[]>>({});
 
   const getCacheKey = () => {
     if (mode === "country") return "countries";
@@ -62,20 +68,27 @@ const LocationPickerInput = ({
 
     setLoading(true);
     try {
-      let list: string[] = [];
+      let list: LocationItem[] = [];
 
       if (mode === "country") {
         const res = await fetch(`${BASE}/countries/states`);
         const json = await res.json();
-        list = (json.data as any[]).map((c) => c.name).sort();
+        list = (json.data as any[])
+          .map((c) => ({
+            name: c.name,
+            iso2: c.iso2,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
       } else if (mode === "state") {
         const res = await fetch(`${BASE}/countries/states`);
         const json = await res.json();
         const found = (json.data as any[]).find(
-          (c) => c.name.toLowerCase() === country?.toLowerCase(),
+          (c) => c.name?.toLowerCase() === country?.toLowerCase(),
         );
         list = found
-          ? (found.states as any[]).map((s: any) => s.name).sort()
+          ? (found.states as any[])
+              .map((s: any) => ({ name: s.name }))
+              .sort((a, b) => a.name.localeCompare(b.name))
           : [];
       } else {
         const res = await fetch(
@@ -84,7 +97,11 @@ const LocationPickerInput = ({
           )}&state=${encodeURIComponent(state ?? "")}`,
         );
         const json = await res.json();
-        list = Array.isArray(json.data) ? (json.data as string[]).sort() : [];
+        list = Array.isArray(json.data)
+          ? (json.data as string[])
+              .map((city) => ({ name: city }))
+              .sort((a, b) => a.name.localeCompare(b.name))
+          : [];
       }
 
       cacheRef.current[key] = list;
@@ -106,15 +123,25 @@ const LocationPickerInput = ({
   const handleSearch = (text: string) => {
     setSearch(text);
     const q = text.toLowerCase();
-    setFiltered(items.filter((item) => item.toLowerCase().includes(q)));
+    setFiltered(items.filter((item) => item.name.toLowerCase().includes(q)));
   };
 
-  const handleSelect = (item: string) => {
-    onSelect(item);
+  const handleSelect = (item: LocationItem) => {
+    onSelect(item.name);
     setModalVisible(false);
     setSearch("");
     setFiltered(items);
   };
+
+  const getFlagUrl = (item?: LocationItem) => {
+    if (mode !== "country" || !item?.iso2) return "";
+    return `https://flagsapi.com/${item.iso2.toUpperCase()}/flat/64.png`;
+  };
+
+  const selectedCountry = items.find(
+    (item) => item.name.toLowerCase() === value.toLowerCase(),
+  );
+  const selectedFlagUrl = getFlagUrl(selectedCountry);
 
   const titleMap: Record<Mode, string> = {
     country: "Select Country",
@@ -130,14 +157,22 @@ const LocationPickerInput = ({
 
       <Pressable
         onPress={handleOpen}
-        className={`flex-row items-center justify-between px-6 py-4 bg-white border-[2.5px] rounded-2xl ${
-          disabled ? "border-primary/5 opacity-40" : "border-primary/10"
+        className={`flex-row items-center justify-between px-6 py-4 bg-white  rounded-2xl ${
+          disabled
+            ? "border-[1.5px] opacity-50 border-[#B5C3E8]/30 rounded-2xl "
+            : "border-[1.5px] border-[#B5C3E8]/30 rounded-2xl "
         }`}
       >
         {loading ? (
           <ActivityIndicator size="small" />
         ) : (
           <>
+            {!!selectedFlagUrl && (
+              <Image
+                source={{ uri: selectedFlagUrl }}
+                className="w-8 h-6 rounded-md mr-3"
+              />
+            )}
             <Text
               className={`font-inter-medium capitalize text-csm flex-1 ${
                 value ? "text-primary" : "text-primary/30"
@@ -145,7 +180,9 @@ const LocationPickerInput = ({
             >
               {value || placeholder}
             </Text>
-            <Text className="text-primary/40 text-xs ml-2"><Icon name="Arrow" size={18} /></Text>
+            <Text className="text-primary/40 text-xs ml-2">
+              <Icon name="Arrow" size={18} />
+            </Text>
           </>
         )}
       </Pressable>
@@ -162,11 +199,16 @@ const LocationPickerInput = ({
       >
         <View className="flex-1 bg-white px-4 pt-10">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-primary font-space-grotesk-bold text-lg">
+            <Text className="text-primary font-space-grotesk-bold text-csl">
               {titleMap[mode]}
             </Text>
-            <Pressable onPress={() => setModalVisible(false)}>
-              <Text className="text-primary/50 text-base">✕</Text>
+            <Pressable
+                style={{ transform: [{ rotate: "45deg" }] }}
+                onPress={() => setModalVisible(false)}
+            >
+              <Text className="text-primary/50 text-base">
+                <Icon size={20} name="Plus" />
+              </Text>
             </Pressable>
           </View>
 
@@ -174,7 +216,7 @@ const LocationPickerInput = ({
             value={search}
             onChangeText={handleSearch}
             placeholder={`Search ${mode}...`}
-            className="bg-primary/5 rounded-xl px-4 py-3 mb-4 text-primary font-inter-medium"
+            className={`flex mb-6 gap-2 flex-row px-6 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter text-cno placeholder:color-primary/30 `}
             autoFocus
           />
 
@@ -187,23 +229,30 @@ const LocationPickerInput = ({
           ) : (
             <FlatList
               data={filtered}
-              keyExtractor={(item) => item}
+              keyExtractor={(item) => `${item.name}-${item.iso2 ?? ""}`}
               keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <Pressable
+                  key={item?.name || item || index}
                   onPress={() => handleSelect(item)}
                   className="flex-row items-center py-3 border-b border-primary/5"
                 >
+                  {!!getFlagUrl(item) && (
+                    <Image
+                      source={{ uri: getFlagUrl(item) }}
+                      className="w-11 h-8 rounded-md mr-3"
+                    />
+                  )}
                   <Text
                     className={`flex-1 font-inter-medium text-csm ${
-                      item === value
+                      item.name === value
                         ? "text-primary font-inter-bold"
                         : "text-primary"
                     }`}
                   >
-                    {item}
+                    {item.name}
                   </Text>
-                  {item === value && (
+                  {item.name === value && (
                     <Text className="text-primary text-xs">
                       <Icon name="Check" />
                     </Text>

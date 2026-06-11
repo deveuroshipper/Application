@@ -19,8 +19,22 @@ interface AuthState {
   login: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
-  setUser: (user: User) => void;
+  setUser: (user: User) => Promise<void>;
 }
+
+const normalizeUser = (user: any): User => {
+  const userData = user?.user ?? user?.data?.user ?? user?.data ?? user;
+
+  return {
+    id: userData?.id,
+    fullName: userData?.fullName,
+    email: userData?.email,
+    phone: userData?.phone,
+    role: userData?.role,
+    status: userData?.status,
+    profileImage: userData?.profileImage,
+  };
+};
 
 export const useAuthStore = create<AuthState>()((set) => ({
   token: null,
@@ -29,15 +43,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isHydrated: false,
 
   login: async (token, user) => {
-    const userData = {
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      status: user.status,
-      profileImage: user.profileImage,
-    };
+    const userData = normalizeUser(user);
     try {
       await AsyncStorage.multiSet([
         ["access_token", token],
@@ -54,7 +60,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ token: null, user: null, isAuthenticated: false });
   },
 
-  setUser: (user) => set({ user }),
+  setUser: async (user) => {
+    const userData = normalizeUser(user);
+    await AsyncStorage.setItem("user_data", JSON.stringify(userData));
+    set({ user: userData });
+  },
 
   loadFromStorage: async () => {
     try {

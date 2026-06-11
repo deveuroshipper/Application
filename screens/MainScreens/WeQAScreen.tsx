@@ -89,14 +89,14 @@ const WeQAScreen = ({ navigation }: any) => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper KeyboardAvoiding={true}>
       <View className="px-8 pb-8 flex-1">
         <BackButton navigation={navigation} />
 
         <View className="mt-10 flex flex-col justify-between content-between flex-1">
           <View className="w-full">
             <View
-              className="w-full h-40 mb-8 overflow-hidden rounded-lg"
+              className="flex-1 max-h-80 min-h-52 mb-8 overflow-hidden rounded-lg"
               style={{
                 shadowColor: "#e3e6e9",
                 shadowOffset: { width: 0, height: 4 },
@@ -106,19 +106,19 @@ const WeQAScreen = ({ navigation }: any) => {
               }}
             >
               <Image
-                className="w-full h-full flex items-start bg-cover"
-                source={require("../../assets/images/WeProcurePage.png")}
+                className="flex-1 w-full flex items-start bg-cover"
+                source={require("../../assets/images/WeQAPage.png")}
               />
             </View>
 
             <View>
               <Text className="text-primary font-space-grotesk-bold text-cxl w-full">
-                WeProcure{" "}
+                WeQA
               </Text>
             </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
-              Tell us what you need we’ll help you procure it from trusted
-              suppliers.
+            <Text className="text-csm mt-2 mb-6 text-[#5C6574] font-inter">
+              Submit your details let us inspect your shipment for accuracy and
+              quality before dispatch.
             </Text>
           </View>
 

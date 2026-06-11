@@ -2,7 +2,7 @@ import Icon from "@/assets/icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { Image, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 const IntroScreen = ({ navigation }: any) => {
   const [step, setStep] = useState(1);
 
@@ -41,8 +41,23 @@ const IntroScreen = ({ navigation }: any) => {
       />
       <View className="flex gap-8 flex-col justify-end py-10 absolute z-20 top-0 left-0 right-0 bottom-0 ">
         <LinearGradient
-          colors={["rgba(15, 23, 41, 0.2),rgba(15, 23, 41, 0.6)", "#0F1729"]}
-          locations={[0.4, 0.8, 1]}
+          colors={[
+            "rgba(15, 23, 41, 0.0)",
+            "rgba(15, 23, 41, 0.9)",
+            "#0F1729",
+            "#0F1729",
+          ]}
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              zIndex: 20,
+              paddingHorizontal: 40,
+              paddingVertical: 40,
+              justifyContent: "space-between",
+              gap: 32,
+            },
+          ]}
+          locations={[0, 0.5, 0.7, 1]}
           className="flex gap-8 flex-col justify-between py-10 absolute z-20 top-0 left-0 right-0 bottom-0 px-10"
         ></LinearGradient>
 
@@ -58,7 +73,7 @@ const IntroScreen = ({ navigation }: any) => {
                 {step == 3 && "Flexible Pickup, Seamless Delivery"}
               </Text>
             </View>
-            <Text className="text-csm text-white font-inter">
+            <Text className="text-csm text-white font-inter mt-4">
               {step == 1 &&
                 "Manage domestic and global shipments through a streamlined logistics network built for modern operations."}
               {step == 2 &&

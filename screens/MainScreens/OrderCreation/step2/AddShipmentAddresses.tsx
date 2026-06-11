@@ -1,3 +1,4 @@
+import EmptyAddress from "@/assets/images/emptyAddress.png";
 import LocationBox from "@/assets/images/LocationBox.png";
 import Truck from "@/assets/images/Truck.png";
 import BackButton from "@/components/BackButton";
@@ -8,6 +9,7 @@ import { getAddressApiHandler } from "@/helper/Api";
 import { useAddressStore } from "@/store/useAddress";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
+
 import {
   ActivityIndicator,
   Animated,
@@ -37,6 +39,8 @@ const TOTAL_STEP = 4;
 const AddShipmentAddresses = ({ navigation, route }: any) => {
   const [step, setStep] = useState(2);
   const ShipmentType: SHIPMENT_TYPE = route?.params?.ShipmentType ?? null;
+  const refreshAddress = route?.params?.refreshAddress ?? null;
+
   const IsDropAt = ShipmentType == SHIPMENT_TYPE.DROP_AT_WAREHOUSE;
 
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -70,10 +74,11 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
       }
     };
     fetchAddresses();
-  }, []);
+  }, [refreshAddress]);
 
   const openModal = (target: "pickup" | "delivery") => {
     setAddressModalTarget(target);
+    setSearchQuery("");
     setShowAddressModal(true);
     Animated.spring(slideAnim, {
       toValue: 0,
@@ -100,10 +105,16 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
     closeModal();
   };
 
+  const excludedSelectedAddress =
+    addressModalTarget === "pickup"
+      ? selectedDeliveryAddress
+      : selectedPickupAddress;
+
   const filteredAddresses = addresses.filter(
     (a) =>
-      a.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.addressLine.toLowerCase().includes(searchQuery.toLowerCase()),
+      a.id !== excludedSelectedAddress?.id &&
+      (a.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.addressLine.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const handelSubmit = (type: any) => {
@@ -150,66 +161,78 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
           </View>
 
           {/* Title */}
-          <Text
-            className="text-csl font-space-grotesk-bold text-primary text-center pb-5"
-            style={{ textDecorationLine: "underline" }}
-          >
+          <Text className="text-csl font-space-grotesk-bold text-primary text-center pb-5">
             Select Location
           </Text>
 
           {/* Search bar */}
-          <View className="mx-6 mb-4 flex flex-row items-center px-4 py-3 bg-white border-[2px] border-primary/10 rounded-2xl gap-3">
-            <Feather name="search" size={18} color="#0F172966" />
+          <View className="mx-6 mb-4 flex flex-row items-center px-4 py-2 bg-white border-[2px] border-[#B5C3E84D]/30 rounded-2xl gap-3">
+            <Feather name="search" size={24} color="#0F172966" />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search Locations ..."
               placeholderTextColor="#0F172966"
-              className="flex-1 text-csm font-inter text-primary"
+              className="flex-1 text-cno font-inter text-primary"
             />
           </View>
-
+          <View className="mx-6 mt-4  h-[1.5px] bg-[#B5C3E84D]/30 mb-2" />
           {/* Add Address row */}
           <TouchableOpacity
             onPress={handelAddNEwAdd}
-            className="mx-6 mb-2 flex flex-row items-center gap-3 py-3"
+            className="mx-6 mb-2 flex flex-row items-center gap-3 px-4 py-3"
           >
             <Feather name="plus" size={20} color="#0F1729" />
-            <Text className="text-cno font-inter-medium text-primary">
+            <Text className="text-cno font-inter-semibold text-primary">
               Add Address
             </Text>
           </TouchableOpacity>
 
           {/* Divider */}
-          <View className="mx-6 h-[1px] bg-primary/10 mb-2" />
+          <View className="mx-6 h-[1.5px] bg-[#B5C3E84D]/30 mb-2" />
 
           {/* Address list */}
           {loadingAddresses ? (
             <ActivityIndicator size="large" color="#0F1729" className="mt-4" />
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} className="mx-6">
-              {filteredAddresses.map((addr) => (
-                <TouchableOpacity
-                  key={addr.id}
-                  onPress={() => handleSelectAddress(addr)}
-                  className="flex flex-row items-center gap-4 py-4 border-b border-primary/5"
-                >
-                  <View className="w-10 h-10 rounded-full bg-[#BFCDDE]/30 items-center justify-center flex-shrink-0">
-                    <Ionicons name="location" size={18} color="#0F1729" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-cno font-inter-medium text-primary">
-                      {addr.fullName} - {addr.number}
-                    </Text>
-                    <Text className="text-csm font-inter text-primary/50 mt-0.5">
-                      {addr.addressLine}
-                    </Text>
-                    <Text className="text-csm font-inter text-primary/50 mt-0.5">
-                      {addr.city}, {addr.state}, {addr.country}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {filteredAddresses?.length > 0 ? (
+                filteredAddresses.map((addr) => (
+                  <TouchableOpacity
+                    key={addr.id}
+                    onPress={() => handleSelectAddress(addr)}
+                    className="flex flex-row items-center gap-4 py-4 border-b border-primary/5"
+                  >
+                    <View className="w-10 h-10 rounded-full bg-[#BFCDDE]/30 items-center justify-center flex-shrink-0">
+                      <Ionicons name="location" size={18} color="#0F1729" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-cno font-inter-medium text-primary">
+                        {addr.fullName} - {addr.number}
+                      </Text>
+                      <Text className="text-csm font-inter text-primary/50 mt-0.5">
+                        {addr.addressLine}
+                      </Text>
+                      <Text className="text-csm font-inter text-primary/50 mt-0.5">
+                        {addr.city}, {addr.state}, {addr.country}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View className="flex-1 pt-20 gap-1 flex flex-col px-6">
+                  <Image
+                    className="w-full rounded-lg flex items-start bg-cover"
+                    source={EmptyAddress}
+                  />
+                  <Text className="text-cmd mt-6 font-space-grotesk-bold text-center">
+                    No Saved Addresses Yet
+                  </Text>
+                  <Text className="text-csm font-inter-medium text-center">
+                    Add your first pickup or delivery address to get started.
+                  </Text>
+                </View>
+              )}
             </ScrollView>
           )}
         </Animated.View>
@@ -245,17 +268,17 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
             {!IsDropAt ? (
               <TouchableOpacity
                 onPress={() => openModal("pickup")}
-                className="flex flex-row items-center gap-4 px-5 py-4 bg-white border-[2px] border-primary/10 rounded-2xl mb-4"
+                className="flex flex-row items-center gap-4 px-5 py-4 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl mb-4"
                 activeOpacity={0.7}
               >
                 <View className="w-16 h-16 rounded-full bg-[#E2EBF6] items-center justify-center flex-shrink-0">
                   <Image
-                    className="w-12 h-12 flex items-start bg-cover"
+                    className="w-11 h-11 flex items-start bg-cover"
                     source={LocationBox}
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-csm font-inter-bold text-primary">
+                  <Text className="text-csm font-inter-semibold text-primary">
                     Add Pickup Address{" "}
                   </Text>
                   <View className="h-0.5 my-1 w-full bg-primary/10" />
@@ -278,17 +301,17 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
 
             <TouchableOpacity
               onPress={() => openModal("delivery")}
-              className="flex flex-row items-center gap-4 px-5 py-4 bg-white border-[2px] border-primary/10 rounded-2xl mb-4"
+              className="flex flex-row items-center gap-4 px-5 py-4 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl mb-4"
               activeOpacity={0.7}
             >
               <View className="w-16 h-16 rounded-full bg-[#E2EBF6] items-center justify-center flex-shrink-0">
                 <Image
-                  className="w-12 h-12 flex items-start bg-cover"
+                  className="w-11 h-11 flex items-start bg-cover"
                   source={Truck}
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-csm font-inter-bold text-primary">
+                <Text className="text-csm font-inter-semibold text-primary">
                   Delivery Address
                 </Text>
                 <View className="h-0.5 my-1 w-full bg-primary/10" />

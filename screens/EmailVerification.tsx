@@ -85,9 +85,15 @@ const EmailVerification = ({ navigation, route }: any) => {
                 Email Verification
               </Text>
             </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
+            <Text className="text-csm mt-2 mb-6 text-[#242646]/70 font-inter">
               We've sent a 4-digit verification code to your email
-              {email ? ` ${email}` : ""}
+              {email ? (
+                <Text className="text-csm mt-2 mb-6 text-black  font-inter-bold">
+                  {` ${email?.slice(0)[0]}.....@${email?.split("@")[1]}`}
+                </Text>
+              ) : (
+                ""
+              )}
             </Text>
           </View>
 

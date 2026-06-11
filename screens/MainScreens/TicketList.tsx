@@ -1,5 +1,5 @@
 import Icon from "@/assets/icons";
-import submitSuccessfully from "@/assets/images/submitSuccessfully.png";
+import submitSuccessfully from "@/assets/images/support.png";
 import BackButton from "@/components/BackButton";
 import Button, { Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -16,13 +16,12 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
-const TicketList = ({ navigation }: any) => {
+const TicketList = ({ navigation, route }: any) => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
   const handleBackToDashboard = () => {
-    navigation.push("SubmitShipment");
+    navigation.push("SupportScreen");
   };
 
   const getTicketNumber = (ticket: any) => {
@@ -293,11 +292,11 @@ const TicketList = ({ navigation }: any) => {
                 action={() => navigation.push("CreateTickets")}
               />
 
-              <Button
+              {/* <Button
                 text="View Tickets"
                 variant={Variant.OUTLINE}
                 action={handleBackToDashboard}
-              />
+              /> */}
             </View>
           </View>
         )}

@@ -1,4 +1,3 @@
-import categoryImage from "@/assets/images/category.png";
 import { getCategoryApiHandler } from "@/helper/Api";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -10,7 +9,9 @@ type Category = {
   icon: keyof typeof Ionicons.glyphMap;
 };
 export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
-
+const buildIMageUrl = (path: string) => {
+  return `${IMAGE_URL}/${path}`;
+};
 const CategoryBox = ({
   selectedCategory,
   setCategory,
@@ -28,6 +29,7 @@ const CategoryBox = ({
   const getCategory = async () => {
     try {
       const data = await getCategoryApiHandler();
+   
       setCategories(data);
       setCategory(data?.[0]?.id || null);
     } catch (error: any) {
@@ -53,11 +55,10 @@ const CategoryBox = ({
     setSubCategories(filteredCategory?.subCategories || []);
   }, [selectedCategory]);
 
-
   return (
     <View className="flex flex-col gap-4">
       <View className="">
-        <Text className="text-csm font-inter-bold text-primary/80 tracking-wider uppercase">
+        <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
           Category
         </Text>
         {categories && categories?.length > 0 ? (
@@ -75,7 +76,7 @@ const CategoryBox = ({
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => setCategory(item.id)}
-                style={{
+                  style={{
                   shadowColor: "#E0A31D",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.02,
@@ -85,18 +86,19 @@ const CategoryBox = ({
                 className={`w-28 items-center rounded-2xl border ${item.id == selectedCategory ? "border-gold" : "border-primary/20"} bg-white px-3 py-4`}
               >
                 <View
-                  className={`mb-3 h-14 w-14 items-center justify-center rounded-full  ${item.id == selectedCategory ? "bg-primary" : "bg-[#D6E0EE]"} `}
+                  className={`mb-3 h-14 w-14 items-center justify-center rounded-full  ${item.id == selectedCategory ? "bg-[#D6E0EE] border-[1px] border-gold" : "bg-[#D6E0EE]"} `}
                 >
                   <Image
-                    className="h-12 w-12"
+                    className="h-11 w-11 bg-cover"
                     source={
-                      item.image ? `${IMAGE_URL}/${item?.image}` : categoryImage
+                      item.custom
+                        ? item?.image
+                        : { uri: buildIMageUrl(item?.image) }
                     }
                   />
-                  {/* <Ionicons name={item.icon} size={22} color="#0F1729" /> */}
                 </View>
                 <Text
-                  className="text-center font-inter-medium text-[12px] text-primary"
+                  className="text-center font-inter-semibold text-[12px] text-primary"
                   numberOfLines={2}
                 >
                   {item.name}
@@ -116,7 +118,7 @@ const CategoryBox = ({
         )}
       </View>
       <View className="">
-        <Text className="text-csm font-inter-bold text-primary/80 tracking-wider uppercase">
+        <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
           Sub-Category
         </Text>
 
@@ -145,12 +147,19 @@ const CategoryBox = ({
                 className={`w-28 items-center rounded-2xl border ${item.id == selectedSubCategory ? "border-gold" : "border-primary/20"} bg-white px-3 py-4`}
               >
                 <View
-                  className={`mb-3 h-14 w-14 items-center justify-center rounded-full  ${item.id == selectedSubCategory ? "bg-primary" : "bg-[#D6E0EE]"} `}
+                  className={`mb-3 h-14 w-14 items-center justify-center rounded-full  ${item.id == selectedSubCategory ? "bg-[#D6E0EE] border-[1px] border-gold" : "bg-[#D6E0EE]"} `}
                 >
-                  {/* <Ionicons name={item.icon} size={22} color="#0F1729" /> */}
+                  <Image
+                    className="h-11 w-11 bg-cover"
+                    source={
+                      item.custom
+                        ? item?.image
+                        : { uri: buildIMageUrl(item?.image) }
+                    }
+                  />
                 </View>
                 <Text
-                  className="text-center font-inter-medium text-[12px] text-primary"
+                  className="text-center font-inter-semibold text-[12px] text-primary"
                   numberOfLines={2}
                 >
                   {item.name}

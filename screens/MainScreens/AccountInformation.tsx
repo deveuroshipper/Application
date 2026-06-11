@@ -61,8 +61,6 @@ const AccountInformation = ({ navigation }: any) => {
     }
   };
 
- 
-
   useEffect(() => {
     setUser(useAuthStore.getState().user);
     getProfile();
@@ -200,7 +198,7 @@ const AccountInformation = ({ navigation }: any) => {
                 Email Id
               </Text>
               <Text className="text-[11px] font-inter text-primary">
-                johnjames@gmail.com
+                 {user?.email}
               </Text>
             </View>
           </View>
@@ -252,7 +250,7 @@ const AccountInformation = ({ navigation }: any) => {
                 Address
               </Text>
               <Text className="text-[11px] font-inter text-primary">
-                Marylebone, London W1U ...
+                View all address
               </Text>
             </View>
           </View>

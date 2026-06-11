@@ -14,6 +14,7 @@ export const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
 const getAccessToken = () => {
   return AsyncStorage.getItem("access_token");
 };
+console.log("BASE_URL =", process.env.EXPO_PUBLIC_BASE_URL);
 
 api.interceptors.request.use(
   async (config) => {
@@ -643,5 +644,15 @@ export const signInWithApple = async () => {
     } else {
       console.log("Apple login error:", error);
     }
+  }
+};
+
+export const storeGoogleLoginApiHandler = async (data: any) => {
+  try {
+    const response = await api.post(`/auth/social-login`, data);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
   }
 };

@@ -2,8 +2,15 @@ import Icon from "@/assets/icons";
 import EmptyOrder from "@/assets/images/EmptyOrder.png";
 import { getOrdersApiHandler } from "@/helper/Api";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 type OrderStatus =
@@ -140,17 +147,22 @@ const OrdersScreen = ({ navigation }: any) => {
   const [orders, setOrders] = useState(null);
   const [IsEmpty, setIsEmpty] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [Loading, setLoading] = useState(true);
+  const hasLoadedOrdersRef = useRef(false);
 
   const handleViewDetails = (id: string) => {
     navigation.push("OrderTrackingScreen", { orderId: id });
   };
 
-  const getOrders = async () => {
+  const getOrders = async (showFullLoader = false) => {
+    if (showFullLoader) setLoading(true);
+
     try {
       const response = await getOrdersApiHandler();
-      
+
       setOrders(response);
       setIsEmpty((response?.length ?? 0) === 0);
+      hasLoadedOrdersRef.current = true;
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -158,19 +170,21 @@ const OrdersScreen = ({ navigation }: any) => {
           typeof error === "string"
             ? error
             : (error?.message ?? "Failed to resend OTP"),
-      });
+        });
+    } finally {
+      if (showFullLoader) setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await getOrders();
+    await getOrders(false);
     setRefreshing(false);
   };
 
   useFocusEffect(
     useCallback(() => {
-      getOrders();
+      getOrders(!hasLoadedOrdersRef.current);
     }, []),
   );
   return (
@@ -180,9 +194,14 @@ const OrdersScreen = ({ navigation }: any) => {
         <Text className="text-white text-[24px] font-space-grotesk-bold">
           Track Shipment
         </Text>
-        <Text className="text-white text-csm font-thin w-1/2 text-center">
-          Enter tracking number to get real-time updates
-        </Text>
+        <View>
+          <Text className="text-white mt-1 leading-6 text-center text-csm font-inter">
+            Enter tracking number to get
+          </Text>
+          <Text className="text-white leading-6  text-center text-csm font-inter">
+            real-time updates
+          </Text>
+        </View>
       </View>
 
       <View className="flex-1 mt-8">
@@ -191,49 +210,55 @@ const OrdersScreen = ({ navigation }: any) => {
             Tracking History
           </Text>
         )}
-        <FlatList
-          data={orders ?? []}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            flexGrow: IsEmpty ? 1 : 0,
-            paddingBottom: 32,
-          }}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          ItemSeparatorComponent={() => <View className="h-6" />}
-          ListEmptyComponent={
-            IsEmpty ? (
-              <View className="flex-1 justify-center items-center gap-6">
-                <View className="w-full h-fit rounded-2xl overflow-hidden">
-                  <Image
-                    source={EmptyOrder}
-                    className="w-full rounded-3xl"
-                    resizeMode="contain"
-                  />
-                </View>
+        {Loading ? (
+          <View className="flex-1 flex justify-center items-center">
+            <ActivityIndicator size={"large"} color={"#0F1729"} />
+          </View>
+        ) : (
+          <FlatList
+            data={orders ?? []}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: IsEmpty ? 1 : 0,
+              paddingBottom: 32,
+            }}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            ItemSeparatorComponent={() => <View className="h-6" />}
+            ListEmptyComponent={
+              IsEmpty ? (
+                <View className="flex-1 justify-center items-center gap-6">
+                  <View className="w-full h-fit rounded-2xl overflow-hidden">
+                    <Image
+                      source={EmptyOrder}
+                      className="w-full rounded-3xl"
+                      resizeMode="contain"
+                    />
+                  </View>
 
-                <View className="items-center gap-2 w-2/3">
-                  <Text className="text-csl font-space-grotesk-bold text-primary text-center">
-                    No active shipments yet
-                  </Text>
-                  <Text className="text-csm font-inter text-primary/50 text-center">
-                    Track your shipment by entering the tracking number above.
-                  </Text>
+                  <View className="items-center gap-2 w-2/3">
+                    <Text className="text-csl font-space-grotesk-bold text-primary text-center">
+                      No active shipments yet
+                    </Text>
+                    <Text className="text-csm font-inter text-primary/50 text-center">
+                      Track your shipment by entering the tracking number above.
+                    </Text>
+                  </View>
                 </View>
+              ) : null
+            }
+            renderItem={({ item, index }) => (
+              <View className="px-8">
+                <OrderCard
+                  order={item}
+                  onViewDetails={handleViewDetails}
+                  isLast={index === (orders?.length ?? 0) - 1}
+                />
               </View>
-            ) : null
-          }
-          renderItem={({ item, index }) => (
-            <View className="px-8">
-              <OrderCard
-                order={item}
-                onViewDetails={handleViewDetails}
-                isLast={index === (orders?.length ?? 0) - 1}
-              />
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
       </View>
     </View>
   );

@@ -8,7 +8,16 @@ import { getRoutesApiHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import Skeleton from "react-native-reanimated-skeleton";
+
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import {
   interpolateColor,
   useAnimatedStyle,
@@ -21,7 +30,7 @@ import Toast from "react-native-toast-message";
 const TOTAL_STEP = 4;
 
 const ChooseRoute = ({ navigation }: any) => {
-  const step = 2;
+  const step = 1;
   const [selected, setSelected] = useState(useAddressStore.getState().route);
   const [routes, setRoutes] = useState();
 
@@ -81,15 +90,15 @@ const ChooseRoute = ({ navigation }: any) => {
           <View className="w-full">
             <View className="flex flex-row items-center justify-between gap-2">
               <View>
-                <Text className="text-primary font-space-grotesk-bold text-cml leading-[40px]">
+                <Text className="text-primary font-space-grotesk-bold text-cml leading-[38px]">
                   Choose You
                 </Text>
-                <Text className="text-primary font-space-grotesk-bold text-cml leading-[40px]">
+                <Text className="text-primary font-space-grotesk-bold text-cml leading-[38px]">
                   Shipping Route
                 </Text>
               </View>
               <Image
-                className="w-28 h-28 flex items-start bg-cover"
+                className="w-32 h-28 flex items-start bg-cover"
                 source={earthMap}
               />
             </View>
@@ -103,49 +112,73 @@ const ChooseRoute = ({ navigation }: any) => {
             <Text className="uppercase text-csm font-inter-bold tracking-wide text-primary/60">
               Choose Your Shipping Path
             </Text>
-
+            {/* <Skeleton
+              isLoading={true}
+              containerStyle={{ flex: 1, width: 300 }}
+            
+              layout={[
+                { key: "someId", width: 220, height: 20, marginBottom: 6 },
+                { key: "someOtherId", width: 180, height: 20, marginBottom: 6 },
+              ]}
+            >
+              <Text className="uppercase text-csm font-inter-bold tracking-wide text-primary/60">
+                Choose Your Shipping Path
+              </Text>
+              <Text className="uppercase text-csm font-inter-bold tracking-wide text-primary/60">
+                Choose Your Shipping Path
+              </Text>
+            </Skeleton> */}
             <ScrollView
               className="h-[63%]"
               showsVerticalScrollIndicator={false}
             >
-              {routes?.map((route: any, index: Number) => (
-                <View
-                  key={route.id + "-" + index}
-                  className="mt-2 flex flex-col gap-4"
-                >
-                  <Pressable
-                    onPress={() => handelChooseRoute(route.id)}
-                    className="w-full h-fit flex flex-row justify-between items-center gap-2 px-3 py-4 border-[#B5C3E8]/30 border-[2px] bg-white rounded-lg"
+              {routes?.length > 0 ? (
+                routes?.map((route: any, index: Number) => (
+                  <View
+                    key={route.id + "-" + index}
+                    className="mt-2 flex flex-col gap-4"
                   >
-                    <View className="flex   w-1/3 flex-col items-center gap-2">
-                      <Image
-                        source={{ uri: CountryImage(route?.originName) }}
-                        className="w-11 h-8 rounded-md"
-                      />
-                      <Text className="text-[12px] text-primary/90 font-inter-bold">
-                        {route?.originName}
-                      </Text>
-                    </View>
-                    <View className="flex justify-center items-center">
-                      <Image source={arrow} className="w-fit h-2 rounded-md" />
-                    </View>
-                    <View className="flex  w-1/3 flex-col items-center gap-2">
-                      <Image
-                        source={{ uri: CountryImage(route?.destinationName) }}
-                        className="w-11 h-8 rounded-md"
-                      />
-                      <Text className="text-[12px] text-primary/90 font-inter-bold">
-                        {route?.destinationName}
-                      </Text>
-                    </View>
-                    <View className="h-7 w-7 flex justify-center items-center border-2 border-primary rounded-full">
-                      {route.id == selected ? (
-                        <View className="h-4 w-4 border-2 bg-primary rounded-full"></View>
-                      ) : null}
-                    </View>
-                  </Pressable>
+                    <Pressable
+                      onPress={() => handelChooseRoute(route.id)}
+                      className="w-full h-fit flex flex-row justify-between items-center gap-2 px-3 py-3 pt-4 border-[#B5C3E8]/30 border-[2px] bg-white rounded-lg"
+                    >
+                      <View className="flex   w-1/3 flex-col items-center gap-2">
+                        <Image
+                          source={{ uri: CountryImage(route?.originName) }}
+                          className="w-11 h-8 rounded-md"
+                        />
+                        <Text className="text-[12px] text-primary/90 font-inter-semibold">
+                          {route?.originName}
+                        </Text>
+                      </View>
+                      <View className="flex justify-center items-center">
+                        <Image
+                          source={arrow}
+                          className="w-fit h-2 rounded-md"
+                        />
+                      </View>
+                      <View className="flex  w-1/3 flex-col items-center gap-2">
+                        <Image
+                          source={{ uri: CountryImage(route?.destinationName) }}
+                          className="w-11 h-8 rounded-md"
+                        />
+                        <Text className="text-[12px] text-primary/90 font-inter-semibold">
+                          {route?.destinationName}
+                        </Text>
+                      </View>
+                      <View className="h-7 w-7 flex justify-center items-center border-2 border-[#334155] rounded-full">
+                        {route.id == selected ? (
+                          <View className="h-4 w-4 border-2 border-[#334155] bg-[#334155] rounded-full"></View>
+                        ) : null}
+                      </View>
+                    </Pressable>
+                  </View>
+                ))
+              ) : (
+                <View className="min-h-60 flex justify-end items-center ">
+                  <ActivityIndicator size={"large"} color={"#0F1729"} />
                 </View>
-              ))}
+              )}
             </ScrollView>
           </View>
 

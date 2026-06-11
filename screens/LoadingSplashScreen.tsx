@@ -45,8 +45,8 @@ const LoadingSplashScreen = ({ navigation }: any) => {
 
     // Verify the stored token is still valid by fetching fresh profile data
     getProfileApiHandler()
-      .then((userData) => {
-        setUser(userData);
+      .then(async (userData) => {
+        await setUser(userData);
         navigation.reset({
           index: 0,
           routes: [{ name: "MainScreens" }],
@@ -71,9 +71,9 @@ const LoadingSplashScreen = ({ navigation }: any) => {
         <View className="h-fit  flex flex-col gap-6 items-center ">
           <View className="mt-28">
             <Image
-              source={require("../assets/logos/Logo.png")}
+              source={require("../assets/images/transperentLogo.png")}
               resizeMode="cover"
-              className="h-fit w-32"
+              className="h-32 w-32"
             />
           </View>
           <View className="flex gap-1 flex-col items-center w-full">

@@ -84,7 +84,7 @@ const CreateAccount = ({ navigation }: any) => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper KeyboardAvoiding={true}>
       <View className="px-8 pb-8 flex-1">
         <BackButton navigation={navigation} />
 
@@ -95,7 +95,7 @@ const CreateAccount = ({ navigation }: any) => {
                 Create Account
               </Text>
             </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
+            <Text className="text-csm mt-2 mb-6 text-[#242646]/70 font-inter">
               Create your account and access a smarter way to manage shipping
               and logistics.
             </Text>

@@ -2,27 +2,27 @@ import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import {
-    BASE_URL,
-    getTicketByIdApiHandler,
-    sendTicketMessageApiHandler,
+  BASE_URL,
+  getTicketByIdApiHandler,
+  sendTicketMessageApiHandler,
 } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { io, Socket } from "socket.io-client";
@@ -285,13 +285,15 @@ const SupportChat = ({ navigation, route }: any) => {
                 isUser ? "text-[#334155]" : "text-white"
               }`}
             >
-              {item.text}
+              {item.text.trim(" ")}
             </Text>
           </View>
         </View>
       </View>
     );
   };
+
+ 
 
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
@@ -352,31 +354,37 @@ const SupportChat = ({ navigation, route }: any) => {
             <Icon name="BoxArrowUp" size={28} color="#0F1729" />
           </TouchableOpacity> */}
 
-          <View className="flex-1 h-16 px-6 rounded-full border border-[#BFD0E6] bg-white flex-row items-center">
-            <TextInput
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Type Here"
-              placeholderTextColor="#475569"
-              className="flex-1 text-[13px] font-inter text-primary"
-              returnKeyType="send"
-              onSubmitEditing={handleSend}
-              editable={!sending}
-            />
+          {ticket?.status !== "resolved" ? (
+            <View className="flex-1 h-16 px-6 rounded-full border border-[#BFD0E6] bg-white flex-row items-center">
+              <TextInput
+                value={message}
+                onChangeText={setMessage}
+                placeholder="Type Here"
+                placeholderTextColor="#475569"
+                className="flex-1 text-[13px] font-inter text-primary"
+                returnKeyType="send"
+                onSubmitEditing={handleSend}
+                editable={!sending}
+              />
 
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={handleSend}
-              disabled={sending || !message.trim()}
-              style={{ opacity: sending || !message.trim() ? 0.45 : 1 }}
-            >
-              {sending ? (
-                <ActivityIndicator color="#34445D" size="small" />
-              ) : (
-                <Icon name="PaperPlane" size={24} color="#34445D" />
-              )}
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={handleSend}
+                disabled={sending || !message.trim()}
+                style={{ opacity: sending || !message.trim() ? 0.45 : 1 }}
+              >
+                {sending ? (
+                  <ActivityIndicator color="#34445D" size="small" />
+                ) : (
+                  <Icon name="PaperPlane" size={24} color="#34445D" />
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="flex justify-center items-center bg-primary/10 rounded-lg flex-1 h-14">
+              <Text className="text-cno font-inter-semibold text-primary/40">Ticket close </Text>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </ScreenWrapper>

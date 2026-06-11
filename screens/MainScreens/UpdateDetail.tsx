@@ -366,7 +366,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
   };
 
   return (
-    <ScreenWrapper>
+   
       <View className="flex-1 bg-BgWhite">
         <SuccessModel
           onclose={() => goInfoPage()}
@@ -396,7 +396,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
           <BackButton color="#FFFF" navigation={navigation} />
           <View className="mt-8">
             <Text className="text-white text-[20px] text-center font-inter-bold">
-              Account Information
+              Account Information 
             </Text>
             <Text className="text-white/50 mt-1 text-center text-cno font-inter">
               Welcome back to Euro Shipper!
@@ -408,7 +408,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
           {renderUpdateUi()}
         </View>
       </View>
-    </ScreenWrapper>
+ 
   );
 };
 
