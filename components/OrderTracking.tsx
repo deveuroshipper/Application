@@ -422,8 +422,8 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
           Enter tracking number to get real-time updates
         </Text>
       </View>
-      <ScrollView className="mb-40">
-        <View className="flex-1 mt-6 mb-20">
+      <ScrollView className="">
+        <View className="flex-1 mt-6 mb-10  ">
           {/* Tracking ID + Status */}
           <View className=" px-8 py-4">
             <View className="flex-row justify-between items-start mb-1"></View>

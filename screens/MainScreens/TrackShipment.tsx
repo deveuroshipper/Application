@@ -188,7 +188,7 @@ const TrackShipment = () => {
           </View>
         </View>
       ) : (
-        <View className="flex-1">
+        <View className="flex-1 ">
           {selectedOrderId ? (
             <OrderTracking orderId={selectedOrderId} />
           ) : (

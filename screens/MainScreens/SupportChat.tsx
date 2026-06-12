@@ -298,7 +298,8 @@ const SupportChat = ({ navigation, route }: any) => {
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
       <KeyboardAvoidingView
-        className="flex-1 px-8 pb-8"
+        className="flex-1 px-8  mb-8 "
+        style={{paddingVertical : 32}}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View className="flex flex-row items-center justify-between">
@@ -357,6 +358,7 @@ const SupportChat = ({ navigation, route }: any) => {
           {ticket?.status !== "resolved" ? (
             <View className="flex-1 h-16 px-6 rounded-full border border-[#BFD0E6] bg-white flex-row items-center">
               <TextInput
+              
                 value={message}
                 onChangeText={setMessage}
                 placeholder="Type Here"

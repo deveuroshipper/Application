@@ -583,7 +583,6 @@ GoogleSignin.configure({
   webClientId:
     "757637884994-e25tj39trrsmir28oobf9p77tnb4lr51.apps.googleusercontent.com",
 });
-
 export const signInWithGoogle = async () => {
   try {
     await GoogleSignin.hasPlayServices({
