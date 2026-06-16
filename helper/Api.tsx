@@ -655,3 +655,23 @@ export const storeGoogleLoginApiHandler = async (data: any) => {
     throw error.response?.data?.message || "Check Network Connection";
   }
 };
+
+export const getDurationApiHandler = async (id: any) => {
+  try {
+    const response = await api.get(`/shipping-rates/duration/${id}`);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};
+
+export const getContentApiHandler = async (type: string) => {
+  try {
+    const response = await api.get(`/cms-content/type/${type}`);
+    return response.data.data ?? response.data;
+  } catch (error: any) {
+    console.log(error.response?.data || error);
+    throw error.response?.data?.message || "Check Network Connection";
+  }
+};

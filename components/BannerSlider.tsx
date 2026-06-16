@@ -72,7 +72,7 @@ const BannerSlider = () => {
   const getSliderImages = async () => {
     try {
       const response = await getDashboardImagesApiHandler();
-      setSlides(response);
+      setSlides(response ?? []);
     } catch (error) {
       Toast.show({
         type: "error",
@@ -137,7 +137,7 @@ const BannerSlider = () => {
     <View className="mt-4">
       <FlatList
         ref={flatListRef}
-        data={ slides}
+        data={slides}
         keyExtractor={(item) => item.id}
         renderItem={renderSlide}
         horizontal

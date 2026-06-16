@@ -14,6 +14,7 @@ import { SHIPMENT_TYPE } from "@/constants/enums";
 import {
   createOrderApiHandler,
   getBoxesApiHandler,
+  getDurationApiHandler,
   submitEnquiryApiHandler,
 } from "@/helper/Api";
 import { useAddressStore } from "@/store/useAddress";
@@ -42,6 +43,7 @@ const Specification = ({ navigation, route }: any) => {
   const [termsConditions, setTermsConditions] = useState(false);
   const [shipmentType, setShipmentType] = useState(null);
   const [boxes, setBoxes] = useState<any>(null);
+  const [durations, setDurations] = useState(null);
   const [loading, setLoading] = useState<Boolean>(false);
   const [errors, setErrors] = useState({
     selectedBox: "",
@@ -219,8 +221,8 @@ const Specification = ({ navigation, route }: any) => {
       const response = await getBoxesApiHandler(
         useAddressStore.getState().route,
       );
-      if(response?.length > 0) {
-        setSelectedBox(response[0])
+      if (response?.length > 0) {
+        setSelectedBox(response[0]);
       }
       console.log("boxes data : ", response);
       setBoxes([...response, ...staticBoxes]);
@@ -235,7 +237,39 @@ const Specification = ({ navigation, route }: any) => {
     }
   };
 
+  const getDurations = async () => {
+    try {
+      const response = await getDurationApiHandler(
+        useAddressStore.getState().route,
+      );
+      const payload = ["Loding"];
+      response?.map((item) => {
+        if (item?.type == "SHIP") {
+          payload[0] = `${item?.protocolDuration} Days` ;
+        } else {
+          payload[0] = "Not Available";
+        }
+        if (item?.type == "AIR") {
+          payload[1] = `${item?.protocolDuration} Days`;
+        } else {
+          payload[1] = "Not Available";
+        }
+      });
+      console.log("duration data", payload);
+      setDurations(payload);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Something went wrong"),
+      });
+    }
+  };
+
   useEffect(() => {
+    getDurations();
     getBoxes();
   }, []);
 
@@ -264,6 +298,7 @@ const Specification = ({ navigation, route }: any) => {
             />
 
             <BoxDimension
+              durations={durations}
               boxesData={boxes}
               selectedBox={selectedBox}
               setSelectedBox={handelSelectBox}

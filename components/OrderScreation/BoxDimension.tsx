@@ -167,6 +167,7 @@ const BoxDimension = ({
   detail,
   setDetail,
   errors = {},
+  durations,
 }: {
   boxesData: BoxItem;
   selectedBox: any;
@@ -185,6 +186,7 @@ const BoxDimension = ({
     l?: string;
     shipmentType?: string;
     termsConditions?: string;
+    durations: any;
   };
 }) => {
   const [infoItem, setInfoItem] = useState<BoxItem | null>(null);
@@ -195,8 +197,7 @@ const BoxDimension = ({
 
   return (
     <View className="mb-10 mt-4">
-              <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
-      
+      <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
         Select Weight & Dimension
       </Text>
       <View>
@@ -402,8 +403,7 @@ const BoxDimension = ({
           </View>
         ) : (
           <View className="flex flex-col gap-4">
-                 <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
-         
+            <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
               Type of Shipment
             </Text>
             <View className="flex flex-row gap-4">
@@ -445,10 +445,14 @@ const BoxDimension = ({
                           : "Lower Cost"}
                       </Text>
                       <Text className="text-center mt-3 font-inter-bold text-cno text-primary">
-                      {selectedBox?.mode == item ? `$${selectedBox?.price}` : "Not Available"}
+                        {selectedBox?.mode == item
+                          ? `$${selectedBox?.price}`
+                          : " "}
                       </Text>
-                      <Text className="px-4 py-2  mt-3 text-csm font-inter-bold rounded-full bg-[#CBD5E1]">
-                        5-8 Days
+                      <Text className="px-4 py-2  mt-3 text-csm text-center font-inter-bold rounded-full bg-[#CBD5E1]">
+                        {item == SHIPMENT_ROUTE.AIR_FREIGHT
+                          ? durations?.[1]
+                          : durations?.[0]}
                       </Text>
                     </View>
                   </Pressable>
@@ -456,32 +460,32 @@ const BoxDimension = ({
               )}
             </View>
             <Pressable
-                onPress={() => setTermsConditions(!termsConditions)}
-                className="mt-4 flex flex-row items-center gap-4"
+              onPress={() => setTermsConditions(!termsConditions)}
+              className="mt-4 flex flex-row items-center gap-4"
+            >
+              <View
+                className={`h-7 w-7 flex overflow-hidden justify-center items-center rounded-md ${errors.termsConditions ? "border-red-400" : "border-primary/40"} border-[1px]`}
               >
-                <View
-                  className={`h-7 w-7 flex overflow-hidden justify-center items-center rounded-md ${errors.termsConditions ? "border-red-400" : "border-primary/40"} border-[1px]`}
-                >
-                  {termsConditions ? (
-                    <View className="h-full w-full flex justify-center items-center bg-primary">
-                      <Icon name="Check" size={18} color="#FFFF" />
-                    </View>
-                  ) : null}
-                </View>
-                <Text className="text-csm text-primary/60">
-                  I agree to the{" "}
-                  <Text className=" font-inter-medium text-primary">Terms</Text>{" "}
-                  and{" "}
-                  <Text className=" font-inter-medium text-primary">
-                    Conditions
-                  </Text>
+                {termsConditions ? (
+                  <View className="h-full w-full flex justify-center items-center bg-primary">
+                    <Icon name="Check" size={18} color="#FFFF" />
+                  </View>
+                ) : null}
+              </View>
+              <Text className="text-csm text-primary/60">
+                I agree to the{" "}
+                <Text className=" font-inter-medium text-primary">Terms</Text>{" "}
+                and{" "}
+                <Text className=" font-inter-medium text-primary">
+                  Conditions
                 </Text>
-              </Pressable>
-              {errors.termsConditions ? (
-                <Text className="text-red-500 text-xs mt-1">
-                  {errors.termsConditions}
-                </Text>
-              ) : null}
+              </Text>
+            </Pressable>
+            {errors.termsConditions ? (
+              <Text className="text-red-500 text-xs mt-1">
+                {errors.termsConditions}
+              </Text>
+            ) : null}
             {errors.shipmentType ? (
               <Text className="text-red-500 text-xs -mt-2">
                 {errors.shipmentType}
