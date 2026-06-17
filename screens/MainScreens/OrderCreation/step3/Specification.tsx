@@ -331,7 +331,7 @@ const Specification = ({ navigation, route }: any) => {
           </ScrollView>
           <View className="">
             <Button
-              text="Submit"
+              text={selectedBox?.custom ? "Submit" : "Continue"}
               disabled={checkIsDisabled()}
               action={handelSubmit}
               loading={loading}

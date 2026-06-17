@@ -89,7 +89,7 @@ const WeProcureScreen = ({ navigation }: any) => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper KeyboardAvoiding={true}>
       <View className="px-8 pb-8 flex-1">
         <BackButton navigation={navigation} />
 

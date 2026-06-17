@@ -5,18 +5,19 @@ import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
-import { getAddressApiHandler } from "@/helper/Api";
+import { getAddressApiHandler, getRoutesByIdApiHandler } from "@/helper/Api";
 import { useAddressStore } from "@/store/useAddress";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   ActivityIndicator,
   Animated,
+  FlatList,
   Image,
   Modal,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -32,6 +33,11 @@ type Address = {
   state: string;
   city: string;
   country: string;
+};
+
+type RouteDetails = {
+  originName: string;
+  destinationName: string;
 };
 
 const TOTAL_STEP = 4;
@@ -54,27 +60,44 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
   const [selectedDeliveryAddress, setSelectedDeliveryAddress] =
     useState<Address | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddAddressDisabled, setIsAddAddressDisabled] = useState(false);
+  const [refreshingAddresses, setRefreshingAddresses] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<RouteDetails | null>(null);
 
   const slideAnim = useRef(new Animated.Value(400)).current;
+  const normalizeCountry = (value?: string | null) =>
+    value?.trim().toLowerCase() ?? "";
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsAddAddressDisabled(false);
+    }, []),
+  );
+
+  const fetchAddresses = useCallback(async (showFullLoader = true) => {
+    if (showFullLoader) setLoadingAddresses(true);
+    try {
+      const data = await getAddressApiHandler();
+      setAddresses(data ?? []);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: typeof error === "string" ? error : "Failed to load addresses.",
+      });
+    } finally {
+      if (showFullLoader) setLoadingAddresses(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchAddresses = async () => {
-      setLoadingAddresses(true);
-      try {
-        const data = await getAddressApiHandler();
-        setAddresses(data ?? []);
-      } catch (error: any) {
-        Toast.show({
-          type: "error",
-          text1:
-            typeof error === "string" ? error : "Failed to load addresses.",
-        });
-      } finally {
-        setLoadingAddresses(false);
-      }
-    };
     fetchAddresses();
-  }, [refreshAddress]);
+  }, [fetchAddresses, refreshAddress]);
+
+  const handleRefreshAddresses = async () => {
+    setRefreshingAddresses(true);
+    await fetchAddresses(false);
+    setRefreshingAddresses(false);
+  };
 
   const openModal = (target: "pickup" | "delivery") => {
     setAddressModalTarget(target);
@@ -110,12 +133,22 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
       ? selectedDeliveryAddress
       : selectedPickupAddress;
 
-  const filteredAddresses = addresses.filter(
-    (a) =>
-      a.id !== excludedSelectedAddress?.id &&
-      (a.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.addressLine.toLowerCase().includes(searchQuery.toLowerCase())),
-  );
+  const targetCountry =
+    addressModalTarget === "pickup"
+      ? selectedRoute?.originName
+      : selectedRoute?.destinationName;
+
+  const filteredAddresses = addresses.filter((a) => {
+    const matchesRouteCountry =
+      normalizeCountry(a.country) === normalizeCountry(targetCountry);
+    const matchesSearch =
+      a.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.addressLine.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return (
+      matchesRouteCountry && a.id !== excludedSelectedAddress?.id && matchesSearch
+    );
+  });
 
   const handelSubmit = (type: any) => {
     useAddressStore.getState().setDeliverAddress(selectedDeliveryAddress);
@@ -125,8 +158,25 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
   };
 
   const handelAddNEwAdd = () => {
+    if (isAddAddressDisabled) return;
+    setIsAddAddressDisabled(true);
     navigation.push("AddNewAddress");
   };
+
+  const getRoute = useCallback(async () => {
+    try {
+      const response = await getRoutesByIdApiHandler(
+        useAddressStore.getState()?.route,
+      );
+      setSelectedRoute(response ?? null);
+    } catch (error) {
+      console.log("error : ", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getRoute();
+  }, [getRoute]);
 
   return (
     <ScreenWrapper>
@@ -180,7 +230,9 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
           {/* Add Address row */}
           <TouchableOpacity
             onPress={handelAddNEwAdd}
+            disabled={isAddAddressDisabled}
             className="mx-6 mb-2 flex flex-row items-center gap-3 px-4 py-3"
+            style={{ opacity: isAddAddressDisabled ? 0.5 : 1 }}
           >
             <Feather name="plus" size={20} color="#0F1729" />
             <Text className="text-cno font-inter-semibold text-primary">
@@ -195,11 +247,18 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
           {loadingAddresses ? (
             <ActivityIndicator size="large" color="#0F1729" className="mt-4" />
           ) : (
-            <ScrollView showsVerticalScrollIndicator={false} className="mx-6">
-              {filteredAddresses?.length > 0 ? (
-                filteredAddresses.map((addr) => (
+            <View className="mx-6 flex-1">
+              <FlatList
+                data={filteredAddresses}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshing={refreshingAddresses}
+                onRefresh={handleRefreshAddresses}
+                contentContainerStyle={{
+                  flexGrow: filteredAddresses.length > 0 ? 0 : 1,
+                }}
+                renderItem={({ item: addr }) => (
                   <TouchableOpacity
-                    key={addr.id}
                     onPress={() => handleSelectAddress(addr)}
                     className="flex flex-row items-center gap-4 py-4 border-b border-primary/5"
                   >
@@ -218,22 +277,23 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
                       </Text>
                     </View>
                   </TouchableOpacity>
-                ))
-              ) : (
-                <View className="flex-1 pt-20 gap-1 flex flex-col px-6">
-                  <Image
-                    className="w-full rounded-lg flex items-start bg-cover"
-                    source={EmptyAddress}
-                  />
-                  <Text className="text-cmd mt-6 font-space-grotesk-bold text-center">
-                    No Saved Addresses Yet
-                  </Text>
-                  <Text className="text-csm font-inter-medium text-center">
-                    Add your first pickup or delivery address to get started.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
+                )}
+                ListEmptyComponent={
+                  <View className="flex-1 pt-20 gap-1 flex flex-col px-6">
+                    <Image
+                      className="w-full rounded-lg flex items-start bg-cover"
+                      source={EmptyAddress}
+                    />
+                    <Text className="text-cmd mt-6 font-space-grotesk-bold text-center">
+                      No Saved Addresses Yet
+                    </Text>
+                    <Text className="text-csm font-inter-medium text-center">
+                      Add your first pickup or delivery address to get started.
+                    </Text>
+                  </View>
+                }
+              />
+            </View>
           )}
         </Animated.View>
       </Modal>

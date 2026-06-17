@@ -40,6 +40,7 @@ const AccountInformation = ({ navigation }: any) => {
   const getProfile = async () => {
     try {
       const response = await getProfileApiHandler();
+      console.log("response : ", response);
       const userData = response?.user;
       const payload = {
         id: userData?.id,
@@ -171,7 +172,7 @@ const AccountInformation = ({ navigation }: any) => {
                 Mobile Number
               </Text>
               <Text className="text-[11px] font-inter text-primary">
-                {user?.phone}
+                {user?.phone ?? "Add number"}
               </Text>
             </View>
           </View>
@@ -198,39 +199,41 @@ const AccountInformation = ({ navigation }: any) => {
                 Email Id
               </Text>
               <Text className="text-[11px] font-inter text-primary">
-                 {user?.email}
+                {user?.email}
               </Text>
             </View>
           </View>
           <Icon name="Arrow" />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            shadowColor: "#BDBDBD",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1115,
-            shadowRadius: 8,
-            elevation: 5,
-          }}
-          onPress={() => {
-            navigation.push("UpdateDetail", {
-              isFor: INFO_UPDATE.PASSWORD_UPDATE,
-            });
-          }}
-          className="px-6 py-5 flex flex-row items-center justify-between bg-white border-[1.5px] rounded-xl border-[#E9EDF8]"
-        >
-          <View className="flex flex-row gap-4">
-            <View>
-              <Text className="text-cno font-inter-bold text-primary">
-                Passwords
-              </Text>
-              <Text className="text-[11px] font-inter text-primary">
-                ***********
-              </Text>
+        {user?.authMethod === "email" ? (
+          <TouchableOpacity
+            style={{
+              shadowColor: "#BDBDBD",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1115,
+              shadowRadius: 8,
+              elevation: 5,
+            }}
+            onPress={() => {
+              navigation.push("UpdateDetail", {
+                isFor: INFO_UPDATE.PASSWORD_UPDATE,
+              });
+            }}
+            className="px-6 py-5 flex flex-row items-center justify-between bg-white border-[1.5px] rounded-xl border-[#E9EDF8]"
+          >
+            <View className="flex flex-row gap-4">
+              <View>
+                <Text className="text-cno font-inter-bold text-primary">
+                  Passwords
+                </Text>
+                <Text className="text-[11px] font-inter text-primary">
+                  ***********
+                </Text>
+              </View>
             </View>
-          </View>
-          <Icon name="Arrow" />
-        </TouchableOpacity>
+            <Icon name="Arrow" />
+          </TouchableOpacity>
+        ) : null}
         <TouchableOpacity
           style={{
             shadowColor: "#BDBDBD",

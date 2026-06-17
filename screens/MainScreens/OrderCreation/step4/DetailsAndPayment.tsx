@@ -87,7 +87,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       await addToCartApiHandler(orderId);
 
       await fetchCart();
-      navigation.push("CartScreen");
+      handleBackToHome();
     } catch (error: any) {
       Toast.show({
         type: "error",

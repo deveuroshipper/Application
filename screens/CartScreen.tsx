@@ -300,7 +300,7 @@ const CartScreen = ({ navigation }: any) => {
 
   const handelSelectedCheckout = () => {
     navigation.push("DetailsAndPayment", {
-      orderId: selectedItems?.[0],
+      orderId: selectedItems,
     });
   };
   const handleViewDetails = (orderId: String) => {

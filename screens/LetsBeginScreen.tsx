@@ -48,7 +48,7 @@ const LetsBeginScreen = ({ navigation }: any) => {
             <View className="h-0.5 flex-auto bg-gold/50 " />
 
             <Text className="z-40 flex-auto pb-2 text-cxs mt-2 w-fit text-center text-white/50 font-inter-medium tracking-[2.5px] uppercase">
-              European Logistics Authority
+              Global Shipping Made Simple
             </Text>
             <View className="h-0.5 flex-auto bg-gold/40" />
           </View>

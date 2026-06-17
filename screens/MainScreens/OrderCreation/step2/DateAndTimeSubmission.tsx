@@ -16,6 +16,61 @@ import { useAddressStore } from "@/store/useAddress";
 import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
+const MIN_PICKUP_HOURS = 48;
+const MIN_DROP_AT_WAREHOUSE_HOURS = 24;
+const SUBMISSION_SHIFTS = [
+  {
+    label: "10:00 AM to 2:00 PM",
+    startHour: 10,
+    startMinute: 0,
+  },
+  {
+    label: "3:00 PM to 7:00 PM",
+    startHour: 15,
+    startMinute: 0,
+  },
+];
+
+const getMinimumSubmissionDateTime = (minimumHours: number) => {
+  const minimumDate = new Date();
+  minimumDate.setHours(minimumDate.getHours() + minimumHours);
+  return minimumDate;
+};
+
+const getStartOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const combineDateAndTime = (date: Date, time: Date) =>
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    time.getHours(),
+    time.getMinutes(),
+    0,
+    0,
+  );
+
+const getShiftDateTime = (
+  date: Date,
+  shift: (typeof SUBMISSION_SHIFTS)[number],
+) =>
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    shift.startHour,
+    shift.startMinute,
+    0,
+    0,
+  );
+
+const showInvalidSubmissionTimeToast = (minimumHours: number) => {
+  Toast.show({
+    type: "error",
+    text1: `Please select a date and time at least ${minimumHours} hours from now.`,
+  });
+};
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-GB", {
@@ -24,39 +79,78 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
-const formatTime = (date: Date) =>
-  date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
 const DateAndTimeSubmission = ({ navigation, route }: any) => {
   const [step, setStep] = useState(2);
   const ShipmentType: SHIPMENT_TYPE = route?.params?.ShipmentType ?? null;
   const IsDropAt = ShipmentType == SHIPMENT_TYPE.DROP_AT_WAREHOUSE;
+  const minimumSubmissionHours = IsDropAt
+    ? MIN_DROP_AT_WAREHOUSE_HOURS
+    : MIN_PICKUP_HOURS;
   const [data, setData] = useState<{ date: Date; time: Date | null }>({
-    date: new Date(),
+    date: getMinimumSubmissionDateTime(minimumSubmissionHours),
     time: null,
   });
   const [loading, setLoading] = useState(true);
   const [showDate, setShowDate] = useState(false);
-  const [showTime, setShowTime] = useState(false);
+  const [showShiftOptions, setShowShiftOptions] = useState(false);
   const [warehouseAddress, setWarehouseAddress] = useState(null);
+console.log("time t: " , data.time)
+  const selectedShift = SUBMISSION_SHIFTS.find(
+    (shift) =>
+      data.time?.getHours() === shift.startHour &&
+      data.time?.getMinutes() === shift.startMinute,
+  );
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDate(false);
-    if (selectedDate) useAddressStore.getState().setDate(selectedDate);
-    if (selectedDate) setData((prev) => ({ ...prev, date: selectedDate }));
+    if (!selectedDate) return;
+
+    const minimumDate = getMinimumSubmissionDateTime(minimumSubmissionHours);
+    if (getStartOfDay(selectedDate) < getStartOfDay(minimumDate)) {
+      showInvalidSubmissionTimeToast(minimumSubmissionHours);
+      return;
+    }
+
+    setData((prev) => {
+      const nextTime =
+        prev.time &&
+        combineDateAndTime(selectedDate, prev.time) >= minimumDate
+          ? prev.time
+          : null;
+
+      useAddressStore.getState().setDate(selectedDate);
+      useAddressStore.getState().setTime(nextTime);
+
+      return { ...prev, date: selectedDate, time: nextTime };
+    });
   };
 
-  const onTimeChange = (_event: any, selectedTime?: Date) => {
-    if (Platform.OS === "android") setShowTime(false);
-    if (selectedTime) useAddressStore.getState().setTime(selectedTime);
-    if (selectedTime) setData((prev) => ({ ...prev, time: selectedTime }));
+  const onShiftSelect = (shift: (typeof SUBMISSION_SHIFTS)[number]) => {
+    const selectedDateTime = getShiftDateTime(data.date, shift);
+
+    if (
+      selectedDateTime <
+      getMinimumSubmissionDateTime(minimumSubmissionHours)
+    ) {
+      showInvalidSubmissionTimeToast(minimumSubmissionHours);
+      return;
+    }
+
+    useAddressStore.getState().setTime(selectedDateTime);
+    setData((prev) => ({ ...prev, time: selectedDateTime }));
+    setShowShiftOptions(false);
   };
 
   const handelSubmit = (type: any) => {
+    if (
+      !data.time ||
+      combineDateAndTime(data.date, data.time) <
+        getMinimumSubmissionDateTime(minimumSubmissionHours)
+    ) {
+      showInvalidSubmissionTimeToast(minimumSubmissionHours);
+      return;
+    }
+
     navigation.push("AddShipmentAddresses", {
       ShipmentType: ShipmentType,
     });
@@ -110,15 +204,8 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
           value={data.date}
           mode="date"
           display="default"
+          minimumDate={getMinimumSubmissionDateTime(minimumSubmissionHours)}
           onChange={onDateChange}
-        />
-      )}
-      {showTime && (
-        <DateTimePicker
-          value={data.time ?? new Date()}
-          mode="time"
-          display="default"
-          onChange={onTimeChange}
         />
       )}
       <View className="px-8 pb-8 flex-1">
@@ -207,8 +294,13 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
               </View>
             )}
 
-            <View className="mt-6 flex flex-col gap-4">
-              <Pressable onPress={() => setShowDate(true)}>
+            <View className="mt-6 flex flex-col gap-2">
+              <Pressable
+                onPress={() => {
+                  setShowShiftOptions(false);
+                  setShowDate(true);
+                }}
+              >
                 <Input
                   label={"Date Submission (Expected)"}
                   placeholderTxt={"Enter Date"}
@@ -218,16 +310,45 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
                   editable={false}
                 />
               </Pressable>
-              <Pressable onPress={() => setShowTime(true)}>
+              <Pressable
+                onPress={() => setShowShiftOptions((prev) => !prev)}
+              >
                 <Input
                   label={"Time Submission"}
-                  placeholderTxt={"Enter Time"}
-                  value={data.time ? formatTime(data.time) : ""}
+                  placeholderTxt={"Select Shift"}
+                  value={selectedShift?.label ?? ""}
                   onChange={() => {}}
                   icon={<Icon name="Time" color="#BFCDDE" size={26} />}
                   editable={false}
                 />
               </Pressable>
+              {showShiftOptions && (
+                <View className="-mt-6 bg-white px-6 border-[1.5px] border-[#B5C3E8]/30 rounded-2xl overflow-hidden">
+                  {SUBMISSION_SHIFTS.map((shift, index) => {
+                    const isSelected = selectedShift?.label === shift.label;
+
+                    return (
+                      <Pressable
+                        key={shift.label}
+                        onPress={() => onShiftSelect(shift)}
+                        className={`flex flex-row items-center justify-between py-4 ${
+                          index > 0 ? "border-t border-t-primary/10" : ""
+                        }`}
+                      >
+                        <View className="flex flex-row items-center gap-3">
+                          <Icon name="Time" color="#BFCDDE" size={22} />
+                          <Text className="text-cno font-inter-medium text-primary">
+                            {shift.label}
+                          </Text>
+                        </View>
+                        {isSelected && (
+                          <Icon name="Check" size={18} color="#0F1729" />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </View>
           </View>
 

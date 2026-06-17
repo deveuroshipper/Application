@@ -231,7 +231,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
   };
 
   return (
-    <ScreenWrapper KeyboardAvoiding={false}>
+    <ScreenWrapper KeyboardAvoiding={true}>
       <View className="flex-1 px-8 pb-8">
         <View className="flex flex-row items-center justify-between">
           <BackButton navigation={navigation} />

@@ -196,7 +196,16 @@ export const getRoutesApiHandler = async () => {
     throw error.response.data.message || "Check Network Connection";
   }
 };
+export const getRoutesByIdApiHandler = async (id: string) => {
+  try {
+    const response = await api.get(`/shipping-routes/${id}`);
 
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
 export const getCategoryApiHandler = async () => {
   try {
     const response = await api.get(`/categories`);

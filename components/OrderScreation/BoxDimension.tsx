@@ -361,10 +361,14 @@ const BoxDimension = ({
                 placeholder="Select"
                 value={shipmentType}
                 onChange={setShipmentType}
-                options={[
-                  { label: "Air Freight", value: "AIR", icon: "Plan" },
-                  { label: "Sea Freight", value: "SHIP", icon: "Ship" },
-                ]}
+                options={
+                  selectedBox?.name == "Custom Box"
+                    ? [
+                        { label: "Air Freight", value: "AIR", icon: "Plan" },
+                        { label: "Sea Freight", value: "SHIP", icon: "Ship" },
+                      ]
+                    : [{ label: "Sea Freight", value: "SHIP", icon: "Ship" }]
+                }
               />
               {errors.shipmentType ? (
                 <Text className="text-red-500 text-xs -mt-2 mb-2">
@@ -385,11 +389,11 @@ const BoxDimension = ({
                     </View>
                   ) : null}
                 </View>
-                <Text className="text-csm text-primary/60">
+                <Text className="text-csm font-inter-semibold text-primary/60">
                   I agree to the{" "}
-                  <Text className=" font-inter-medium text-primary">Terms</Text>{" "}
+                  <Text className=" font-inter-bold text-primary">Terms</Text>{" "}
                   and{" "}
-                  <Text className=" font-inter-medium text-primary">
+                  <Text className=" font-inter-bold text-primary">
                     Conditions
                   </Text>
                 </Text>

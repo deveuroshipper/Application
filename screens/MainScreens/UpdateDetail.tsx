@@ -4,7 +4,6 @@ import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
-import ScreenWrapper from "@/components/ScreenWrapper";
 import SuccessModel from "@/components/SuccessModel";
 import { INFO_UPDATE } from "@/constants/enums";
 import {
@@ -80,23 +79,23 @@ const UpdateDetail = ({ navigation, route }: any) => {
 
     switch (isFor) {
       case INFO_UPDATE.EMAIL_UPDATE:
-        if (!detail.oldEmail.trim())
+        if (!detail.oldEmail?.trim())
           newErrors.oldEmail = "Old email is required.";
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(detail.oldEmail))
           newErrors.oldEmail = "Please enter a valid old email address.";
 
-        if (!detail.newEmail.trim())
+        if (!detail.newEmail?.trim())
           newErrors.newEmail = "New email is required.";
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(detail.newEmail))
           newErrors.newEmail = "Please enter a valid new email address.";
         break;
 
-      case INFO_UPDATE.PHONE_UPDATE:
-        if (!detail.oldNumber.trim())
-          newErrors.oldNumber = "Old mobile number is required.";
-        if (!detail.newNumber.trim())
-          newErrors.newNumber = "New mobile number is required.";
-        break;
+      // case INFO_UPDATE.PHONE_UPDATE:
+      //   if (!detail.oldNumber?.trim())
+      //     newErrors.oldNumber = "Old mobile number is required.";
+      //   if (!detail.newNumber?.trim())
+      //     newErrors.newNumber = "New mobile number is required.";
+      //   break;
 
       case INFO_UPDATE.PASSWORD_UPDATE:
         if (!detail.oldPassword)
@@ -123,9 +122,9 @@ const UpdateDetail = ({ navigation, route }: any) => {
   const isVerifyDisabled = (() => {
     switch (isFor) {
       case INFO_UPDATE.EMAIL_UPDATE:
-        return !detail.oldEmail.trim() || !detail.newEmail.trim() || loading;
-      case INFO_UPDATE.PHONE_UPDATE:
-        return !detail.oldNumber.trim() || !detail.newNumber.trim() || loading;
+        return !detail.oldEmail?.trim() || !detail.newEmail?.trim() || loading;
+      // case INFO_UPDATE.PHONE_UPDATE:
+      //   return !detail.oldNumber?.trim() || !detail.newNumber?.trim() || loading;
       case INFO_UPDATE.PASSWORD_UPDATE:
         return (
           !detail.oldPassword ||
@@ -181,15 +180,16 @@ const UpdateDetail = ({ navigation, route }: any) => {
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-
-          response = await updateInfoApiHandler({
-            old: detail?.oldNumber,
+          const payload = {
             new: detail?.newNumber,
             type: "phoneupdate",
-          });
+          };
+          if (detail?.oldNumber) {
+            payload.old = detail?.oldNumber;
+          }
+          response = await updateInfoApiHandler(payload);
           break;
         case INFO_UPDATE.PASSWORD_UPDATE:
-
           response = await changePasswordApiHandler({
             oldPassword: detail?.oldPassword,
             newPassword: detail?.newPassword,
@@ -271,18 +271,20 @@ const UpdateDetail = ({ navigation, route }: any) => {
         return (
           <View>
             <View className="mb-6">
-              <PhoneNumberInput
-                label={"Enter Old Mobile Number"}
-                placeholderTxt={"Type your old mobile number"}
-                value={detail?.oldNumber}
-                selectedCode={detail?.oldCode}
-                onCodeChange={(e) => {}}
-                onChange={(text: string) => {
-                  setDetail({ ...detail, oldNumber: text });
-                  clearError("oldNumber");
-                }}
-                error={errors.oldNumber}
-              />
+              {detail?.oldNumber ? (
+                <PhoneNumberInput
+                  label={"Enter Old Mobile Number"}
+                  placeholderTxt={"Type your old mobile number"}
+                  value={detail?.oldNumber}
+                  selectedCode={detail?.oldCode}
+                  onCodeChange={(e) => {}}
+                  onChange={(text: string) => {
+                    setDetail({ ...detail, oldNumber: text });
+                    clearError("oldNumber");
+                  }}
+                  error={errors.oldNumber}
+                />
+              ) : null}
               <PhoneNumberInput
                 label={"Enter New Mobile Number"}
                 placeholderTxt={"Type your new mobile number"}
@@ -366,49 +368,47 @@ const UpdateDetail = ({ navigation, route }: any) => {
   };
 
   return (
-   
-      <View className="flex-1 bg-BgWhite">
-        <SuccessModel
-          onclose={() => goInfoPage()}
-          show={showModel}
-          body={
-            <View className="flex-1 px-8 flex justify-center items-center">
-              <View className="bg-white w-full p-6 rounded-2xl flex flex-col gap-4 justify-center items-center">
-                <Image source={passwordSuccess} />
-                <View className="flex justify-center items-center">
-                  <Text className="text-cmd font-space-grotesk-bold text-center">
-                    Password Updated Successfully!
-                  </Text>
-                  <Text className="text-center w-64">
-                    Your account information has been updated successfully.
-                  </Text>
-                </View>
-                <Button
-                  text="Done"
-                  loading={loading}
-                  action={() => goInfoPage()}
-                />
+    <View className="flex-1 bg-BgWhite">
+      <SuccessModel
+        onclose={() => goInfoPage()}
+        show={showModel}
+        body={
+          <View className="flex-1 px-8 flex justify-center items-center">
+            <View className="bg-white w-full p-6 rounded-2xl flex flex-col gap-4 justify-center items-center">
+              <Image source={passwordSuccess} />
+              <View className="flex justify-center items-center">
+                <Text className="text-cmd font-space-grotesk-bold text-center">
+                  Password Updated Successfully!
+                </Text>
+                <Text className="text-center w-64">
+                  Your account information has been updated successfully.
+                </Text>
               </View>
+              <Button
+                text="Done"
+                loading={loading}
+                action={() => goInfoPage()}
+              />
             </View>
-          }
-        />
-        <View className="pt-12  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
-          <BackButton color="#FFFF" navigation={navigation} />
-          <View className="mt-8">
-            <Text className="text-white text-[20px] text-center font-inter-bold">
-              Account Information 
-            </Text>
-            <Text className="text-white/50 mt-1 text-center text-cno font-inter">
-              Welcome back to Euro Shipper!
-            </Text>
           </View>
-        </View>
-
-        <View className=" mt-10  px-8 mb-6 flex flex-col gap-6 flex-1">
-          {renderUpdateUi()}
+        }
+      />
+      <View className="pt-12  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+        <BackButton color="#FFFF" navigation={navigation} />
+        <View className="mt-8">
+          <Text className="text-white text-[20px] text-center font-inter-bold">
+            Account Information
+          </Text>
+          <Text className="text-white/50 mt-1 text-center text-cno font-inter">
+            Welcome back to Euro Shipper!
+          </Text>
         </View>
       </View>
- 
+
+      <View className=" mt-10  px-8 mb-6 flex flex-col gap-6 flex-1">
+        {renderUpdateUi()}
+      </View>
+    </View>
   );
 };
 

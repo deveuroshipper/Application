@@ -43,7 +43,6 @@ const CreateTickets = ({ navigation }: any) => {
     data.typeOfQuery &&
     (data.typeOfQuery !== "order_related" || data.order) &&
     data.subject.trim() &&
-    data.typeOfProduct.trim() &&
     data.message.trim(),
   );
 
@@ -74,8 +73,7 @@ const CreateTickets = ({ navigation }: any) => {
     if (data.typeOfQuery === "order_related" && !data.order)
       newErrors.order = "Order is required.";
     if (!data.subject.trim()) newErrors.subject = "Subject is required.";
-    if (!data.typeOfProduct.trim())
-      newErrors.typeOfProduct = "Type of product is required.";
+   
     if (!data.message.trim()) newErrors.message = "Message is required.";
 
     setErrors(newErrors);
@@ -92,7 +90,7 @@ const CreateTickets = ({ navigation }: any) => {
         email: data.email.trim(),
         mobilenumber: data.phone.trim(),
         subject: data.subject.trim(),
-        typeOfProduct: data.typeOfProduct.trim(),
+        typeOfProduct: "NA",
         message: data.message.trim(),
         queryType: data.typeOfQuery,
         ...(data.order ? { orderId: data.order } : {}),
@@ -184,7 +182,7 @@ const CreateTickets = ({ navigation }: any) => {
                 setData({ ...data, phone: text });
                 if (errors.phone) setErrors((e) => ({ ...e, phone: "" }));
               }}
-              keyboardTypes={"name-phone-pad"}
+              keyboardTypes={"phone-pad"}
               error={errors.phone}
             />
             <Dropdown
@@ -295,7 +293,7 @@ const CreateTickets = ({ navigation }: any) => {
               }}
               error={errors.subject}
             />
-            <Input
+            {/* <Input
               label={"type Of product"}
               placeholderTxt={"Subject"}
               value={data?.typeOfProduct}
@@ -305,7 +303,7 @@ const CreateTickets = ({ navigation }: any) => {
                   setErrors((e) => ({ ...e, typeOfProduct: "" }));
               }}
               error={errors.typeOfProduct}
-            />
+            /> */}
             <Input
               label={"message"}
               placeholderTxt={"Type your message "}
