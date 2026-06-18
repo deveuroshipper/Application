@@ -8,19 +8,30 @@ import { INFO_UPDATE } from "@/constants/enums";
 import { getProfileApiHandler, updateNameApiHandler } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useEffect, useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 const AccountInformation = ({ navigation }: any) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [showModel, setShowModel] = useState(false);
   const [nameModel, setNameModel] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(
     useAuthStore.getState()?.user?.fullName ?? "",
   );
+  const currentName = user?.fullName ?? "";
+  const isNameChanged = name.trim() !== currentName.trim();
 
   const handelUpdateName = async () => {
+    if (!isNameChanged || loading) return;
+
     try {
       setLoading(true);
       await updateNameApiHandler({ name });
@@ -97,6 +108,10 @@ const AccountInformation = ({ navigation }: any) => {
         show={nameModel}
         body={
           <View className="flex-1 px-8 flex justify-center items-center">
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setNameModel(false)}
+            />
             <View className="bg-white w-full p-6 rounded-2xl flex flex-col gap-2 justify-center items-center">
               <View className=" w-full">
                 <Input
@@ -106,7 +121,12 @@ const AccountInformation = ({ navigation }: any) => {
                   placeholderTxt="Enter Full name "
                 />
               </View>
-              <Button text="Submit" action={() => handelUpdateName()} />
+              <Button
+                text="Submit"
+                loading={loading}
+                disabled={!isNameChanged || loading}
+                action={() => handelUpdateName()}
+              />
             </View>
           </View>
         }
@@ -134,6 +154,7 @@ const AccountInformation = ({ navigation }: any) => {
             elevation: 5,
           }}
           onPress={() => {
+            setName(user?.fullName ?? "");
             setNameModel(true);
           }}
           className="px-6 py-5 flex flex-row items-center justify-between bg-white border-[1.5px] rounded-xl border-[#E9EDF8]"
