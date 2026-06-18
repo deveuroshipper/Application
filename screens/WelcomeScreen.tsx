@@ -23,6 +23,8 @@ const WelcomeScreen = ({ navigation }: any) => {
         authMethod: "google",
         authId: data?.user?.id,
       };
+
+      console.log("payload for login: ", payload);
       const response = await storeGoogleLoginApiHandler(payload);
 
       await useAuthStore.getState().login(response.token, response.user);
@@ -75,12 +77,12 @@ const WelcomeScreen = ({ navigation }: any) => {
         </View>
 
         <View className="w-full  flex flex-col gap-6 items-center">
-          <SocialButton
+          {/* <SocialButton
             size={Size.Small}
             action={signInWithApple}
             icon={<Icon name="Apple" size={20} />}
             text={"Continue with Apple"}
-          />
+          /> */}
           <SocialButton
             size={Size.Small}
             action={handelGoogleLogin}

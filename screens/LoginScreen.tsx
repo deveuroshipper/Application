@@ -188,11 +188,11 @@ const LoginScreen = ({ navigation }: any) => {
                 <View className="h-[0.9px] flex-auto bg-primary/30" />
               </View>
 
-              <SocialButton
+              {/* <SocialButton
                 size={Size.Small}
                 icon={<Icon name="Apple" size={20} />}
                 text={"Continue with Apple"}
-              />
+              /> */}
               <SocialButton
                 size={Size.Small}
                 action={handelGoogleLogin}
