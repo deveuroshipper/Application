@@ -49,7 +49,7 @@ type Props = {
 
 const BannerSlider = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [slides, setSlides] = useState<null | any>(null);
+  const [slides, setSlides] = useState<null | any>([]);
   const flatListRef = useRef<FlatList<BannerSlide>>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -134,42 +134,51 @@ const BannerSlider = () => {
   );
 
   return (
-    <View className="mt-4">
-      <FlatList
-        ref={flatListRef}
-        data={slides}
-        keyExtractor={(item) => item.id}
-        renderItem={renderSlide}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled={false}
-        snapToInterval={SLIDE_WIDTH + SLIDE_GAP}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: 24 }}
-        onMomentumScrollEnd={onScrollEnd}
-        getItemLayout={(_, index) => ({
-          length: SLIDE_WIDTH + SLIDE_GAP,
-          offset: (SLIDE_WIDTH + SLIDE_GAP) * index,
-          index,
-        })}
-      />
-
-      {/* Dot Indicators */}
-      <View className="flex-row justify-center items-center mt-6 gap-1.5">
-        {slides?.map((_, index) => (
-          <View
-            key={index}
-            style={{
-              width: index === activeIndex ? 30 : 10,
-              height: 4,
-              borderRadius: 3,
-              backgroundColor: index === activeIndex ? "#E0A31D" : "#D4C4AE",
-            }}
+    <>
+      {slides?.length > 0 ? (
+        <View className="mt-4">
+          <FlatList
+            ref={flatListRef}
+            data={slides}
+            keyExtractor={(item) => item.id}
+            renderItem={renderSlide}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled={false}
+            snapToInterval={SLIDE_WIDTH + SLIDE_GAP}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: 24 }}
+            onMomentumScrollEnd={onScrollEnd}
+            getItemLayout={(_, index) => ({
+              length: SLIDE_WIDTH + SLIDE_GAP,
+              offset: (SLIDE_WIDTH + SLIDE_GAP) * index,
+              index,
+            })}
           />
-        ))}
-      </View>
-    </View>
+
+          {/* Dot Indicators */}
+          <View className="flex-row justify-center items-center mt-6 gap-1.5">
+            {slides?.map((_, index) => (
+              <View
+                key={index}
+                style={{
+                  width: index === activeIndex ? 30 : 10,
+                  height: 4,
+                  borderRadius: 3,
+                  backgroundColor:
+                    index === activeIndex ? "#E0A31D" : "#D4C4AE",
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View className="px-6 mt-4">
+          <View className="w-full h-52 rounded-3xl bg-primary/5" />
+        </View>
+      )}
+    </>
   );
 };
 

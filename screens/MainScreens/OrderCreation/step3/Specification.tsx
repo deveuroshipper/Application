@@ -224,7 +224,7 @@ const Specification = ({ navigation, route }: any) => {
       if (response?.length > 0) {
         setSelectedBox(response[0]);
       }
-      console.log("boxes data : ", response);
+      console.log("boxes data : ", response[0]?.modePrices);
       setBoxes([...response, ...staticBoxes]);
     } catch (error: any) {
       Toast.show({
@@ -242,20 +242,16 @@ const Specification = ({ navigation, route }: any) => {
       const response = await getDurationApiHandler(
         useAddressStore.getState().route,
       );
+      console.log("duration data", response);
       const payload = ["Loding"];
       response?.map((item) => {
         if (item?.type == "SHIP") {
-          payload[0] = `${item?.protocolDuration} Days` ;
-        } else {
-          payload[0] = "Not Available";
-        }
-        if (item?.type == "AIR") {
+          payload[0] = `${item?.protocolDuration} Days`;
+        } else if (item?.type == "AIR") {
           payload[1] = `${item?.protocolDuration} Days`;
-        } else {
-          payload[1] = "Not Available";
-        }
+        } 
       });
-      console.log("duration data", payload);
+
       setDurations(payload);
     } catch (error: any) {
       Toast.show({

@@ -137,7 +137,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
     try {
       // setLoading(true);
       const response = await getOrderByIdApiHandler(orderId);
-
+      console.log("order details : ", response);
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({

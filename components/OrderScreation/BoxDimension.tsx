@@ -5,17 +5,21 @@ import verifiedBox from "@/assets/images/boxes/verifiyedBox.png";
 import plan from "@/assets/images/plan.png";
 import ship from "@/assets/images/ship.png";
 import { SHIPMENT_ROUTE } from "@/constants/enums";
+import { getContentApiHandler } from "@/helper/Api";
 import { BoxItem } from "@/screens/MainScreens/OrderCreation/step3/Specification";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import Dropdown from "../Dropdown";
 import Input from "../Input";
 
@@ -156,6 +160,175 @@ const BoxInfoModal = ({
   </Modal>
 );
 
+const TermsConditionsModal = ({ onClose }: { onClose: () => void }) => {
+  const [content, setContent] = useState<any>(null);
+  const [hasMoreContent, setHasMoreContent] = useState(false);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const contentHeightRef = React.useRef(0);
+  const scrollViewHeightRef = React.useRef(0);
+  const scrollOffsetRef = React.useRef(0);
+  const hasMoreContentRef = React.useRef(false);
+
+  const updateScrollIndicator = React.useCallback((offset?: number) => {
+    const currentOffset = offset ?? scrollOffsetRef.current;
+    const contentHeight = contentHeightRef.current;
+    const scrollViewHeight = scrollViewHeightRef.current;
+
+    const nextHasMoreContent =
+      contentHeight > scrollViewHeight &&
+      currentOffset + scrollViewHeight < contentHeight - 8;
+
+    if (nextHasMoreContent !== hasMoreContentRef.current) {
+      hasMoreContentRef.current = nextHasMoreContent;
+      setHasMoreContent(nextHasMoreContent);
+    }
+  }, []);
+
+  const getContent = async () => {
+    try {
+      const response = await getContentApiHandler("termsAndCondition");
+      setContent(response);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : "Failed to load terms and conditions.",
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    getContent();
+  }, []);
+
+  return (
+    <Modal transparent animationType="fade" onRequestClose={onClose}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+        }}
+      >
+        <Pressable
+          onPress={onClose}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: "rgba(0,0,0,0.45)",
+          }}
+        />
+
+        <View
+          style={{
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            padding: 24,
+            paddingBottom: 36,
+            maxHeight: "80%",
+          }}
+        >
+          <View className="flex flex-row justify-between items-center">
+            <Text className="text-clg font-inter-bold">
+              Terms and Conditions
+            </Text>
+            <Pressable onPress={onClose}>
+              <View style={{ transform: [{ rotate: "45deg" }] }}>
+                <Icon size={20} name="Plus" />
+              </View>
+            </Pressable>
+          </View>
+
+          {content ? (
+            <View style={{ flexShrink: 1, marginTop: 32 }}>
+              <ScrollView
+                ref={scrollViewRef}
+                nestedScrollEnabled
+                directionalLockEnabled
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                scrollEventThrottle={16}
+                onLayout={(event) => {
+                  scrollViewHeightRef.current =
+                    event.nativeEvent.layout.height;
+                  updateScrollIndicator();
+                }}
+                onContentSizeChange={(_, height) => {
+                  contentHeightRef.current = height;
+                  updateScrollIndicator();
+                }}
+                onScroll={(event) => {
+                  const offset = event.nativeEvent.contentOffset.y;
+                  scrollOffsetRef.current = offset;
+                  updateScrollIndicator(offset);
+                }}
+                contentContainerStyle={{ paddingBottom: 52 }}
+              >
+                <View style={{ gap: 16 }}>
+                  {content.map((item: any, index: number) => (
+                    <View key={index} style={{ gap: 4 }}>
+                      <Text className="text-cno font-inter-semibold">
+                        {`${index + 1}. ${item?.title}`}
+                      </Text>
+                      <Text className="text-csm font-inter">
+                        {item?.description}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {hasMoreContent && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Scroll down to see more terms"
+                  onPress={() =>
+                    scrollViewRef.current?.scrollTo({
+                      y:
+                        scrollOffsetRef.current +
+                        Math.max(scrollViewHeightRef.current * 0.7, 120),
+                      animated: true,
+                    })
+                  }
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    alignSelf: "center",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#0F1729",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 4,
+                  }}
+                >
+                  <View style={{ transform: [{ rotate: "90deg" }] }}>
+                    <Icon name="Arrow" size={20} color="#FFFFFF" />
+                  </View>
+                </Pressable>
+              )}
+            </View>
+          ) : (
+            <View style={{ paddingVertical: 40, alignItems: "center" }}>
+              <ActivityIndicator color={"#0F1729"} size={"large"} />
+            </View>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 const BoxDimension = ({
   boxesData,
   selectedBox,
@@ -190,6 +363,7 @@ const BoxDimension = ({
   };
 }) => {
   const [infoItem, setInfoItem] = useState<BoxItem | null>(null);
+  const [showTerms, setShowTerms] = useState(false);
 
   const buildIMageUrl = (path: string) => {
     return `${IMAGE_URL}/${path}`;
@@ -391,10 +565,11 @@ const BoxDimension = ({
                 </View>
                 <Text className="text-csm font-inter-semibold text-primary/60">
                   I agree to the{" "}
-                  <Text className=" font-inter-bold text-primary">Terms</Text>{" "}
-                  and{" "}
-                  <Text className=" font-inter-bold text-primary">
-                    Conditions
+                  <Text
+                    onPress={() => setShowTerms(true)}
+                    className=" font-inter-bold text-primary"
+                  >
+                    Terms and Conditions
                   </Text>
                 </Text>
               </Pressable>
@@ -412,55 +587,58 @@ const BoxDimension = ({
             </Text>
             <View className="flex flex-row gap-4">
               {[SHIPMENT_ROUTE.AIR_FREIGHT, SHIPMENT_ROUTE.SEA_FREIGHT].map(
-                (item) => (
-                  <Pressable
-                    onPress={() =>
-                      item == selectedBox?.mode
-                        ? setShipmentType(item)
-                        : setShipmentType(null)
-                    }
-                    key={item}
-                    style={{
-                      shadowColor: "#E0A31D",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.02,
-                      shadowRadius: 32,
-                      elevation: item == shipmentType ? 6 : 0,
-                      opacity: item == selectedBox?.mode ? 1 : 0.4,
-                    }}
-                    className={`flex-1 pt-4 h-fit flex flex-col gap-2 relative items-center justify-center rounded-2xl border ${item == shipmentType ? "border-gold" : errors.shipmentType ? "border-red-400" : "border-primary/20"} bg-white px-2 py-4`}
-                  >
-                    <Image
-                      source={item == SHIPMENT_ROUTE.AIR_FREIGHT ? plan : ship}
-                    />
+                (item) => {
+                  let findModeData = selectedBox?.modePrices.filter(
+                    (box) => box?.mode == item,
+                  )[0];
 
-                    <View className="flex flex-col mt-2">
-                      <Text
-                        className="text-center uppercase font-inter-bold text-[15px] text-primary"
-                        numberOfLines={2}
-                      >
-                        {item == SHIPMENT_ROUTE.AIR_FREIGHT
-                          ? "Air Freight"
-                          : "Sea Freight"}
-                      </Text>
-                      <Text className="text-center font-inter-medium text-[12px] text-primary">
-                        {item == SHIPMENT_ROUTE.AIR_FREIGHT
-                          ? "Priority Delivery"
-                          : "Lower Cost"}
-                      </Text>
-                      <Text className="text-center mt-3 font-inter-bold text-cno text-primary">
-                        {selectedBox?.mode == item
-                          ? `$${selectedBox?.price}`
-                          : " "}
-                      </Text>
-                      <Text className="px-4 py-2  mt-3 text-csm text-center font-inter-bold rounded-full bg-[#CBD5E1]">
-                        {item == SHIPMENT_ROUTE.AIR_FREIGHT
-                          ? durations?.[1]
-                          : durations?.[0]}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ),
+                  console.log();
+
+                  return (
+                    <Pressable
+                      onPress={() => setShipmentType(item)}
+                      key={item}
+                      style={{
+                        shadowColor: "#E0A31D",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.02,
+                        shadowRadius: 32,
+                        elevation: item == shipmentType ? 6 : 0,
+                      }}
+                      className={`flex-1 pt-4 h-fit flex flex-col gap-2 relative items-center justify-center rounded-2xl border ${item == shipmentType ? "border-gold" : errors.shipmentType ? "border-red-400" : "border-primary/20"} bg-white px-2 py-4`}
+                    >
+                      <Image
+                        source={
+                          item == SHIPMENT_ROUTE.AIR_FREIGHT ? plan : ship
+                        }
+                      />
+
+                      <View className="flex flex-col mt-2">
+                        <Text
+                          className="text-center uppercase font-inter-bold text-[15px] text-primary"
+                          numberOfLines={2}
+                        >
+                          {item == SHIPMENT_ROUTE.AIR_FREIGHT
+                            ? "Air Freight"
+                            : "Sea Freight"}
+                        </Text>
+                        <Text className="text-center font-inter-medium text-[12px] text-primary">
+                          {item == SHIPMENT_ROUTE.AIR_FREIGHT
+                            ? "Priority Delivery"
+                            : "Lower Cost"}
+                        </Text>
+                        <Text className="text-center mt-3 font-inter-bold text-cno text-primary">
+                          ${findModeData?.price}
+                        </Text>
+                        <Text className="px-4 py-2  mt-3 text-csm text-center font-inter-bold rounded-full bg-[#CBD5E1]">
+                          {item == SHIPMENT_ROUTE.AIR_FREIGHT
+                            ? durations?.[1]
+                            : durations?.[0]}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                },
               )}
             </View>
             <Pressable
@@ -476,12 +654,13 @@ const BoxDimension = ({
                   </View>
                 ) : null}
               </View>
-              <Text className="text-csm text-primary/60">
+              <Text className="text-csm font-inter-semibold text-primary/60">
                 I agree to the{" "}
-                <Text className=" font-inter-medium text-primary">Terms</Text>{" "}
-                and{" "}
-                <Text className=" font-inter-medium text-primary">
-                  Conditions
+                <Text
+                  onPress={() => setShowTerms(true)}
+                  className=" font-inter-bold text-primary"
+                >
+                  Terms and Conditions
                 </Text>
               </Text>
             </Pressable>
@@ -505,6 +684,10 @@ const BoxDimension = ({
           onClose={() => setInfoItem(null)}
           onContinue={() => setInfoItem(null)}
         />
+      )}
+
+      {showTerms && (
+        <TermsConditionsModal onClose={() => setShowTerms(false)} />
       )}
     </View>
   );

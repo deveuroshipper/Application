@@ -203,8 +203,8 @@ const LocationPickerInput = ({
               {titleMap[mode]}
             </Text>
             <Pressable
-                style={{ transform: [{ rotate: "45deg" }] }}
-                onPress={() => setModalVisible(false)}
+              style={{ transform: [{ rotate: "45deg" }] }}
+              onPress={() => setModalVisible(false)}
             >
               <Text className="text-primary/50 text-base">
                 <Icon size={20} name="Plus" />
@@ -215,6 +215,7 @@ const LocationPickerInput = ({
           <TextInput
             value={search}
             onChangeText={handleSearch}
+            style={{ paddingVertical: 10 }}
             placeholder={`Search ${mode}...`}
             className={`flex mb-6 gap-2 flex-row px-6 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter text-cno placeholder:color-primary/30 `}
             autoFocus

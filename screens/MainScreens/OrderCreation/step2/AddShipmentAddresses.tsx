@@ -157,10 +157,36 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
     navigation.push("ConfirmAddressScreen");
   };
 
-  const handelAddNEwAdd = () => {
+  const handelAddNEwAdd = async () => {
     if (isAddAddressDisabled) return;
     setIsAddAddressDisabled(true);
-    navigation.push("AddNewAddress");
+
+    try {
+      let routeDetails = selectedRoute;
+
+      if (!routeDetails) {
+        routeDetails = await getRoutesByIdApiHandler(
+          useAddressStore.getState()?.route,
+        );
+        setSelectedRoute(routeDetails ?? null);
+      }
+
+      navigation.push("AddNewAddress", {
+        countryName:
+          addressModalTarget === "pickup"
+            ? routeDetails?.originName
+            : routeDetails?.destinationName,
+      });
+    } catch (error) {
+      setIsAddAddressDisabled(false);
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : "Failed to load the shipment route.",
+      });
+    }
   };
 
   const getRoute = useCallback(async () => {

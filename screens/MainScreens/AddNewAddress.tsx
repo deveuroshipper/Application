@@ -27,18 +27,97 @@ const COUNTRY_CODE_OVERRIDES: Record<string, string> = {
   "south africa": "ZA",
 };
 
+type MobileCountry = {
+  dialCode: string;
+  flag: string;
+  name: string;
+};
+
+const EMPTY_MOBILE_COUNTRY: MobileCountry = {
+  dialCode: "",
+  flag: "",
+  name: "",
+};
+
+const FALLBACK_MOBILE_COUNTRIES: Record<string, MobileCountry> = {
+  "united states": {
+    dialCode: "+1",
+    flag: "🇺🇸",
+    name: "United States",
+  },
+  "united kingdom": {
+    dialCode: "+44",
+    flag: "🇬🇧",
+    name: "United Kingdom",
+  },
+  india: {
+    dialCode: "+91",
+    flag: "🇮🇳",
+    name: "India",
+  },
+  belgium: {
+    dialCode: "+32",
+    flag: "🇧🇪",
+    name: "Belgium",
+  },
+  "united arab emirates": {
+    dialCode: "+971",
+    flag: "🇦🇪",
+    name: "United Arab Emirates",
+  },
+};
+
+const getFlagEmoji = (countryCode?: string) => {
+  if (!countryCode || countryCode.length !== 2) return "";
+
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+};
+
+const getMobileCountry = async (
+  countryName: string,
+): Promise<MobileCountry> => {
+  const normalizedCountry = countryName.trim().toLowerCase();
+  const fallback = FALLBACK_MOBILE_COUNTRIES[normalizedCountry];
+
+  try {
+    const response = await fetch(
+      "https://countriesnow.space/api/v0.1/countries/codes",
+    );
+    const json = await response.json();
+    const country = (json.data as any[])?.find(
+      (item) => item.name?.trim().toLowerCase() === normalizedCountry,
+    );
+
+    if (country?.dial_code) {
+      return {
+        dialCode: country.dial_code,
+        flag: getFlagEmoji(country.code),
+        name: country.name,
+      };
+    }
+  } catch {
+    // Use the local fallback below when the country service is unavailable.
+  }
+
+  return (
+    fallback ?? {
+      ...EMPTY_MOBILE_COUNTRY,
+      name: countryName,
+    }
+  );
+};
+
 const AddNewAddress = ({ navigation, route }: any) => {
   const address_id = route?.params?.address_id ?? null;
+  const countryName = route?.params?.countryName?.trim() ?? "";
   const [step, setStep] = useState(2);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({
     name: "",
     mobile: "",
-    mobileCode: {
-      dialCode: "+1",
-      flag: "🇺🇸",
-      name: "United States",
-    },
+    mobileCode: EMPTY_MOBILE_COUNTRY,
     code: "",
     addressLine1: "",
     pincode: "",
@@ -57,6 +136,27 @@ const AddNewAddress = ({ navigation, route }: any) => {
   });
 
   const pincodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (address_id || !countryName) return;
+
+    let isActive = true;
+    setData((prev) => ({
+      ...prev,
+      country: countryName,
+      state: "",
+      city: "",
+    }));
+
+    getMobileCountry(countryName).then((mobileCode) => {
+      if (!isActive) return;
+      setData((prev) => ({ ...prev, mobileCode }));
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [address_id, countryName]);
 
   const getCountryIso2 = async (
     countryName: string,
@@ -134,16 +234,32 @@ const AddNewAddress = ({ navigation, route }: any) => {
     if (!address_id) return;
     getAddressByIdApiHandler(address_id)
       .then((addr) => {
+        const addressCountry = addr.country ?? "";
+
         setData((prev) => ({
           ...prev,
           name: addr.fullName ?? "",
           mobile: addr.number ?? "",
+          mobileCode:
+            addr.dialCode || addr.coname
+              ? {
+                  dialCode: addr.dialCode ?? "",
+                  flag: "",
+                  name: addr.coname ?? addressCountry,
+                }
+              : prev.mobileCode,
           addressLine1: addr.addressLine ?? "",
           pincode: addr.pincode ?? "",
-          country: addr.country ?? "",
+          country: addressCountry,
           state: addr.state ?? "",
           city: addr.city ?? "",
         }));
+
+        if (!addr.dialCode && addressCountry) {
+          getMobileCountry(addressCountry).then((mobileCode) => {
+            setData((prev) => ({ ...prev, mobileCode }));
+          });
+        }
       })
       .catch((error: any) => {
         Toast.show({
@@ -287,7 +403,21 @@ const AddNewAddress = ({ navigation, route }: any) => {
                 placeholder="Select Country"
                 value={data.country}
                 onSelect={(val) => {
-                  setData({ ...data, country: val, state: "", city: "" });
+                  setData({
+                    ...data,
+                    country: val,
+                    state: "",
+                    city: "",
+                    mobileCode: {
+                      ...EMPTY_MOBILE_COUNTRY,
+                      name: val,
+                    },
+                  });
+                  getMobileCountry(val).then((mobileCode) => {
+                    setData((prev) =>
+                      prev.country === val ? { ...prev, mobileCode } : prev,
+                    );
+                  });
                   if (errors.country) setErrors((e) => ({ ...e, country: "" }));
                 }}
                 error={errors.country}

@@ -94,7 +94,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   const [showDate, setShowDate] = useState(false);
   const [showShiftOptions, setShowShiftOptions] = useState(false);
   const [warehouseAddress, setWarehouseAddress] = useState(null);
-console.log("time t: " , data.time)
+  console.log("time t: ", data.time);
   const selectedShift = SUBMISSION_SHIFTS.find(
     (shift) =>
       data.time?.getHours() === shift.startHour &&
@@ -113,8 +113,7 @@ console.log("time t: " , data.time)
 
     setData((prev) => {
       const nextTime =
-        prev.time &&
-        combineDateAndTime(selectedDate, prev.time) >= minimumDate
+        prev.time && combineDateAndTime(selectedDate, prev.time) >= minimumDate
           ? prev.time
           : null;
 
@@ -129,8 +128,7 @@ console.log("time t: " , data.time)
     const selectedDateTime = getShiftDateTime(data.date, shift);
 
     if (
-      selectedDateTime <
-      getMinimumSubmissionDateTime(minimumSubmissionHours)
+      selectedDateTime < getMinimumSubmissionDateTime(minimumSubmissionHours)
     ) {
       showInvalidSubmissionTimeToast(minimumSubmissionHours);
       return;
@@ -301,26 +299,28 @@ console.log("time t: " , data.time)
                   setShowDate(true);
                 }}
               >
-                <Input
-                  label={"Date Submission (Expected)"}
-                  placeholderTxt={"Enter Date"}
-                  value={formatDate(data.date)}
-                  onChange={() => {}}
-                  icon={<Icon name="Calendar" color="#BFCDDE" />}
-                  editable={false}
-                />
+                <View pointerEvents="none">
+                  <Input
+                    label={"Date Submission (Expected)"}
+                    placeholderTxt={"Enter Date"}
+                    value={formatDate(data.date)}
+                    onChange={() => {}}
+                    icon={<Icon name="Calendar" color="#BFCDDE" />}
+                    editable={false}
+                  />
+                </View>
               </Pressable>
-              <Pressable
-                onPress={() => setShowShiftOptions((prev) => !prev)}
-              >
-                <Input
-                  label={"Time Submission"}
-                  placeholderTxt={"Select Shift"}
-                  value={selectedShift?.label ?? ""}
-                  onChange={() => {}}
-                  icon={<Icon name="Time" color="#BFCDDE" size={26} />}
-                  editable={false}
-                />
+              <Pressable onPress={() => setShowShiftOptions((prev) => !prev)}>
+                <View pointerEvents="none">
+                  <Input
+                    label={"Time Submission"}
+                    placeholderTxt={"Select Shift"}
+                    value={selectedShift?.label ?? ""}
+                    onChange={() => {}}
+                    icon={<Icon name="Time" color="#BFCDDE" size={26} />}
+                    editable={false}
+                  />
+                </View>
               </Pressable>
               {showShiftOptions && (
                 <View className="-mt-6 bg-white px-6 border-[1.5px] border-[#B5C3E8]/30 rounded-2xl overflow-hidden">
