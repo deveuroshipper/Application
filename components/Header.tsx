@@ -25,9 +25,9 @@ const Header = ({ CartClick, NotificationClick }: any) => {
   }, [fetchCart, fetchNotificationStatus]);
 
   return (
-    <View className="bg-white flex flex-row justify-between items-center px-8 py-6">
+    <View className="bg-white flex flex-row justify-between items-center px-8 pb-4 pt-2">
       <View className="flex flex-1  flex-row gap-4">
-        <View className="h-12 w-12 flex justify-center items-center overflow-hidden bg-slate-200 rounded-md">
+        {/* <View className="h-12 w-12 flex justify-center items-center overflow-hidden bg-slate-200 rounded-md">
           {profileImageUri ? (
             <Image
               className={`h-12 w-12 bg-cover`}
@@ -36,10 +36,10 @@ const Header = ({ CartClick, NotificationClick }: any) => {
           ) : (
             <Text className="text-csl font-inter-bold">{displayName.charAt(0)}</Text>
           )}
-        </View>
+        </View> */}
         <View>
           <Text className="text-cxs font-inter-semibold uppercase text-[#1A1C1E]/50">
-            Welcome to Euro Shipper
+            Welcome to EuroShipper
           </Text>
           <Text className="text-csl font-inter-bold text-[#1A1C1E] capitalize">
             Hi, {displayName}
@@ -47,7 +47,7 @@ const Header = ({ CartClick, NotificationClick }: any) => {
         </View>
       </View>
 
-      <View className="flex flex-row gap-6">
+      <View className="flex flex-row gap-2.5">
         <Pressable
           onPress={CartClick}
           className="relative h-9 w-9 flex justify-center items-center"

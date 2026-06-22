@@ -318,7 +318,12 @@ const TrackingStepRow = ({
   );
 };
 
-const HoldWarningCard = ({ onPayNow }: { onPayNow: () => void }) => (
+const HoldWarningCard = ({
+  onPayNow,
+  orderDetails,
+}: {
+  onPayNow: () => void;
+}) => (
   <View
     className="mx-8 mb-5 rounded-[28px] border-[1.5px] px-6 py-7"
     style={{
@@ -341,18 +346,27 @@ const HoldWarningCard = ({ onPayNow }: { onPayNow: () => void }) => (
       Why is your parcel on hold?
     </Text>
 
-    <Text className="mb-5 text-[12px] font-inter text-black">
-      Your parcel is currently on hold due to pending payment. Complete the
-      payment to resume shipment processing and continue delivery.
-    </Text>
+    {orderDetails?.holdReason === "remaining_payment" ? (
+      <Text className="mb-5 text-[12px] font-inter text-black">
+        Your parcel is currently on hold due to pending payment. Complete the
+        payment to resume shipment processing and continue delivery.
+      </Text>
+    ) : (
+      <Text className="mb-5 text-[12px] font-inter text-black">
+        Your parcel is currently on hold due to pending payment. Complete the
+        payment to resume shipment processing and continue delivery.
+      </Text>
+    )}
 
-    <TouchableOpacity
-      onPress={onPayNow}
-      className="flex-row items-center gap-1"
-    >
-      <Text className="text-csm font-inter-bold text-[#2673DD]">Pay Now</Text>
-      <Icon name="Arrow" size={18} color="#2673DD" />
-    </TouchableOpacity>
+    {orderDetails?.holdReason === "remaining_payment" ? (
+      <TouchableOpacity
+        onPress={onPayNow}
+        className="flex-row items-center gap-1"
+      >
+        <Text className="text-csm font-inter-bold text-[#2673DD]">Pay Now</Text>
+        <Icon name="Arrow" size={18} color="#2673DD" />
+      </TouchableOpacity>
+    ) : null}
   </View>
 );
 
@@ -399,6 +413,7 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
         const response = await getOrderByIdApiHandler(orderId);
 
         setOrderDetail(response);
+        console.log("response : ", response);
       } catch (error: any) {
         Toast.show({
           type: "error",
@@ -474,13 +489,15 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
             )}
           </View>
 
-          {currentStatus === "HOLD" && (
-            <HoldWarningCard
-              onPayNow={() =>
-                navigation.push("DetailsAndPayment", { orderId: orderId })
-              }
-            />
-          )}
+          {currentStatus === "HOLD" &&
+            orderDetail?.holdReason === "remaining_payment" && (
+              <HoldWarningCard
+                onPayNow={() =>
+                  navigation.push("DetailsAndPayment", { orderId: orderId })
+                }
+                orderDetails={orderDetail}
+              />
+            )}
 
           {/* Accordions */}
           {/* <AccordionRow

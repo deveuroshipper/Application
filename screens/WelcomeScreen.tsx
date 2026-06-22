@@ -7,13 +7,18 @@ import {
 } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Platform, Pressable, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const WelcomeScreen = ({ navigation }: any) => {
   const handelGoogleLogin = async () => {
+    let backendRequestStarted = false;
+
     try {
       const AuthResponse = await signInWithGoogle();
+
+      if (!AuthResponse) return;
+
       const data = AuthResponse?.data;
 
       const payload = {
@@ -24,7 +29,7 @@ const WelcomeScreen = ({ navigation }: any) => {
         authId: data?.user?.id,
       };
 
-      console.log("payload for login: ", payload);
+      backendRequestStarted = true;
       const response = await storeGoogleLoginApiHandler(payload);
 
       await useAuthStore.getState().login(response.token, response.user);
@@ -41,9 +46,70 @@ const WelcomeScreen = ({ navigation }: any) => {
         ],
       });
     } catch (error: any) {
+      if (!backendRequestStarted) return;
+
       Toast.show({
         type: "error",
-        text1: error ?? "Failed to remove item",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Google login failed"),
+      });
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    let backendRequestStarted = false;
+
+    try {
+      const appleResponse = await signInWithApple();
+
+      if (!appleResponse) return;
+
+      const fullName = [
+        appleResponse.fullName?.givenName,
+        appleResponse.fullName?.familyName,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const payload = {
+        email: appleResponse.email,
+        name: fullName || "Apple User",
+        profile: null,
+        authMethod: "apple",
+        authId: appleResponse.user,
+        identityToken: appleResponse.identityToken,
+      };
+
+      backendRequestStarted = true;
+
+      const response = await storeGoogleLoginApiHandler(payload);
+      // Better: rename this API to storeSocialLoginApiHandler
+
+      await useAuthStore.getState().login(response.token, response.user);
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "MainScreens",
+            params: {
+              screen: "BottomTabBar",
+              params: { screen: "HomeScreen" },
+            },
+          },
+        ],
+      });
+    } catch (error: any) {
+      if (!backendRequestStarted) return;
+
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Apple login failed"),
       });
     }
   };
@@ -77,11 +143,24 @@ const WelcomeScreen = ({ navigation }: any) => {
         </View>
 
         <View className="w-full  flex flex-col gap-6 items-center">
-          {/* <SocialButton
-            size={Size.Small}
-            action={signInWithApple}
-            icon={<Icon name="Apple" size={20} />}
-            text={"Continue with Apple"}
+          {Platform.OS == "ios" ? (
+            <SocialButton
+              size={Size.Small}
+              action={handleAppleLogin}
+              icon={<Icon name="Apple" size={20} />}
+              text={"Continue with Apple"}
+            />
+          ) : null}
+          {/* <AppleAuthentication.AppleAuthenticationButton
+            buttonType={
+              AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+            }
+            buttonStyle={
+              AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            }
+            cornerRadius={8}
+            style={{ width: "100%", height: 48 }}
+            onPress={handelAppleLogin}
           /> */}
           <SocialButton
             size={Size.Small}

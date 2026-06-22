@@ -146,7 +146,7 @@ const ListAddresses = ({ navigation, route }: any) => {
               action={handelAddNew}
             />
 
-            <Button text="Continue" action={handelSubmit} />
+            {/* <Button text="Continue" action={handelSubmit} /> */}
           </View>
         </View>
       </View>

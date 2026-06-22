@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
   const insets = useSafeAreaInsets();
-  const paddingTop = insets.top > 0 ? insets.top + 5 : 30; // keep 30
+  const paddingTop = insets.top > 0 ? insets.top + 10 : 30; // keep 30
   const containerStyle = {
     flex: 1,
     paddingTop,

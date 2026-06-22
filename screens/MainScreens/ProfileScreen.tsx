@@ -110,7 +110,7 @@ const ProfileScreen = ({ navigation }: any) => {
             Welcome back Euro Shipper!
           </Text>
         </View>
-        <View className="w-14 h-14 flex justify-center items-center bg-slate-200 rounded-full overflow-hidden">
+        {/* <View className="w-14 h-14 flex justify-center items-center bg-slate-200 rounded-full overflow-hidden">
           {profileImageUri ? (
             <Image
               className={`w-14 h-14 bg-cover`}
@@ -121,7 +121,7 @@ const ProfileScreen = ({ navigation }: any) => {
               {user?.fullName?.charAt(0)}
             </Text>
           )}
-        </View>
+        </View> */}
       </View>
       <View className="px-8 mb-6 flex flex-col justify-between flex-1">
         <View className=" mt-10 flex-1 flex-col gap-8">

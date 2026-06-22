@@ -5,7 +5,7 @@ interface AddressState {
   route: string | null;
   shipmentType: SHIPMENT_TYPE | null;
   date: Date | String | null;
-  time: Date | String | null;
+  time: string | null;
   pickupAddress: any | null;
   deliverAddress: any | null;
   
@@ -13,7 +13,7 @@ interface AddressState {
   setRoute: (route: string | null) => void;
   setShipmentType: (type: SHIPMENT_TYPE | null) => void;
   setDate: (date: Date | String | null) => void;
-  setTime: (time: Date | String | null) => void;
+  setTime: (time: string | null) => void;
   setPickupAddress: (address: any | null) => void;
   setDeliverAddress: (address: any | null) => void;
 }

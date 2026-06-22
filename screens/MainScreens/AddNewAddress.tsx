@@ -112,6 +112,7 @@ const getMobileCountry = async (
 const AddNewAddress = ({ navigation, route }: any) => {
   const address_id = route?.params?.address_id ?? null;
   const countryName = route?.params?.countryName?.trim() ?? "";
+  const isCountryLocked = !address_id && Boolean(countryName);
   const [step, setStep] = useState(2);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({
@@ -376,6 +377,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
                 placeholderTxt={"Type your mobile number"}
                 value={data?.mobile}
                 selectedCode={data?.mobileCode}
+                disableCode={isCountryLocked}
                 onCodeChange={(e) => setData({ ...data, mobileCode: e })}
                 onChange={(text: string) => {
                   setData({ ...data, mobile: text });
@@ -402,6 +404,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
                 label="Country"
                 placeholder="Select Country"
                 value={data.country}
+                disabled={isCountryLocked}
                 onSelect={(val) => {
                   setData({
                     ...data,

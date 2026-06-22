@@ -12,6 +12,29 @@ export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 const buildIMageUrl = (path: string) => {
   return `${IMAGE_URL}/${path}`;
 };
+
+const CategorySkeleton = () => (
+  <View
+    style={{
+      gap: 12,
+      paddingTop: 12,
+      paddingBottom: 12,
+      paddingRight: 24,
+    }}
+    className="flex-row"
+  >
+    {[1, 2, 3].map((item) => (
+      <View
+        key={item}
+        className="w-28 items-center rounded-2xl border border-primary/10 bg-white px-3 py-4"
+      >
+        <View className="mb-3 h-14 w-14 rounded-full bg-slate-200" />
+        <View className="h-3 w-16 rounded-full bg-slate-200" />
+      </View>
+    ))}
+  </View>
+);
+
 const CategoryBox = ({
   selectedCategory,
   setCategory,
@@ -25,11 +48,12 @@ const CategoryBox = ({
 }) => {
   const [categories, setCategories] = useState(null);
   const [subCategories, setSubCategories] = useState(null);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const getCategory = async () => {
     try {
       const data = await getCategoryApiHandler();
-   
+
       setCategories(data);
       setCategory(data?.[0]?.id || null);
     } catch (error: any) {
@@ -40,6 +64,8 @@ const CategoryBox = ({
             ? error
             : (error?.message ?? "Something went wrong"),
       });
+    } finally {
+      setIsLoadingCategories(false);
     }
   };
   useEffect(() => {
@@ -61,7 +87,9 @@ const CategoryBox = ({
         <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
           Category
         </Text>
-        {categories && categories?.length > 0 ? (
+        {isLoadingCategories ? (
+          <CategorySkeleton />
+        ) : categories && categories?.length > 0 ? (
           <FlatList
             data={categories}
             keyExtractor={(item) => item.id}
@@ -122,7 +150,9 @@ const CategoryBox = ({
           Sub-Category
         </Text>
 
-        {subCategories && subCategories?.length > 0 ? (
+        {isLoadingCategories ? (
+          <CategorySkeleton />
+        ) : subCategories && subCategories?.length > 0 ? (
           <FlatList
             data={subCategories}
             keyExtractor={(item) => item.id}

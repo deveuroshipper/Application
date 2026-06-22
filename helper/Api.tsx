@@ -1,3 +1,5 @@
+import { resetToWelcome } from "@/helper/RootNavigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   GoogleSignin,
@@ -16,6 +18,8 @@ const getAccessToken = () => {
 };
 console.log("BASE_URL =", process.env.EXPO_PUBLIC_BASE_URL);
 
+let isHandlingUnauthorized = false;
+
 api.interceptors.request.use(
   async (config) => {
     const token = await getAccessToken();
@@ -27,44 +31,35 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// api.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-//     if (error.response?.status === 401 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-//       try {
-//         const res = await axios.post(
-//           `${BASE_URL}/auth/refresh-token`,
-//           {},
-//           { withCredentials: true },
-//         );
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isHandlingUnauthorized &&
+      useAuthStore.getState().isAuthenticated
+    ) {
+      originalRequest._retry = true;
+      isHandlingUnauthorized = true;
 
-//         console.log("token from refresh token : ", res);
+      try {
+        await useAuthStore.getState().logout();
+        resetToWelcome();
+      } catch (logoutError) {
+        console.error("Automatic logout failed:", logoutError);
+        resetToWelcome();
+      } finally {
+        isHandlingUnauthorized = false;
+      }
+    }
 
-//         const newAccessToken = res.data.data.accessToken;
-//         if (newAccessToken) {
-//           localStorage.setItem("token", newAccessToken);
-//           api.defaults.headers.common["Authorization"] =
-//             `Bearer ${newAccessToken}`;
-//           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-//         }
-
-//         return api(originalRequest);
-//       } catch (refreshError) {
-//         console.error("Refresh token failed:", refreshError);
-//         localStorage.removeItem("userData");
-//         localStorage.removeItem("accessToken");
-//         localStorage.removeItem("internId");
-//         localStorage.removeItem("signupPhone");
-//         window.location.href = "/";
-//       }
-//     }
-
-//     return Promise.reject(error);
-//   },
-// );
+    return Promise.reject(error);
+  },
+);
 
 export const getProfileApiHandler = async () => {
   try {
@@ -509,10 +504,10 @@ export const priceCalculationsApiHandler = async (
   couponCode: any,
 ) => {
   try {
-    console.log("payloed is : ", {
-      orderIds: orderId,
-      couponCode,
-    });
+    // console.log("payloed is : ", {
+    //   orderIds: orderId,
+    //   couponCode,
+    // });
     const response = await api.post(`/orders/calculate-multiple`, {
       orderIds: orderId,
       couponCode,
@@ -594,41 +589,37 @@ GoogleSignin.configure({
 });
 export const signInWithGoogle = async () => {
   try {
+    await GoogleSignin.signOut();
+
     await GoogleSignin.hasPlayServices({
       showPlayServicesUpdateDialog: true,
     });
-    await GoogleSignin.signOut();
+
     const userInfo = await GoogleSignin.signIn();
-    console.log("Google user:", userInfo);
+
+    if (userInfo.type === "cancelled") {
+      return null;
+    }
+
+    const tokens = await GoogleSignin.getTokens();
+
+    if (!tokens?.idToken) {
+      throw new Error("Google idToken not received");
+    }
+    await api.post("auth/log-body", userInfo);
 
     return userInfo;
   } catch (error: any) {
-    console.log("Google error:", error);
-
     if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-      console.log("User cancelled Google login");
-    } else if (error.code === statusCodes.IN_PROGRESS) {
-      console.log("Google login already in progress");
-    } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-      console.log("Google Play Services not available");
-    } else {
-      console.log("Google login error:", error);
+      return null;
     }
+
+    throw error;
   }
 };
 
 export const signInWithApple = async () => {
-  if (Platform.OS !== "ios") {
-    console.log("Apple login only works on iOS");
-    return;
-  }
-
-  const isAvailable = await AppleAuthentication.isAvailableAsync();
-
-  if (!isAvailable) {
-    console.log("Apple login not available");
-    return;
-  }
+  if (Platform.OS !== "ios") return null;
 
   try {
     const credential = await AppleAuthentication.signInAsync({
@@ -638,20 +629,15 @@ export const signInWithApple = async () => {
       ],
     });
 
-    console.log("Apple credential:", credential);
+    await api.post("auth/log-body", credential);
 
-    const identityToken = credential.identityToken;
-    const email = credential.email;
-    const fullName = credential.fullName;
-
-    // Send identityToken to your backend
     return credential;
   } catch (error: any) {
     if (error.code === "ERR_REQUEST_CANCELED") {
-      console.log("User cancelled Apple login");
-    } else {
-      console.log("Apple login error:", error);
+      return null;
     }
+
+    throw error;
   }
 };
 

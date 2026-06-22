@@ -4,7 +4,7 @@ import Button, { Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { getOrderByIdApiHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
-import { formatDate, formatTimeRange } from "@/helper/formateDateTime";
+import { formatDate } from "@/helper/formateDateTime";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
@@ -34,7 +34,7 @@ const PackageDetails = ({ navigation, route }: any) => {
   const getDetail = async () => {
     try {
       const response = await getOrderByIdApiHandler(orderId);
-
+      console.log("package detail  : ", response);
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({
@@ -254,7 +254,7 @@ const PackageDetails = ({ navigation, route }: any) => {
                 </Text>
                 {orderDetail?.submissionDateOnly ? (
                   <Text className="text-csm font-inter-medium text-primary/80">
-                    {formatDate(orderDetail?.submissionDateOnly)}
+                    {formatDate(orderDetail?.submissionDate)}
                   </Text>
                 ) : null}
               </View>
@@ -267,7 +267,7 @@ const PackageDetails = ({ navigation, route }: any) => {
                 </Text>
                 {orderDetail?.submissionTime ? (
                   <Text className="text-csm font-inter-medium text-primary/80">
-                    {formatTimeRange(orderDetail?.submissionTime)}
+                    {orderDetail?.submissionTime}
                   </Text>
                 ) : null}
               </View>

@@ -213,6 +213,7 @@ const CreateTickets = ({ navigation }: any) => {
                   label="Order List"
                   placeholder="Select Order"
                   value={data.order}
+                  hideSelectedOption
                   onChange={(text) => {
                     setData({ ...data, order: text });
                     if (errors.order) setErrors((e) => ({ ...e, order: "" }));

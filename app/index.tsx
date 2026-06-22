@@ -39,10 +39,38 @@ import {
   getProfileApiHandler,
   setAppTokenApiHandler,
 } from "../helper/Api";
+import {
+  clearRootNavigation,
+  setRootNavigation,
+} from "../helper/RootNavigation";
 import { useAuthStore } from "../store/useAuthStore";
 import MainScreens from "./MainScreens";
 
 const Stack = createStackNavigator();
+
+const RootStackLayout = ({ children, navigation }: any) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const wasAuthenticated = React.useRef(isAuthenticated);
+
+  React.useEffect(() => {
+    setRootNavigation(navigation);
+
+    return () => clearRootNavigation(navigation);
+  }, [navigation]);
+
+  React.useEffect(() => {
+    if (wasAuthenticated.current && !isAuthenticated) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "WelcomeScreen" }],
+      });
+    }
+
+    wasAuthenticated.current = isAuthenticated;
+  }, [isAuthenticated, navigation]);
+
+  return children;
+};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -222,6 +250,7 @@ const Layout = () => {
     <StripeProvider publishableKey="pk_test_51T8IHvGmnpqm6UPOoqXKCWrbx0jnFhqcxITexjsNuhgPocGNJ9EWc6qJWZxUnaSBko7pMTGVf8ZTL52bJ13rN7om00gUVTM9D4">
       <Stack.Navigator
         initialRouteName="LoadingSplashScreen"
+        layout={RootStackLayout}
         screenOptions={{
           headerShown: false,
         }}

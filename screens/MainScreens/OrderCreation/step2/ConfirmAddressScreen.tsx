@@ -103,7 +103,7 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                         <Text className="text-csm font-inter-bold">
                           {pickupAddress?.fullName}
                         </Text>
-                        <Text className="w-2/3 text-[11px] font-inter-bold text-primary/80">
+                        <Text className="w-full text-[11px] font-inter-bold text-primary/80">
                           {pickupAddress?.number}
                         </Text>
                       </View>
@@ -130,12 +130,12 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                     </View>
                   </View>
 
-                  <View className="flex flex-row justify-between items-end">
+                  <View className="flex flex-row justify-between items-end gap-4">
                     <View>
-                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
+                      <Text className="w-full  text-csm font-inter text-[#334155] capitalize">
                         {pickupAddress?.addressLine.slice(0, 100)}
                       </Text>
-                      <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">
+                      <Text className="w-full text-csm font-inter-medium text-primary/80 capitalize">
                         {pickupAddress?.state} - {pickupAddress?.city}
                       </Text>
                     </View>
@@ -178,12 +178,12 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                       </View>
                     </View>
 
-                    <View className="flex flex-row justify-between items-end">
+                    <View className="flex flex-row justify-between items-end gap-4">
                       <View className="flex-1">
-                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
+                      <Text className="w-full text-csm font-inter text-[#334155] capitalize">
                           {buildAddress(warehouseAddress)}
                         </Text>
-                        <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">
+                        <Text className="w-full text-csm font-inter-medium text-primary/80 capitalize">
                           {warehouseAddress?.city} - {warehouseAddress?.country}
                         </Text>
                       </View>
@@ -278,12 +278,12 @@ const ConfirmAddressScreen = ({ navigation, route }: any) => {
                   </View>
                 </View>
 
-                <View className="flex flex-row justify-between items-end ">
-                  <View className="flex-1">
-                      <Text className="w-2/3 text-csm font-inter text-[#334155] capitalize">
+                <View className="flex flex-row gap-4 justify-between items-end ">
+                  <View className="flex-1 ">
+                      <Text className="w-full  text-csm font-inter text-[#334155] capitalize">
                       {dropAddress?.addressLine.slice(0, 100)}
                     </Text>
-                    <Text className="w-2/3 text-csm font-inter-medium text-primary/80 capitalize">
+                    <Text className="w-full text-csm font-inter-medium text-primary/80 capitalize">
                       {dropAddress?.state} - {dropAddress?.city}
                     </Text>
                   </View>

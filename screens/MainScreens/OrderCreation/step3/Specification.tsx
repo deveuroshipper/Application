@@ -43,6 +43,7 @@ const Specification = ({ navigation, route }: any) => {
   const [termsConditions, setTermsConditions] = useState(false);
   const [shipmentType, setShipmentType] = useState(null);
   const [boxes, setBoxes] = useState<any>(null);
+  const [isLoadingBoxes, setIsLoadingBoxes] = useState(true);
   const [durations, setDurations] = useState(null);
   const [loading, setLoading] = useState<Boolean>(false);
   const [errors, setErrors] = useState({
@@ -195,9 +196,13 @@ const Specification = ({ navigation, route }: any) => {
             addressStates?.shipmentType == SHIPMENT_TYPE.DOORSTEP_PICKUP
               ? "PICKUP"
               : "DROP",
+          submissionDate: useAddressStore.getState().date,
+          submissionTime: useAddressStore.getState().time,
           pickupAddressId: useAddressStore.getState().pickupAddress?.id,
           dropAddressId: useAddressStore.getState().deliverAddress?.id,
         };
+
+        console.log("payload : ", payload);
 
         const response = await createOrderApiHandler(payload);
 
@@ -225,7 +230,7 @@ const Specification = ({ navigation, route }: any) => {
         setSelectedBox(response[0]);
       }
       console.log("boxes data : ", response[0]?.modePrices);
-      setBoxes([...response, ...staticBoxes]);
+      setBoxes([...(response ?? []), ...staticBoxes]);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -234,6 +239,8 @@ const Specification = ({ navigation, route }: any) => {
             ? error
             : (error?.message ?? "Something went wrong"),
       });
+    } finally {
+      setIsLoadingBoxes(false);
     }
   };
 
@@ -249,7 +256,7 @@ const Specification = ({ navigation, route }: any) => {
           payload[0] = `${item?.protocolDuration} Days`;
         } else if (item?.type == "AIR") {
           payload[1] = `${item?.protocolDuration} Days`;
-        } 
+        }
       });
 
       setDurations(payload);
@@ -296,6 +303,7 @@ const Specification = ({ navigation, route }: any) => {
             <BoxDimension
               durations={durations}
               boxesData={boxes}
+              isLoading={isLoadingBoxes}
               selectedBox={selectedBox}
               setSelectedBox={handelSelectBox}
               termsConditions={termsConditions}

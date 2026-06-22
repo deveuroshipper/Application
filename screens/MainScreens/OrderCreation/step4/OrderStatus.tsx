@@ -9,9 +9,17 @@ import { ORDER_STATUS } from "./PackageDetails";
 
 const OrderStatus = ({ navigation, route }: any) => {
   const handleBackToDashboard = () => {
-    navigation.push("BottomTabBar");
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: "BottomTabBar",
+          params: { screen: "HomeScreen" },
+        },
+      ],
+    });
   };
-  const IsSuccess: Boolean = route?.params?.status == ORDER_STATUS.SUCCESS;
+  const isSuccess = route?.params?.status === ORDER_STATUS.SUCCESS;
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -26,7 +34,7 @@ const OrderStatus = ({ navigation, route }: any) => {
           {/* Success Illustration Card */}
           <View className="w-full  h-fit rounded-2xl overflow-hidden">
             <Image
-              source={IsSuccess ? OrderSuccessfully : OrderFail}
+              source={isSuccess ? OrderSuccessfully : OrderFail}
               className="w-full rounded-3xl"
               resizeMode="contain"
             />
@@ -35,15 +43,15 @@ const OrderStatus = ({ navigation, route }: any) => {
           {/* Text */}
           <View className="items-center gap-2 ">
             <Text className="text-csl leading-[22px]  font-space-grotesk-bold text-primary text-center">
-              {IsSuccess ? "Your Order Has Been" : "Your Order Failed!"}
+              {isSuccess ? "Your Order Has Been" : "Your Order Failed!"}
             </Text>
-            {IsSuccess ? (
+            {isSuccess ? (
               <Text className="text-csl leading-[22px]  font-space-grotesk-bold text-primary text-center">
                 Successfully Created
               </Text>
             ) : null}
             <Text className="text-csm mt-3 font-inter px-4 text-black text-center">
-              {IsSuccess
+              {isSuccess
                 ? "Your shipment has been created. We’ll keep you updated every step of the way."
                 : "Something went wrong while creating your order. Please try again or contact support."}
             </Text>

@@ -9,14 +9,19 @@ import { getProfileApiHandler, updateNameApiHandler } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
+  Linking,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+
+const DELETE_ACCOUNT_URL = process.env.EXPO_PUBLIC_DELETE_ACCOUNT_URL;
 
 const AccountInformation = ({ navigation }: any) => {
   const [user, setUser] = useState<any>(null);
@@ -51,8 +56,8 @@ const AccountInformation = ({ navigation }: any) => {
   const getProfile = async () => {
     try {
       const response = await getProfileApiHandler();
-      console.log("response : ", response);
       const userData = response?.user;
+      console.log("response : ", userData);
       const payload = {
         id: userData?.id,
         fullName: userData?.fullName,
@@ -61,6 +66,7 @@ const AccountInformation = ({ navigation }: any) => {
         role: userData?.role,
         status: userData?.status,
         profileImage: null,
+        authMethod: userData?.authMethod,
       };
       useAuthStore?.getState().setUser(payload);
 
@@ -71,6 +77,37 @@ const AccountInformation = ({ navigation }: any) => {
         text1: typeof error === "string" ? error : "Failed to delete address.",
       });
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "We are redirecting you to our website to delete your account.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: async () => {
+            if (!DELETE_ACCOUNT_URL) {
+              Alert.alert(
+                "Unable to Continue",
+                "The delete account page is currently unavailable.",
+              );
+              return;
+            }
+
+            try {
+              await Linking.openURL(DELETE_ACCOUNT_URL);
+            } catch {
+              Alert.alert("Unable to Open Link", "Please try again later.");
+            }
+          },
+        },
+      ],
+    );
   };
 
   useEffect(() => {
@@ -132,7 +169,7 @@ const AccountInformation = ({ navigation }: any) => {
         }
       />
       {/* Header */}
-      <View className="pt-12  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">
@@ -144,7 +181,11 @@ const AccountInformation = ({ navigation }: any) => {
         </View>
       </View>
 
-      <View className=" mt-10  px-8 mb-6 flex flex-col gap-6 flex-1">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="mt-10 px-8 pb-6 flex flex-col gap-6"
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableOpacity
           style={{
             shadowColor: "#BDBDBD",
@@ -226,7 +267,8 @@ const AccountInformation = ({ navigation }: any) => {
           </View>
           <Icon name="Arrow" />
         </TouchableOpacity>
-        {user?.authMethod === "email" ? (
+        {console.log("user data : ", user)}
+        {user?.authMethod == "email" ? (
           <TouchableOpacity
             style={{
               shadowColor: "#BDBDBD",
@@ -279,6 +321,14 @@ const AccountInformation = ({ navigation }: any) => {
             </View>
           </View>
           <Icon name="Arrow" />
+        </TouchableOpacity>
+      </ScrollView>
+
+      <View className="px-8 pb-8">
+        <TouchableOpacity onPress={handleDeleteAccount} activeOpacity={0.7}>
+          <Text className="text-cno font-inter-bold text-[#C9243F] text-center">
+            Delete Account
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

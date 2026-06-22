@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "euroshipper",  
+    "scheme": "euroshipper",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/transperentLogo.png",
@@ -15,9 +15,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.euroshipper",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "EuroShipper uses the camera to capture shipment, package, and profile images."
       },
       "NSAppTransportSecurity": {
         "NSAllowsArbitraryLoads": true
@@ -42,8 +44,9 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       "@react-native-community/datetimepicker",
-      "expo-build-properties",
+
       [
         "expo-build-properties",
         {
@@ -51,7 +54,9 @@
             "usesCleartextTraffic": true
           },
           "ios": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "useFrameworks": "static",
+            "modularHeaders": true
           }
         }
       ]

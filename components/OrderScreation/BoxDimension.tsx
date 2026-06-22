@@ -82,20 +82,35 @@ const BoxInfoModal = ({
             style={{ width: 90, height: 90 }}
             resizeMode="contain"
           />
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: 4, maxWidth: "65%" }}>
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#1a1a2e" }}>
               Size: {item.name}
             </Text>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}>
-              Max Weight:
-              <Text style={{ fontWeight: "600" }}>{item.weight} KG</Text>
-            </Text>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}>
-              Max Size:{" "}
-              <Text style={{ fontWeight: "600", opacity: 0.2 }}>
-                {item?.height} X {item?.width} X {item?.length}cm
+            {!item?.custom ? (
+              <Text
+                style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}
+              >
+                Max Weight:
+                <Text style={{ fontWeight: "600" }}>{item.weight} KG</Text>
               </Text>
-            </Text>
+            ) : (
+              <Text
+                style={{ fontSize: 14, fontWeight: "400", color: "#1a1a2e" }}
+              >
+                Submit an enquiry and we&apos;ll get back to you regarding
+                availability.
+              </Text>
+            )}
+            {!item?.custom ? (
+              <Text
+                style={{ fontSize: 14, fontWeight: "700", color: "#1a1a2e" }}
+              >
+                Max Size:{" "}
+                <Text style={{ fontWeight: "600", opacity: 0.2 }}>
+                  {item?.height} X {item?.width} X {item?.length}cm
+                </Text>
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -254,8 +269,7 @@ const TermsConditionsModal = ({ onClose }: { onClose: () => void }) => {
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 onLayout={(event) => {
-                  scrollViewHeightRef.current =
-                    event.nativeEvent.layout.height;
+                  scrollViewHeightRef.current = event.nativeEvent.layout.height;
                   updateScrollIndicator();
                 }}
                 onContentSizeChange={(_, height) => {
@@ -329,8 +343,32 @@ const TermsConditionsModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+const BoxSkeleton = () => (
+  <View
+    style={{
+      gap: 12,
+      paddingTop: 12,
+      paddingBottom: 20,
+      paddingRight: 24,
+    }}
+    className="flex-row"
+  >
+    {[1, 2, 3].map((item) => (
+      <View
+        key={item}
+        className="h-44 w-44 items-center justify-center rounded-2xl border border-primary/10 bg-white px-2 py-6"
+      >
+        <View className="h-20 w-28 rounded-xl bg-slate-200" />
+        <View className="mt-4 h-3 w-20 rounded-full bg-slate-200" />
+        <View className="mt-2 h-3 w-24 rounded-full bg-slate-200" />
+      </View>
+    ))}
+  </View>
+);
+
 const BoxDimension = ({
   boxesData,
+  isLoading,
   selectedBox,
   setSelectedBox,
   termsConditions,
@@ -342,7 +380,8 @@ const BoxDimension = ({
   errors = {},
   durations,
 }: {
-  boxesData: BoxItem;
+  boxesData: BoxItem[] | null;
+  isLoading: boolean;
   selectedBox: any;
   setSelectedBox: any;
   termsConditions: Boolean;
@@ -359,8 +398,8 @@ const BoxDimension = ({
     l?: string;
     shipmentType?: string;
     termsConditions?: string;
-    durations: any;
   };
+  durations: any;
 }) => {
   const [infoItem, setInfoItem] = useState<BoxItem | null>(null);
   const [showTerms, setShowTerms] = useState(false);
@@ -375,77 +414,82 @@ const BoxDimension = ({
         Select Weight & Dimension
       </Text>
       <View>
-        <FlatList
-          data={boxesData}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            gap: 12,
-            paddingTop: 12,
-            paddingBottom: 20,
-            paddingRight: 24,
-          }}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => {
-                setSelectedBox(item);
-                setShipmentType(null);
-              }}
-              style={{
-                shadowColor: "#E0A31D",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.02,
-                shadowRadius: 32,
-                elevation: item.id == selectedBox?.id ? 8 : 0,
-              }}
-              className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-6`}
-            >
+        {isLoading ? (
+          <BoxSkeleton />
+        ) : (
+          <FlatList
+            data={boxesData ?? []}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              gap: 12,
+              paddingTop: 12,
+              paddingBottom: 20,
+              paddingRight: 24,
+            }}
+            renderItem={({ item }) => (
               <Pressable
-                onPress={() => setInfoItem(item)}
-                className="absolute top-2 right-2 z-10"
+                onPress={() => {
+                  setSelectedBox(item);
+                  setShipmentType(null);
+                }}
+                style={{
+                  shadowColor: "#E0A31D",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.02,
+                  shadowRadius: 32,
+                  elevation: item.id == selectedBox?.id ? 8 : 0,
+                }}
+                className={`w-44 h-fit relative items-center justify-center rounded-2xl border ${item.id == selectedBox?.id ? "border-gold" : "border-primary/20"} bg-white px-2 py-6`}
               >
-                <Icon name="Info" size={24} color="#B5B5B5" />
-              </Pressable>
-
-              <Image
-                className=" bg-cover"
-                height={80}
-                width={120}
-                source={
-                  item.custom
-                    ? item?.image
-                    : { uri: buildIMageUrl(item?.boxImage) }
-                }
-              />
-
-              <View>
-                <Text
-                  className="text-center font-inter-semibold text-[12.5px] text-primary"
-                  numberOfLines={2}
+                <Pressable
+                  onPress={() => setInfoItem(item)}
+                  className="absolute top-2 right-2 z-10"
                 >
-                  Size: {item.name}
-                </Text>
-                {!item.custom && (
+                  <Icon name="Info" size={24} color="#B5B5B5" />
+                </Pressable>
+
+                <Image
+                  className=" bg-cover"
+                  height={80}
+                  width={120}
+                  source={
+                    item.custom
+                      ? item?.image
+                      : { uri: buildIMageUrl(item?.boxImage) }
+                  }
+                />
+
+                <View>
                   <Text
-                    className="text-center mt-1 font-inter-medium text-[12px] text-primary"
+                    className="text-center font-inter-semibold text-[12.5px] text-primary"
                     numberOfLines={2}
                   >
-                    Max Weight: {item.weight} KG
+                    Size: {item.name}
                   </Text>
-                )}
+                  {!item.custom && (
+                    <Text
+                      className="text-center mt-1 font-inter-medium text-[12px] text-primary"
+                      numberOfLines={2}
+                    >
+                      Max Weight: {item.weight} KG
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            )}
+          />
+        )}
+
+        {!isLoading && selectedBox ? (
+          selectedBox?.custom ? (
+            <View>
+              <View className="mt-4 w-full rounded-3xl overflow-hidden">
+                <Image className="w-full" source={selectedBox?.fullImage} />
               </View>
-            </Pressable>
-          )}
-        />
 
-        {selectedBox && selectedBox?.custom ? (
-          <View>
-            <View className="mt-4 w-full rounded-3xl overflow-hidden">
-              <Image className="w-full" source={selectedBox?.fullImage} />
-            </View>
-
-            <View className="flex flex-col  mt-6">
+              <View className="flex flex-col  mt-6">
               <Input
                 label={"Approx Weight"}
                 keyboardTypes="number-pad"
@@ -578,10 +622,10 @@ const BoxDimension = ({
                   {errors.termsConditions}
                 </Text>
               ) : null}
+              </View>
             </View>
-          </View>
-        ) : (
-          <View className="flex flex-col gap-4">
+          ) : (
+            <View className="flex flex-col gap-4">
             <Text className="text-csm font-inter-semibold text-[#334155] tracking-wider uppercase">
               Type of Shipment
             </Text>
@@ -674,8 +718,9 @@ const BoxDimension = ({
                 {errors.shipmentType}
               </Text>
             ) : null}
-          </View>
-        )}
+            </View>
+          )
+        ) : null}
       </View>
 
       {infoItem && (

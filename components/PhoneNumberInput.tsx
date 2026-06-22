@@ -52,6 +52,7 @@ const PhoneNumberInput = ({
   onChange,
   selectedCode,
   onCodeChange,
+  disableCode = false,
   error = "",
 }: {
   label: String;
@@ -60,6 +61,7 @@ const PhoneNumberInput = ({
   onChange: any;
   selectedCode?: SelectedCountry;
   onCodeChange?: (country: SelectedCountry) => void;
+  disableCode?: boolean;
   error?: string;
 }) => {
   const [countries, setCountries] = useState<SelectedCountry[]>([]);
@@ -134,8 +136,11 @@ const PhoneNumberInput = ({
 
       <View className="flex gap-2 flex-row items-center px-6 py-2 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/80">
         <Pressable
-          onPress={fetchCountries}
-          className="flex-row items-center gap-1 pr-2 border-r border-primary/20"
+          onPress={disableCode ? undefined : fetchCountries}
+          disabled={disableCode}
+          className={`flex-row items-center gap-1 pr-2 border-r border-primary/20 ${
+            disableCode ? "opacity-60" : ""
+          }`}
         >
           {loading ? (
             <ActivityIndicator size="small" />
@@ -145,7 +150,9 @@ const PhoneNumberInput = ({
               <Text className="text-csm font-inter-medium text-primary">
                 {selected.dialCode}
               </Text>
-              <Text className="text-primary/40 text-xs">▾</Text>
+              {!disableCode && (
+                <Text className="text-primary/40 text-xs">▾</Text>
+              )}
             </>
           )}
         </Pressable>

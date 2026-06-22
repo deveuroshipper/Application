@@ -111,12 +111,15 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
     }).start();
   };
 
-  const closeModal = () => {
+  const closeModal = (onClosed?: () => void) => {
     Animated.timing(slideAnim, {
       toValue: 400,
       duration: 250,
       useNativeDriver: true,
-    }).start(() => setShowAddressModal(false));
+    }).start(() => {
+      setShowAddressModal(false);
+      requestAnimationFrame(() => onClosed?.());
+    });
   };
 
   const handleSelectAddress = (addr: Address) => {
@@ -171,11 +174,13 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
         setSelectedRoute(routeDetails ?? null);
       }
 
-      navigation.push("AddNewAddress", {
-        countryName:
-          addressModalTarget === "pickup"
-            ? routeDetails?.originName
-            : routeDetails?.destinationName,
+      closeModal(() => {
+        navigation.push("AddNewAddress", {
+          countryName:
+            addressModalTarget === "pickup"
+              ? routeDetails?.originName
+              : routeDetails?.destinationName,
+        });
       });
     } catch (error) {
       setIsAddAddressDisabled(false);
@@ -211,11 +216,11 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
         visible={showAddressModal}
         transparent
         animationType="none"
-        onRequestClose={closeModal}
+        onRequestClose={() => closeModal()}
       >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(15,23,41,0.4)" }}
-          onPress={closeModal}
+          onPress={() => closeModal()}
         />
         <Animated.View
           style={{

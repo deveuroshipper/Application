@@ -4,10 +4,9 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
 import { Image, Platform, Pressable, Share, Text, View } from "react-native";
-
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import DoorPIck from "@/assets/images/DoorPIck.png";
 import earthMap from "@/assets/images/earthmap.png";
 import { getWarehouseApiHandler } from "@/helper/Api";
@@ -116,9 +115,14 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
         prev.time && combineDateAndTime(selectedDate, prev.time) >= minimumDate
           ? prev.time
           : null;
+      const nextShift = SUBMISSION_SHIFTS.find(
+        (shift) =>
+          nextTime?.getHours() === shift.startHour &&
+          nextTime?.getMinutes() === shift.startMinute,
+      );
 
       useAddressStore.getState().setDate(selectedDate);
-      useAddressStore.getState().setTime(nextTime);
+      useAddressStore.getState().setTime(nextShift?.label ?? null);
 
       return { ...prev, date: selectedDate, time: nextTime };
     });
@@ -126,7 +130,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
 
   const onShiftSelect = (shift: (typeof SUBMISSION_SHIFTS)[number]) => {
     const selectedDateTime = getShiftDateTime(data.date, shift);
-
+    console.log("selected date : ", shift);
     if (
       selectedDateTime < getMinimumSubmissionDateTime(minimumSubmissionHours)
     ) {
@@ -134,7 +138,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
       return;
     }
 
-    useAddressStore.getState().setTime(selectedDateTime);
+    useAddressStore.getState().setTime(shift?.label);
     setData((prev) => ({ ...prev, time: selectedDateTime }));
     setShowShiftOptions(false);
   };
@@ -149,6 +153,9 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
       return;
     }
 
+    useAddressStore.getState().setDate(data.date);
+    useAddressStore.getState().setTime(selectedShift?.label ?? null);
+
     navigation.push("AddShipmentAddresses", {
       ShipmentType: ShipmentType,
     });
@@ -157,7 +164,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   const getWarehouseAddress = async () => {
     try {
       const routedId = useAddressStore.getState().route ?? null;
-
+      console.log("route id for warehouse : ", routedId);
       const data = await getWarehouseApiHandler(routedId);
       setWarehouseAddress(data);
     } catch (error: any) {
@@ -197,13 +204,50 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   }, []);
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
-      {showDate && (
+      {/* {showDate && (
         <DateTimePicker
           value={data.date}
           mode="date"
           display="default"
           minimumDate={getMinimumSubmissionDateTime(minimumSubmissionHours)}
           onChange={onDateChange}
+        />
+      )} */}
+
+      {showDate && (
+        // <DateTimePicker
+        //   value={data.date}
+        //   mode="date"
+        //   display={Platform.OS === "ios" ? "inline" : "default"}
+        //   minimumDate={getMinimumSubmissionDateTime(minimumSubmissionHours)}
+        //   onChange={(event, selectedDate) => {
+        //     if (Platform.OS === "android") {
+        //       setShowDate(false);
+        //     }
+
+        //     if (Platform.OS === "ios" && event.type === "dismissed") {
+        //       setShowDate(false);
+        //       return;
+        //     }
+
+        //     onDateChange(event, selectedDate);
+
+        //     if (Platform.OS === "ios" && selectedDate) {
+        //       setShowDate(false);
+        //     }
+        //   }}
+        // />
+        <DateTimePickerModal
+          isVisible={showDate}
+          mode="date"
+          date={data.date}
+          minimumDate={getMinimumSubmissionDateTime(minimumSubmissionHours)}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onConfirm={(selectedDate) => {
+            onDateChange(null, selectedDate);
+            setShowDate(false);
+          }}
+          onCancel={() => setShowDate(false)}
         />
       )}
       <View className="px-8 pb-8 flex-1">
@@ -310,6 +354,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
                   />
                 </View>
               </Pressable>
+
               <Pressable onPress={() => setShowShiftOptions((prev) => !prev)}>
                 <View pointerEvents="none">
                   <Input

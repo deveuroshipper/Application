@@ -15,16 +15,21 @@ const Dropdown = ({
   options,
   value,
   onChange,
+  hideSelectedOption = false,
 }: {
   label?: string;
   placeholder?: string;
   options: DropdownOption[];
   value: string | null;
   onChange: (value: string) => void;
+  hideSelectedOption?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
 
   const selected = options.find((o) => o.value === value);
+  const visibleOptions = hideSelectedOption
+    ? options.filter((option) => option.value !== value)
+    : options;
   const renderLabel = (optionLabel: any, selectedLabel = false) => {
     if (React.isValidElement(optionLabel)) return optionLabel;
 
@@ -51,7 +56,9 @@ const Dropdown = ({
       {/* Trigger */}
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => setOpen((prev) => !prev)}
+        onPress={() =>
+          setOpen((prev) => (visibleOptions.length > 0 ? !prev : false))
+        }
         className={`flex flex-row items-center gap-2 px-6 py-4 bg-white border-[2.5px] border-primary/10 rounded-2xl ${open ? "rounded-b-none border-b-0" : "border-b-[2.5px] rounded-b-2xl"}`}
       >
         {/* Selected icon */}
@@ -82,9 +89,9 @@ const Dropdown = ({
       </TouchableOpacity>
 
       {/* Options list */}
-      {open && (
+      {open && visibleOptions.length > 0 && (
         <View className="bg-white px-6 border-[2.5px] border-primary/10 rounded-2xl rounded-t-none border-t-0 overflow-hidden">
-          {options.map((option, index) => (
+          {visibleOptions.map((option) => (
             <TouchableOpacity
               key={option.value}
               activeOpacity={0.7}

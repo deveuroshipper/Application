@@ -73,8 +73,13 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   const handelGoogleLogin = async () => {
+    let backendRequestStarted = false;
+
     try {
       const AuthResponse = await signInWithGoogle();
+
+      if (!AuthResponse) return;
+
       const data = AuthResponse?.data;
 
       const payload = {
@@ -84,6 +89,8 @@ const LoginScreen = ({ navigation }: any) => {
         authMethod: "google",
         authId: data?.user?.id,
       };
+
+      backendRequestStarted = true;
       const response = await storeGoogleLoginApiHandler(payload);
 
       await useAuthStore.getState().login(response.token, response.user);
@@ -100,9 +107,14 @@ const LoginScreen = ({ navigation }: any) => {
         ],
       });
     } catch (error: any) {
+      if (!backendRequestStarted) return;
+
       Toast.show({
         type: "error",
-        text1: error ?? "Failed to remove item",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Google login failed"),
       });
     }
   };

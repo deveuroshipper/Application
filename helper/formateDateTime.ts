@@ -1,5 +1,9 @@
 // Format time range (e.g. 13:03:40 -> 1 PM - 3 PM)
 export function formatTimeRange(timeString, durationHours = 2) {
+  if (timeString?.toLowerCase().includes(" to ")) {
+    return timeString;
+  }
+
   const [hours, minutes, seconds] = timeString?.split(":")?.map(Number);
 
   const start = new Date();

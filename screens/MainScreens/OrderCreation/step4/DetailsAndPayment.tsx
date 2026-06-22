@@ -137,7 +137,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
     try {
       // setLoading(true);
       const response = await getOrderByIdApiHandler(orderId);
-      console.log("order details : ", response);
+      // console.log("order details : ", response);
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({
@@ -212,7 +212,19 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
         //   title: "Payment Successful",
         //   message: "Your payment has been completed successfully.",
         // });
-        navigation.push("OrderStatus", { status: ORDER_STATUS.SUCCESS });
+        navigation.reset({
+          index: 1,
+          routes: [
+            {
+              name: "BottomTabBar",
+              params: { screen: "HomeScreen" },
+            },
+            {
+              name: "OrderStatus",
+              params: { status: ORDER_STATUS.SUCCESS },
+            },
+          ],
+        });
       }
     } catch (error: any) {
       // setPaymentModal({
