@@ -1,11 +1,19 @@
 import Icon from "@/assets/icons";
 import { getOrderByIdApiHandler } from "@/helper/Api";
 import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
 type StepStatus = "done" | "active" | "hold" | "pending";
 
@@ -323,6 +331,7 @@ const HoldWarningCard = ({
   orderDetails,
 }: {
   onPayNow: () => void;
+  orderDetails: any;
 }) => (
   <View
     className="mx-8 mb-5 rounded-[28px] border-[1.5px] px-6 py-7"
@@ -370,6 +379,41 @@ const HoldWarningCard = ({
   </View>
 );
 
+const HoldAttachmentCard = ({ onView }: { onView: () => void }) => (
+  <View
+    className="mx-8 mb-5 rounded-[28px] border-[1.5px] px-6 py-7"
+    style={{
+      backgroundColor: "#FFFCF5",
+      borderColor: "#F9D28A",
+    }}
+  >
+    <View
+      className="mb-4 items-center justify-center rounded-full border-[2px]"
+      style={{
+        width: 36,
+        height: 36,
+        borderColor: "#E8A20C",
+      }}
+    >
+      <Icon name="Info" size={22} color="#E8A20C" />
+    </View>
+
+    <Text className="mb-2 text-csm font-inter-bold text-black">
+      Hold attachment available
+    </Text>
+
+    <Text className="mb-5 text-[12px] font-inter text-black">
+      A document has been added for this hold. View the attachment for more
+      details about your shipment.
+    </Text>
+
+    <TouchableOpacity onPress={onView} className="flex-row items-center gap-1">
+      <Text className="text-csm font-inter-bold text-[#2673DD]">View</Text>
+      <Icon name="Arrow" size={18} color="#2673DD" />
+    </TouchableOpacity>
+  </View>
+);
+
 // ─── Accordion row ─────────────────────────────────────────────────────────────
 
 const AccordionRow = ({ label, onclick }: { label: string; onclick?: any }) => {
@@ -411,9 +455,8 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
 
       try {
         const response = await getOrderByIdApiHandler(orderId);
-
+        console.log("order details : ---", response);
         setOrderDetail(response);
-        console.log("response : ", response);
       } catch (error: any) {
         Toast.show({
           type: "error",
@@ -426,10 +469,71 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
     };
 
     getOrderDetail();
-  }, [orderId]);
+  }, []);
+
+  const openExternalLink = async (link: string | undefined, fallback: string) => {
+    if (!link) {
+      Toast.show({
+        type: "error",
+        text1: fallback,
+      });
+      return;
+    }
+
+    const canOpen = await Linking.canOpenURL(link);
+    if (!canOpen) {
+      Toast.show({
+        type: "error",
+        text1: "Unable to open link.",
+      });
+      return;
+    }
+
+    await Linking.openURL(link);
+  };
+
+  const handlePayNow = () => {
+    Alert.alert(
+      "Redirect to Payment",
+      "We will redirect you to complete your pending payment.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Continue",
+          onPress: () =>
+            openExternalLink(
+              orderDetail?.remainingPaymentLink,
+              "Payment link is not available.",
+            ),
+        },
+      ],
+    );
+  };
+
+  const handleViewHoldAttachment = () => {
+    Alert.alert(
+      "Open Attachment",
+      "We will redirect you to view the hold attachment.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Continue",
+          onPress: () =>
+            openExternalLink(
+            IMAGE_URL+  orderDetail?.holdAttachment,
+              "Hold attachment is not available.",
+            ),
+        },
+      ],
+    );
+  };
+
   return (
     <View className="flex-1 bg-BgWhite">
-      <View className="pt-14 pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }}
+        className=" pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary"
+      >
         <Text className="text-white text-[24px] font-space-grotesk-bold">
           Track Shipment
         </Text>
@@ -451,7 +555,9 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
                   numberOfLines={1}
                   className="text-[24px] uppercase font-space-grotesk-bold text-primary"
                 >
-                  {orderId}
+                  {orderDetail?.shortId
+                    ? orderDetail?.shortId?.toUpperCase()
+                    : orderId}
                 </Text>
               </View>
             </View>
@@ -492,12 +598,14 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
           {currentStatus === "HOLD" &&
             orderDetail?.holdReason === "remaining_payment" && (
               <HoldWarningCard
-                onPayNow={() =>
-                  navigation.push("DetailsAndPayment", { orderId: orderId })
-                }
+                onPayNow={handlePayNow}
                 orderDetails={orderDetail}
               />
             )}
+
+          {orderDetail?.holdAttachment ? (
+            <HoldAttachmentCard onView={handleViewHoldAttachment} />
+          ) : null}
 
           {/* Accordions */}
           {/* <AccordionRow

@@ -1,22 +1,31 @@
 import Icon from "@/assets/icons";
+import DoorPIck from "@/assets/images/DoorPIck.png";
+import earthMap from "@/assets/images/earthmap.png";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { SHIPMENT_TYPE } from "@/constants/enums";
-import { useEffect, useState } from "react";
-import { Image, Platform, Pressable, Share, Text, View } from "react-native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import DoorPIck from "@/assets/images/DoorPIck.png";
-import earthMap from "@/assets/images/earthmap.png";
 import { getWarehouseApiHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
+import { useEffect, useState } from "react";
+import {
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  Text,
+  View,
+} from "react-native";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
 const MIN_PICKUP_HOURS = 48;
 const MIN_DROP_AT_WAREHOUSE_HOURS = 24;
+const MAX_SUBMISSION_MONTHS = 3;
 const SUBMISSION_SHIFTS = [
   {
     label: "10:00 AM to 2:00 PM",
@@ -34,6 +43,12 @@ const getMinimumSubmissionDateTime = (minimumHours: number) => {
   const minimumDate = new Date();
   minimumDate.setHours(minimumDate.getHours() + minimumHours);
   return minimumDate;
+};
+
+const getMaximumSubmissionDateTime = () => {
+  const maximumDate = new Date();
+  maximumDate.setMonth(maximumDate.getMonth() + MAX_SUBMISSION_MONTHS);
+  return maximumDate;
 };
 
 const getStartOfDay = (date: Date) =>
@@ -71,6 +86,13 @@ const showInvalidSubmissionTimeToast = (minimumHours: number) => {
   });
 };
 
+const showInvalidFutureDateToast = () => {
+  Toast.show({
+    type: "error",
+    text1: `Please select a date within the next ${MAX_SUBMISSION_MONTHS} months.`,
+  });
+};
+
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -92,8 +114,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   const [loading, setLoading] = useState(true);
   const [showDate, setShowDate] = useState(false);
   const [showShiftOptions, setShowShiftOptions] = useState(false);
-  const [warehouseAddress, setWarehouseAddress] = useState(null);
-  console.log("time t: ", data.time);
+  const [warehouseAddress, setWarehouseAd] = useState(null);
   const selectedShift = SUBMISSION_SHIFTS.find(
     (shift) =>
       data.time?.getHours() === shift.startHour &&
@@ -105,8 +126,13 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
     if (!selectedDate) return;
 
     const minimumDate = getMinimumSubmissionDateTime(minimumSubmissionHours);
+    const maximumDate = getMaximumSubmissionDateTime();
     if (getStartOfDay(selectedDate) < getStartOfDay(minimumDate)) {
       showInvalidSubmissionTimeToast(minimumSubmissionHours);
+      return;
+    }
+    if (getStartOfDay(selectedDate) > getStartOfDay(maximumDate)) {
+      showInvalidFutureDateToast();
       return;
     }
 
@@ -130,7 +156,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
 
   const onShiftSelect = (shift: (typeof SUBMISSION_SHIFTS)[number]) => {
     const selectedDateTime = getShiftDateTime(data.date, shift);
-    console.log("selected date : ", shift);
+
     if (
       selectedDateTime < getMinimumSubmissionDateTime(minimumSubmissionHours)
     ) {
@@ -144,6 +170,13 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   };
 
   const handelSubmit = (type: any) => {
+    if (
+      getStartOfDay(data.date) > getStartOfDay(getMaximumSubmissionDateTime())
+    ) {
+      showInvalidFutureDateToast();
+      return;
+    }
+
     if (
       !data.time ||
       combineDateAndTime(data.date, data.time) <
@@ -164,9 +197,8 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
   const getWarehouseAddress = async () => {
     try {
       const routedId = useAddressStore.getState().route ?? null;
-      console.log("route id for warehouse : ", routedId);
       const data = await getWarehouseApiHandler(routedId);
-      setWarehouseAddress(data);
+      setWarehouseAd(data);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -242,6 +274,7 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
           mode="date"
           date={data.date}
           minimumDate={getMinimumSubmissionDateTime(minimumSubmissionHours)}
+          maximumDate={getMaximumSubmissionDateTime()}
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onConfirm={(selectedDate) => {
             onDateChange(null, selectedDate);
@@ -263,59 +296,60 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
           </View>
         </View>
 
-        <View className="mt-10 flex flex-col justify-between content-between flex-1">
-          <View className="w-full">
-            <View className="flex flex-row items-center justify-between gap-2">
-              <View>
-                <Text className="text-primary font-space-grotesk-bold text-cml leading-[38px]">
-                  {IsDropAt ? "Drop Off at" : "Doorstep Pickup"}
-                </Text>
-                {IsDropAt ? (
+        <ScrollView>
+          <View className="mt-8  flex flex-col justify-between content-between flex-1">
+            <View className="w-full">
+              <View className="flex flex-row items-center justify-between gap-2">
+                <View>
                   <Text className="text-primary font-space-grotesk-bold text-cml leading-[38px]">
-                    Warehouse
+                    {IsDropAt ? "Drop Off at" : "Doorstep Pickup"}
                   </Text>
-                ) : null}
-              </View>
-              <Image
-                className="w-28 h-28 flex items-start bg-cover"
-                source={earthMap}
-              />
-            </View>
-            <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
-              {IsDropAt
-                ? "Set your shipment destination and explore the best available delivery routes."
-                : "Choose a pickup date and time for your shipment collection. "}
-            </Text>
-
-            {IsDropAt ? (
-              <View>
-                <View className="flex flex-row mt-2 mb-3 justify-between">
-                  <Text className="text-csm uppercase   text-[#5C6574] font-inter-semibold">
-                    Choose Your Shipping Path
-                  </Text>
-                </View>
-
-                {warehouseAddress ? (
-                  <Pressable
-                    onPress={copyAddressToClipboard}
-                    className="flex gap-4 flex-row items-center px-4 py-4 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30"
-                  >
-                    {warehouseAddress && (
-                      <Image
-                        className="w-11 h-8 rounded-md"
-                        source={{
-                          uri: CountryImage(warehouseAddress?.country),
-                        }}
-                      />
-                    )}
-                    <Text className="w-2/3 capitalize">
-                      {buildAddress(warehouseAddress)}
+                  {IsDropAt ? (
+                    <Text className="text-primary font-space-grotesk-bold text-cml leading-[38px]">
+                      Warehouse
                     </Text>
-                    <Icon name="Copy" />
-                  </Pressable>
-                ) : (
-                  <View className="flex gap-4 flex-row items-center  px-4 py-7 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
-                    {/* {warehouseAddress && (
+                  ) : null}
+                </View>
+                <Image
+                  className="w-28 h-28 flex items-start bg-cover"
+                  source={earthMap}
+                />
+              </View>
+              <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
+                {IsDropAt
+                  ? "Set your shipment destination and explore the best available delivery routes."
+                  : "Choose a pickup date and time for your shipment collection. "}
+              </Text>
+
+              {IsDropAt ? (
+                <View>
+                  <View className="flex flex-row mt-2 mb-3 justify-between">
+                    <Text className="text-csm uppercase   text-[#5C6574] font-inter-semibold">
+                      Choose Your Shipping Path
+                    </Text>
+                  </View>
+
+                  {warehouseAddress ? (
+                    <Pressable
+                      onPress={copyAddressToClipboard}
+                      className="flex gap-4 flex-row items-center px-4 py-4 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30"
+                    >
+                      {warehouseAddress && (
+                        <Image
+                          className="w-11 h-8 rounded-md"
+                          source={{
+                            uri: CountryImage(warehouseAddress?.country),
+                          }}
+                        />
+                      )}
+                      <Text className="w-2/3 capitalize">
+                        {buildAddress(warehouseAddress)}
+                      </Text>
+                      <Icon name="Copy" />
+                    </Pressable>
+                  ) : (
+                    <View className="flex gap-4 flex-row items-center  px-4 py-7 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter-medium text-csm placeholder:color-primary/30">
+                      {/* {warehouseAddress && (
                       <Image
                         className="w-11 h-8 rounded-md"
                         source={{
@@ -323,87 +357,88 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
                         }}
                       />
                     )} */}
-                    <Text className="text-cno text-primary/50 pl-4">
-                      {loading ? "Wait a moment" : "Address not available"}
-                    </Text>
-                    {/* <Icon name="Copy" /> */}
+                      <Text className="text-cno text-primary/50 pl-4">
+                        {loading ? "Wait a moment" : "Address not available"}
+                      </Text>
+                      {/* <Icon name="Copy" /> */}
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View className="w-full overflow-hidden rounded-3xl">
+                  <Image className="w-full bg-cover" source={DoorPIck} />
+                </View>
+              )}
+
+              <View className="mt-6 flex flex-col gap-0">
+                <Pressable
+                  onPress={() => {
+                    setShowShiftOptions(false);
+                    setShowDate(true);
+                  }}
+                >
+                  <View pointerEvents="none">
+                    <Input
+                      label={"Date Submission (Expected)"}
+                      placeholderTxt={"Enter Date"}
+                      value={formatDate(data.date)}
+                      onChange={() => {}}
+                      icon={<Icon name="Calendar" color="#BFCDDE" />}
+                      editable={false}
+                    />
+                  </View>
+                </Pressable>
+
+                <Pressable onPress={() => setShowShiftOptions((prev) => !prev)}>
+                  <View pointerEvents="none">
+                    <Input
+                      label={"Time Submission"}
+                      placeholderTxt={"Select Shift"}
+                      value={selectedShift?.label ?? ""}
+                      onChange={() => {}}
+                      icon={<Icon name="Time" color="#BFCDDE" size={26} />}
+                      editable={false}
+                    />
+                  </View>
+                </Pressable>
+                {showShiftOptions && (
+                  <View className="-mt-6 bg-white px-6 border-[1.5px] border-[#B5C3E8]/30 rounded-2xl overflow-hidden">
+                    {SUBMISSION_SHIFTS.map((shift, index) => {
+                      const isSelected = selectedShift?.label === shift.label;
+
+                      return (
+                        <Pressable
+                          key={shift.label}
+                          onPress={() => onShiftSelect(shift)}
+                          className={`flex flex-row items-center justify-between py-3 ${
+                            index > 0 ? "border-t border-t-primary/10" : ""
+                          }`}
+                        >
+                          <View className="flex flex-row items-center gap-3">
+                            <Icon name="Time" color="#BFCDDE" size={22} />
+                            <Text className="text-cno font-inter-medium text-primary">
+                              {shift.label}
+                            </Text>
+                          </View>
+                          {isSelected && (
+                            <Icon name="Check" size={18} color="#0F1729" />
+                          )}
+                        </Pressable>
+                      );
+                    })}
                   </View>
                 )}
               </View>
-            ) : (
-              <View className="w-full overflow-hidden rounded-3xl">
-                <Image className="w-full bg-cover" source={DoorPIck} />
-              </View>
-            )}
-
-            <View className="mt-6 flex flex-col gap-2">
-              <Pressable
-                onPress={() => {
-                  setShowShiftOptions(false);
-                  setShowDate(true);
-                }}
-              >
-                <View pointerEvents="none">
-                  <Input
-                    label={"Date Submission (Expected)"}
-                    placeholderTxt={"Enter Date"}
-                    value={formatDate(data.date)}
-                    onChange={() => {}}
-                    icon={<Icon name="Calendar" color="#BFCDDE" />}
-                    editable={false}
-                  />
-                </View>
-              </Pressable>
-
-              <Pressable onPress={() => setShowShiftOptions((prev) => !prev)}>
-                <View pointerEvents="none">
-                  <Input
-                    label={"Time Submission"}
-                    placeholderTxt={"Select Shift"}
-                    value={selectedShift?.label ?? ""}
-                    onChange={() => {}}
-                    icon={<Icon name="Time" color="#BFCDDE" size={26} />}
-                    editable={false}
-                  />
-                </View>
-              </Pressable>
-              {showShiftOptions && (
-                <View className="-mt-6 bg-white px-6 border-[1.5px] border-[#B5C3E8]/30 rounded-2xl overflow-hidden">
-                  {SUBMISSION_SHIFTS.map((shift, index) => {
-                    const isSelected = selectedShift?.label === shift.label;
-
-                    return (
-                      <Pressable
-                        key={shift.label}
-                        onPress={() => onShiftSelect(shift)}
-                        className={`flex flex-row items-center justify-between py-4 ${
-                          index > 0 ? "border-t border-t-primary/10" : ""
-                        }`}
-                      >
-                        <View className="flex flex-row items-center gap-3">
-                          <Icon name="Time" color="#BFCDDE" size={22} />
-                          <Text className="text-cno font-inter-medium text-primary">
-                            {shift.label}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Icon name="Check" size={18} color="#0F1729" />
-                        )}
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              )}
             </View>
           </View>
+        </ScrollView>
 
-          <View className="mt-auto">
-            <Button
-              disabled={!data.time || !data.date || !warehouseAddress}
-              text="Continue"
-              action={handelSubmit}
-            />
-          </View>
+        <View className="mt-auto">
+          <Button
+            disabled={!data.time || !data.date || !warehouseAddress}
+            text="Continue"
+            action={handelSubmit}
+          />
         </View>
       </View>
     </ScreenWrapper>

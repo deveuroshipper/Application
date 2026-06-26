@@ -5,12 +5,13 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import SocialButton, { Size } from "@/components/SocialButton";
 import {
   loginApiHandler,
+  signInWithApple,
   signInWithGoogle,
   storeGoogleLoginApiHandler,
 } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, View } from "react-native";
+import { Image, Platform, ScrollView, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const LoginScreen = ({ navigation }: any) => {
@@ -118,6 +119,62 @@ const LoginScreen = ({ navigation }: any) => {
       });
     }
   };
+
+  const handleAppleLogin = async () => {
+    let backendRequestStarted = false;
+
+    try {
+      const appleResponse = await signInWithApple();
+
+      if (!appleResponse) return;
+
+      const fullName = [
+        appleResponse.fullName?.givenName,
+        appleResponse.fullName?.familyName,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const payload = {
+        email: appleResponse.email,
+        name: fullName || "Apple User",
+        profile: null,
+        authMethod: "apple",
+        authId: appleResponse.user,
+        identityToken: appleResponse.identityToken,
+      };
+
+      backendRequestStarted = true;
+
+      const response = await storeGoogleLoginApiHandler(payload);
+      // Better: rename this API to storeSocialLoginApiHandler
+
+      await useAuthStore.getState().login(response.token, response.user);
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "MainScreens",
+            params: {
+              screen: "BottomTabBar",
+              params: { screen: "HomeScreen" },
+            },
+          },
+        ],
+      });
+    } catch (error: any) {
+      if (!backendRequestStarted) return;
+
+      Toast.show({
+        type: "error",
+        text1:
+          typeof error === "string"
+            ? error
+            : (error?.message ?? "Apple login failed"),
+      });
+    }
+  };
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
       <ScrollView showsHorizontalScrollIndicator={false}>
@@ -200,11 +257,14 @@ const LoginScreen = ({ navigation }: any) => {
                 <View className="h-[0.9px] flex-auto bg-primary/30" />
               </View>
 
-              {/* <SocialButton
-                size={Size.Small}
-                icon={<Icon name="Apple" size={20} />}
-                text={"Continue with Apple"}
-              /> */}
+              {Platform.OS == "ios" ? (
+                <SocialButton
+                  size={Size.Small}
+                  action={handleAppleLogin}
+                  icon={<Icon name="Apple" size={20} />}
+                  text={"Continue with Apple"}
+                />
+              ) : null}
               <SocialButton
                 size={Size.Small}
                 action={handelGoogleLogin}

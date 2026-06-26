@@ -108,7 +108,7 @@ const ListAddresses = ({ navigation, route }: any) => {
                     </View>
 
                     <View className="flex  flex-row justify-between items-end">
-                      <View className="">
+                      <View className="w-[80%]">
                         <Text className=" text-csm font-inter text-primary/60">
                           {address?.addressLine.slice(0, 100)}
                         </Text>

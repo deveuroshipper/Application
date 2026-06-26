@@ -636,7 +636,7 @@ const BoxDimension = ({
                     (box) => box?.mode == item,
                   )[0];
 
-                  console.log();
+                
 
                   return (
                     <Pressable

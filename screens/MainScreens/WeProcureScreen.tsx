@@ -1,22 +1,25 @@
+import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import ScreenWrapper from "@/components/ScreenWrapper";
+import ServiceInfoModal from "@/components/ServiceInfoModal";
 import { submitServiceQueryApiHandler } from "@/helper/Api";
 import React, { useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const WeProcureScreen = ({ navigation }: any) => {
+  const [infoVisible, setInfoVisible] = useState(false);
   const [data, SetData] = useState({
     name: "",
     email: "",
     mobile: "",
     code: {
-      dialCode: "+1",
-      flag: "🇺🇸",
-      name: "United States",
+      dialCode: "",
+      flag: "",
+      name: "",
     },
   });
   const [loading, setLoading] = useState(false);
@@ -41,8 +44,12 @@ const WeProcureScreen = ({ navigation }: any) => {
       newErrors.email = "Please enter a valid email address.";
 
     if (!phoneNumber) newErrors.mobile = "Phone number is required.";
-    else if (!/^\d{7,15}$/.test(phoneNumber))
-      newErrors.mobile = "Please enter a valid phone number.";
+    else if (!/^\d{10}$/.test(data.mobile.trim())) {
+      newErrors.mobile = "Phone number must be exactly 10 digits.";
+    }
+     if (data?.code?.dialCode == "" || data?.code?.name == "") {
+      newErrors.mobile = "Please select a mobile country code";
+    }
 
     setErrors(newErrors);
     return !newErrors.name && !newErrors.email && !newErrors.mobile;
@@ -91,12 +98,32 @@ const WeProcureScreen = ({ navigation }: any) => {
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
       <View className="px-8 pb-8 flex-1">
-        <BackButton navigation={navigation} />
+        <ServiceInfoModal
+          visible={infoVisible}
+          title="WeProcure"
+          description="WeProcure is a product sourcing service. If you need products, materials, or inventory from suppliers, our team helps find reliable vendors, compare options, negotiate pricing, and arrange procurement on your behalf."
+          onClose={() => setInfoVisible(false)}
+        />
+
+        <View className="flex-row items-center justify-between">
+          <BackButton navigation={navigation} />
+          <TouchableOpacity
+            onPress={() => setInfoVisible(true)}
+            className="h-10 px-4 rounded-full bg-[#E4E8EF] flex-row items-center gap-2"
+            accessibilityRole="button"
+            accessibilityLabel="WeProcure information"
+          >
+            <Icon name="Info" size={18} color="#0F1729" />
+            <Text className="text-csm text-primary font-inter-bold pb-0.5">
+              Info
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <View className="mt-10 flex flex-col justify-between content-between flex-1">
           <View className="w-full">
             <View
-              className="w-full max-h-80 min-h-52 mb-8 overflow-hidden rounded-lg"
+              className="w-full max-h-80 min-h-52 mb-6 overflow-hidden rounded-lg"
               style={{
                 shadowColor: "#e3e6e9",
                 shadowOffset: { width: 0, height: 4 },
@@ -122,7 +149,7 @@ const WeProcureScreen = ({ navigation }: any) => {
             </Text>
           </View>
 
-          <View className="flex flex-col gap-2">
+          <View className="flex flex-col gap-0">
             <Input
               label={"FULL NAME"}
               placeholderTxt={"Enter Full Name"}
@@ -144,7 +171,7 @@ const WeProcureScreen = ({ navigation }: any) => {
               error={errors.email}
             />
             <PhoneNumberInput
-              label={"Phone Number*"}
+              label={"Phone Number"}
               placeholderTxt={"987654321"}
               value={data?.mobile}
               selectedCode={data?.code}

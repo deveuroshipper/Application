@@ -80,6 +80,8 @@ export const registerApiHandler = async (
   email: string,
   password: string,
   mobile: string,
+  dialCode: String,
+  coname: String,
 ) => {
   try {
     const response = await api.post(`/auth/register`, {
@@ -87,6 +89,8 @@ export const registerApiHandler = async (
       email,
       password,
       phone: mobile,
+      dialCode,
+      coname,
     });
     return response.data.data;
   } catch (error: any) {
@@ -290,13 +294,46 @@ export const submitEnquiryApiHandler = async (data: any) => {
   }
 };
 
+// export const createOrderApiHandler = async (data: any) => {
+//   try {
+//     const response = await api.post(`/orders`, data);
+
+//     return response.data.data;
+//   } catch (error: any) {
+//     console.log(error);
+//     throw error.response.data.message || "Check Network Connection";
+//   }
+// };
+
 export const createOrderApiHandler = async (data: any) => {
   try {
-    const response = await api.post(`/orders`, data);
+    const response = await api.post(`/orders/checkout`, data);
 
     return response.data.data;
   } catch (error: any) {
     console.log(error);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const getCheckoutOrderHandler = async (id: any) => {
+  try {
+    const response = await api.get(`/orders/checkouts/${id}`);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error);
+    throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const discardCheckoutApiHandler = async (id: any) => {
+  try {
+    const response = await api.delete(`/orders/discard-checkout/${id}`);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.log(error.response.data);
     throw error.response.data.message || "Check Network Connection";
   }
 };
@@ -337,13 +374,22 @@ export const getCartApiHandler = async () => {
 export const addToCartApiHandler = async (id: any) => {
   try {
     const response = await api.post(`/carts/add`, {
-      orderId: id,
+      checkoutId: id,
     });
 
     return response.data.data;
   } catch (error: any) {
     console.log(error.response.data);
     throw error.response.data.message || "Check Network Connection";
+  }
+};
+
+export const checkCartApiHandler = async (id: any) => {
+  try {
+    await api.get(`/carts/check/${id}`);
+    return true;
+  } catch {
+    return false;
   }
 };
 
@@ -586,6 +632,9 @@ export const getDashboardImagesApiHandler = async () => {
 GoogleSignin.configure({
   webClientId:
     "757637884994-e25tj39trrsmir28oobf9p77tnb4lr51.apps.googleusercontent.com",
+  iosClientId:
+    "757637884994-g287t5c8fopikangimkuhnj47qnvljhu.apps.googleusercontent.com",
+  offlineAccess: true,
 });
 export const signInWithGoogle = async () => {
   try {

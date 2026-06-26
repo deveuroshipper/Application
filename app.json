@@ -4,7 +4,7 @@
     "slug": "euroshipper",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash.png",
     "scheme": "euroshipper",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -14,12 +14,19 @@
     },
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.euroshipper",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "EuroShipper uses the camera to capture shipment, package, and profile images."
+        "NSCameraUsageDescription": "EuroShipper uses the camera to capture shipment, package, and profile images.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.757637884994-g287t5c8fopikangimkuhnj47qnvljhu"
+            ]
+          }
+        ]
       },
       "NSAppTransportSecurity": {
         "NSAllowsArbitraryLoads": true

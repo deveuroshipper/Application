@@ -1,5 +1,6 @@
 import Icon from "@/assets/icons";
-import React, { useEffect, useState } from "react";
+import { nameMap } from "@/constants/country";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -23,6 +24,8 @@ interface SelectedCountry {
   name: string;
 }
 
+type SelectedCountryInput = SelectedCountry | string | null | undefined;
+
 const getFlagEmoji = (countryCode?: string) => {
   if (!countryCode || countryCode.length !== 2) return "🏳️";
 
@@ -31,11 +34,22 @@ const getFlagEmoji = (countryCode?: string) => {
     .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 };
 
+const getCountryCodeByName = (name?: string) => {
+  const normalizedName = String(name ?? "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedName) return "";
+
+  return (nameMap as Record<string, string>)[normalizedName] ?? "";
+};
+
 const DEFAULT_COUNTRY: SelectedCountry = {
   dialCode: "+1",
   flag: "🇺🇸",
   name: "United States",
 };
+
+const UNKNOWN_COUNTRY_FLAG = "🏳️";
 
 const FALLBACK_COUNTRIES: SelectedCountry[] = [
   DEFAULT_COUNTRY,
@@ -44,6 +58,117 @@ const FALLBACK_COUNTRIES: SelectedCountry[] = [
   { name: "Belgium", dialCode: "+32", flag: "🇧🇪" },
   { name: "United Arab Emirates", dialCode: "+971", flag: "🇦🇪" },
 ];
+
+const normalizeDialCode = (dialCode?: string) => {
+  const trimmed = String(dialCode ?? "").trim();
+  if (!trimmed) return "";
+  return trimmed.startsWith("+") ? trimmed : `+${trimmed}`;
+};
+
+const getFallbackCountryByDialCode = (dialCode?: string) => {
+  const normalizedDialCode = normalizeDialCode(dialCode);
+  return FALLBACK_COUNTRIES.find(
+    (country) => country.dialCode === normalizedDialCode,
+  );
+};
+
+const getFallbackCountryByName = (name?: string) => {
+  const normalizedName = String(name ?? "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedName) return undefined;
+
+  const fallbackCountry = FALLBACK_COUNTRIES.find(
+    (country) => country.name.toLowerCase() === normalizedName,
+  );
+
+  if (fallbackCountry) return fallbackCountry;
+
+  const countryCode = getCountryCodeByName(normalizedName);
+  if (!countryCode) return undefined;
+
+  return {
+    name: name?.trim() || DEFAULT_COUNTRY.name,
+    dialCode: "",
+    flag: getFlagEmoji(countryCode),
+  };
+};
+
+const MAX_PHONE_DIGITS = 10;
+
+const sanitizePhoneNumber = (text: any) =>
+  String(text ?? "")
+    .replace(/\D/g, "")
+    .slice(0, MAX_PHONE_DIGITS);
+
+const mapCountryCodes = (data: Country[]) =>
+  data
+    .filter((c) => c.name && c.dial_code)
+    .map((c) => ({
+      name: c.name,
+      flag: getFlagEmoji(c.code),
+      dialCode: normalizeDialCode(c.dial_code),
+    }))
+    .filter((c) => c.dialCode)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+const normalizeSelectedCountry = (
+  country?: SelectedCountryInput,
+): SelectedCountry | null => {
+  if (typeof country === "string") {
+    const dialCode = normalizeDialCode(country);
+    if (!dialCode) return null;
+
+    const fallbackCountry = getFallbackCountryByDialCode(dialCode);
+
+    return (
+      fallbackCountry ?? {
+        dialCode: dialCode || DEFAULT_COUNTRY.dialCode,
+        flag:
+          dialCode === DEFAULT_COUNTRY.dialCode
+            ? DEFAULT_COUNTRY.flag
+            : UNKNOWN_COUNTRY_FLAG,
+        name: dialCode === DEFAULT_COUNTRY.dialCode ? DEFAULT_COUNTRY.name : "",
+      }
+    );
+  }
+
+  if (country?.dialCode || country?.flag || country?.name) {
+    const dialCode = normalizeDialCode(country.dialCode);
+    const fallbackByName = getFallbackCountryByName(country.name);
+    const fallbackByDialCode = getFallbackCountryByDialCode(dialCode);
+
+    return {
+      dialCode:
+        dialCode ||
+        fallbackByName?.dialCode ||
+        fallbackByDialCode?.dialCode ||
+        "",
+      flag:
+        country.flag ||
+        fallbackByName?.flag ||
+        fallbackByDialCode?.flag ||
+        (dialCode === DEFAULT_COUNTRY.dialCode
+          ? DEFAULT_COUNTRY.flag
+          : UNKNOWN_COUNTRY_FLAG),
+      name:
+        country.name ||
+        fallbackByDialCode?.name ||
+        fallbackByName?.name ||
+        "",
+    };
+  }
+
+  return null;
+};
+
+const shouldEnrichSelectedCountry = (country: SelectedCountry | null) =>
+  Boolean(
+    country?.dialCode &&
+      (!country.flag ||
+        country.flag === UNKNOWN_COUNTRY_FLAG ||
+        !country.name.trim()),
+  );
 
 const PhoneNumberInput = ({
   label,
@@ -55,11 +180,11 @@ const PhoneNumberInput = ({
   disableCode = false,
   error = "",
 }: {
-  label: String;
-  placeholderTxt: String;
+  label: string;
+  placeholderTxt: string;
   value: any;
   onChange: any;
-  selectedCode?: SelectedCountry;
+  selectedCode?: SelectedCountryInput;
   onCodeChange?: (country: SelectedCountry) => void;
   disableCode?: boolean;
   error?: string;
@@ -69,41 +194,72 @@ const PhoneNumberInput = ({
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<SelectedCountry>(
-    selectedCode ?? DEFAULT_COUNTRY,
+  const phoneInputRef = useRef<any>(null);
+  const [selected, setSelected] = useState<SelectedCountry | null>(
+    normalizeSelectedCountry(selectedCode),
   );
 
   useEffect(() => {
-    if (selectedCode) setSelected(selectedCode);
+    setSelected(normalizeSelectedCountry(selectedCode));
   }, [selectedCode]);
 
-  const fetchCountries = async () => {
+  const loadCountries = useCallback(async () => {
     if (countries.length > 0) {
-      setModalVisible(true);
-      return;
+      return countries;
     }
-    setLoading(true);
+
     try {
       const res = await fetch(
         "https://countriesnow.space/api/v0.1/countries/codes",
       );
       const json = await res.json();
       const data: Country[] = Array.isArray(json?.data) ? json.data : [];
-      const mapped: SelectedCountry[] = data
-        .filter((c) => c.name && c.dial_code)
-        .map((c) => ({
-          name: c.name,
-          flag: getFlagEmoji(c.code),
-          dialCode: c.dial_code ?? "",
-        }))
-        .filter((c) => c.dialCode)
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const mapped = mapCountryCodes(data);
       const countryList = mapped.length > 0 ? mapped : FALLBACK_COUNTRIES;
       setCountries(countryList);
       setFiltered(countryList);
+      return countryList;
     } catch {
       setCountries(FALLBACK_COUNTRIES);
       setFiltered(FALLBACK_COUNTRIES);
+      return FALLBACK_COUNTRIES;
+    }
+  }, [countries]);
+
+  useEffect(() => {
+    const selectedCountry = normalizeSelectedCountry(selectedCode);
+
+    if (!shouldEnrichSelectedCountry(selectedCountry)) return;
+
+    let isActive = true;
+
+    loadCountries().then((countryList) => {
+      if (!isActive) return;
+
+      const matchedCountry = countryList.find(
+        (country) => country.dialCode === selectedCountry?.dialCode,
+      );
+
+      if (!matchedCountry) return;
+
+      const enrichedCountry = {
+        ...selectedCountry,
+        ...matchedCountry,
+      };
+
+      setSelected(enrichedCountry);
+      onCodeChange?.(enrichedCountry);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [loadCountries, onCodeChange, selectedCode]);
+
+  const fetchCountries = async () => {
+    setLoading(true);
+    try {
+      await loadCountries();
     } finally {
       setLoading(false);
       setModalVisible(true);
@@ -128,6 +284,16 @@ const PhoneNumberInput = ({
     setFiltered(countries);
   };
 
+  const handlePhoneChange = (text: string) => {
+    const sanitizedText = sanitizePhoneNumber(text);
+
+    if (text !== sanitizedText) {
+      phoneInputRef.current?.setNativeProps({ text: sanitizedText });
+    }
+
+    onChange(sanitizedText);
+  };
+
   return (
     <View>
       <Text className="text-csm uppercase mt-2 mb-3 text-primary font-inter-medium">
@@ -146,25 +312,36 @@ const PhoneNumberInput = ({
             <ActivityIndicator size="small" />
           ) : (
             <>
-              <Text className="text-lg">{selected.flag}</Text>
-              <Text className="text-csm font-inter-medium text-primary">
-                {selected.dialCode}
-              </Text>
+              {selected ? (
+                <>
+                  <Text className="text-lg">{selected.flag}</Text>
+                  <Text className="text-csm font-inter-medium text-primary">
+                    {selected.dialCode}
+                  </Text>
+                </>
+              ) : null}
               {!disableCode && (
-                <Text className="text-primary/40 text-xs">▾</Text>
+                <View
+                  style={{ transform: [{ rotate: "90deg" }] }}
+                  className="text-primary/40 mr-2 text-xs"
+                >
+                  <Icon name="Arrow" size={18} />
+                </View>
               )}
             </>
           )}
         </Pressable>
 
         <TextInput
-          value={value}
-          onChangeText={onChange}
+          ref={phoneInputRef}
+          value={sanitizePhoneNumber(value)}
+          onChangeText={handlePhoneChange}
           className="flex-1"
           placeholder={placeholderTxt as string}
-          keyboardType="phone-pad"
+          keyboardType="number-pad"
+          maxLength={MAX_PHONE_DIGITS}
           placeholderTextColor={"#C3C5C9"}
-          style={{ paddingVertical: 10 }}
+          style={{ paddingVertical: 10, color: "#0F1729" }}
         />
       </View>
 
@@ -197,7 +374,7 @@ const PhoneNumberInput = ({
           <RNTextInput
             value={search}
             onChangeText={handleSearch}
-            style={{ paddingVertical: 20 }}
+            style={{ paddingVertical: 14 }}
             placeholder="Search country or code..."
             className={`flex mb-6 gap-2 flex-row px-6 bg-white border-[1.5px] border-[#B5C3E8]/30 rounded-2xl font-inter text-cno placeholder:color-primary/30 `}
             autoFocus

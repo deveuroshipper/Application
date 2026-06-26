@@ -2,7 +2,7 @@ import BackButton from "@/components/BackButton";
 import { ABOUT_PAGES } from "@/constants/enums";
 import { getContentApiHandler } from "@/helper/Api";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 
@@ -47,7 +47,10 @@ const AboutUsDetails = ({ navigation, route }: any) => {
   }, [isFor]);
   return (
     <View className="flex-1 bg-BgWhite">
-      <View className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }}
+        className=" px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary"
+      >
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">

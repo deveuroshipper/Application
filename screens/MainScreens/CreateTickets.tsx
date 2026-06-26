@@ -73,7 +73,7 @@ const CreateTickets = ({ navigation }: any) => {
     if (data.typeOfQuery === "order_related" && !data.order)
       newErrors.order = "Order is required.";
     if (!data.subject.trim()) newErrors.subject = "Subject is required.";
-   
+
     if (!data.message.trim()) newErrors.message = "Message is required.";
 
     setErrors(newErrors);
@@ -134,8 +134,6 @@ const CreateTickets = ({ navigation }: any) => {
     getOrders();
   }, []);
 
-  console.log("orders : ", orders);
-
   return (
     <ScreenWrapper KeyboardAvoiding={true}>
       <View className="flex-1 px-8 pb-8">
@@ -166,7 +164,7 @@ const CreateTickets = ({ navigation }: any) => {
             />
             <Input
               label={"Email ID"}
-              placeholderTxt={"abc123@gmail.com"}
+              placeholderTxt={"jen@gmail.com"}
               value={data?.email}
               onChange={(text: string) => {
                 setData({ ...data, email: text });
@@ -231,11 +229,12 @@ const CreateTickets = ({ navigation }: any) => {
                                   <View className="flex flex-row gap-2">
                                     <Icon name="Box" />
                                     <View className="flex flex-row items-center justify-center">
+                                      <Text className="text-cno font-inter-medium text-primary"></Text>
                                       <Text className="text-cno font-inter-medium text-primary">
+                                        {item?.shortId
+                                          ? item?.shortId?.toUpperCase()
+                                          : item?.id.slice(0, 10) + "..."}
                                         
-                                      </Text>
-                                      <Text className="text-cno font-inter-medium text-primary">
-                                        {item?.id.slice(0, 10)}...
                                       </Text>
                                     </View>
                                   </View>

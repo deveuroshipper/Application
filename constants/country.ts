@@ -3,6 +3,7 @@ export const nameMap = {
   "åland islands": "ax",
   albania: "al",
   algeria: "dz",
+  angola: "ao",
   argentina: "ar",
   australia: "au",
   austria: "at",

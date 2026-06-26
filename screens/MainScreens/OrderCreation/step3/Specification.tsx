@@ -202,11 +202,10 @@ const Specification = ({ navigation, route }: any) => {
           dropAddressId: useAddressStore.getState().deliverAddress?.id,
         };
 
-        console.log("payload : ", payload);
-
         const response = await createOrderApiHandler(payload);
+    
 
-        navigation.push("DetailsAndPayment", { orderId: response?.id });
+        navigation.push("DetailsAndPayment", { orderId: response?.checkoutId });
       }
     } catch (error: any) {
       Toast.show({
@@ -229,7 +228,7 @@ const Specification = ({ navigation, route }: any) => {
       if (response?.length > 0) {
         setSelectedBox(response[0]);
       }
-      console.log("boxes data : ", response[0]?.modePrices);
+
       setBoxes([...(response ?? []), ...staticBoxes]);
     } catch (error: any) {
       Toast.show({
@@ -249,7 +248,7 @@ const Specification = ({ navigation, route }: any) => {
       const response = await getDurationApiHandler(
         useAddressStore.getState().route,
       );
-      console.log("duration data", response);
+
       const payload = ["Loding"];
       response?.map((item) => {
         if (item?.type == "SHIP") {

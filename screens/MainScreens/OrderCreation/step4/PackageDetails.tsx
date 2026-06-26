@@ -2,7 +2,7 @@ import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import Button, { Variant } from "@/components/Button";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { getOrderByIdApiHandler } from "@/helper/Api";
+import { getCheckoutOrderHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
 import { formatDate } from "@/helper/formateDateTime";
 import React, { useEffect, useState } from "react";
@@ -23,9 +23,6 @@ const PackageDetails = ({ navigation, route }: any) => {
 
   const [orderDetail, setOrderDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedShipment, setSelectedShipment] = useState<"air" | "sea">(
-    "air",
-  );
 
   const handleCheckout = () => {
     navigation.push("DetailsAndPayment", { orderId: orderId });
@@ -33,8 +30,8 @@ const PackageDetails = ({ navigation, route }: any) => {
 
   const getDetail = async () => {
     try {
-      const response = await getOrderByIdApiHandler(orderId);
-      console.log("package detail  : ", response);
+      const response = await getCheckoutOrderHandler(orderId);
+      
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({
@@ -99,8 +96,10 @@ const PackageDetails = ({ navigation, route }: any) => {
                   numberOfLines={1}
                   className="text-csm font-inter-semibold text-[#454545] mb-0.5"
                 >
-                  Order id : #
-                  {orderDetail?.id?.toUpperCase()?.replaceAll("-", "")}
+                  Order id :{" "}
+                  {orderDetail?.shortId
+                    ? orderDetail?.shortId?.toUpperCase()
+                    : orderDetail?.id?.toUpperCase()?.replaceAll("-", "")}
                 </Text>
               </View>
             </View>
@@ -252,7 +251,7 @@ const PackageDetails = ({ navigation, route }: any) => {
                 <Text className="text-csm font-inter-bold text-primary mt-1">
                   Date Submission
                 </Text>
-                {orderDetail?.submissionDateOnly ? (
+                {orderDetail?.submissionDate ? (
                   <Text className="text-csm font-inter-medium text-primary/80">
                     {formatDate(orderDetail?.submissionDate)}
                   </Text>

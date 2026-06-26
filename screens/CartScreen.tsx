@@ -35,7 +35,6 @@ const CartItemCard = ({
   onCheckout: () => void;
   onViewDetails: () => void;
 }) => {
- 
   return (
     <View
       className="bg-white rounded-2xl p-4 mb-6"
@@ -79,12 +78,14 @@ const CartItemCard = ({
         <View className="flex-1 gap-2 flex flex-col justify-between ">
           <View className="flex justify-between flex-row items-center">
             <Text className="text-csm mb-2 font-inter-semibold text-[#334155]">
-              Order Id :
-              {(item.orderid ?? item.orderId ?? item.id)
-                ?.toUpperCase()
-                ?.slice(0, 10)
-                ?.replaceAll("-", "")
-                ?.slice(0, 10) + "..."}
+              Order Id :{" "}
+              {item?.shortId
+                ? item?.shortId?.toUpperCase()
+                : (item.orderid ?? item.orderId ?? item.id)
+                    ?.toUpperCase()
+                    ?.slice(0, 10)
+                    ?.replaceAll("-", "")
+                    ?.slice(0, 10) + "..."}
             </Text>
             <TouchableOpacity
               onPress={onDelete}
@@ -292,7 +293,6 @@ const CartScreen = ({ navigation }: any) => {
   };
 
   const handleCheckout = (orderId: String) => {
-   
     navigation.push("DetailsAndPayment", {
       orderId: orderId,
     });
@@ -318,6 +318,8 @@ const CartScreen = ({ navigation }: any) => {
       });
     });
   }, [fetchCart]);
+
+ 
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -381,7 +383,10 @@ const CartScreen = ({ navigation }: any) => {
                 const itemId =
                   item.id ?? item.orderid ?? item.orderId ?? String(index);
                 const orderId =
-                  item.orderid ?? item.orderId ?? item.id ?? itemId;
+                  item.checkoutId ??
+                  item.checkoutId ??
+                  item.checkoutId ??
+                  itemId;
 
                 return (
                   <CartItemCard

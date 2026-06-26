@@ -16,7 +16,7 @@ import {
 } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useEffect, useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Platform, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 const VerifyUpdateOtp = ({ navigation, route }: any) => {
@@ -28,7 +28,7 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
   const [showModel, setShowModel] = useState(false);
   const getErrorMessage = (error: any, fallback = "Something went wrong") =>
     typeof error === "string" ? error : (error?.message ?? fallback);
-  console.log("update data : ", data);
+ 
   const getProfile = async () => {
     try {
       const response = await getProfileApiHandler();
@@ -155,7 +155,10 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           </View>
         }
       />
-      <View className="pt-12  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }}
+        className="  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary"
+      >
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">
@@ -176,7 +179,7 @@ const VerifyUpdateOtp = ({ navigation, route }: any) => {
           </View>
           <Text className="text-csm mt-2 mb-6 text-primary/60 font-inter">
             We've sent a 4-digit verification code to your email
-            {data?.newEmail ? ` ${data?.newEmail}` :  ` ${user?.email}`}
+            {data?.newEmail ? ` ${data?.newEmail}` : ` ${user?.email}`}
           </Text>
         </View>
 

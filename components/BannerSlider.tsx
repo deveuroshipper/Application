@@ -123,12 +123,18 @@ const BannerSlider = () => {
         }}
       />
       <View className="absolute bottom-0 left-0 px-8 py-6">
-        <Text
-          className="text-white font-inter-bold"
-          style={{ fontSize: 22, lineHeight: 30, maxWidth: SLIDE_WIDTH * 0.65 }}
-        >
-          {item.title}
-        </Text>
+        {item?.title ? (
+          <Text
+            className="text-white font-inter-bold"
+            style={{
+              fontSize: 22,
+              lineHeight: 30,
+              maxWidth: SLIDE_WIDTH * 0.65,
+            }}
+          >
+            {item?.title}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

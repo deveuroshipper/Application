@@ -113,7 +113,8 @@ const OrderCard = ({
     {/* Top row: Order ID + Date */}
     <View className="flex-row justify-between items-center mb-1">
       <Text className="text-cno font-inter-bold text-primary">
-        Order ID: {order.orderId}
+        Order ID:{" "}
+        {order?.shortId ? order?.shortId?.toUpperCase() : order.orderId}
       </Text>
       <Text className="text-[12px] font-inter-medium text-[#55658B]/50">
         {order.date}

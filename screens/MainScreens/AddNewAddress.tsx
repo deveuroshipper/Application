@@ -33,7 +33,7 @@ type MobileCountry = {
   name: string;
 };
 
-const EMPTY_MOBILE_COUNTRY: MobileCountry = {
+const DEFAULT_MOBILE_COUNTRY: MobileCountry = {
   dialCode: "",
   flag: "",
   name: "",
@@ -68,7 +68,8 @@ const FALLBACK_MOBILE_COUNTRIES: Record<string, MobileCountry> = {
 };
 
 const getFlagEmoji = (countryCode?: string) => {
-  if (!countryCode || countryCode.length !== 2) return "";
+  if (!countryCode || countryCode.length !== 2)
+    return DEFAULT_MOBILE_COUNTRY.flag;
 
   return countryCode
     .toUpperCase()
@@ -79,6 +80,8 @@ const getMobileCountry = async (
   countryName: string,
 ): Promise<MobileCountry> => {
   const normalizedCountry = countryName.trim().toLowerCase();
+  if (!normalizedCountry) return DEFAULT_MOBILE_COUNTRY;
+
   const fallback = FALLBACK_MOBILE_COUNTRIES[normalizedCountry];
 
   try {
@@ -103,8 +106,8 @@ const getMobileCountry = async (
 
   return (
     fallback ?? {
-      ...EMPTY_MOBILE_COUNTRY,
-      name: countryName,
+      ...DEFAULT_MOBILE_COUNTRY,
+      name: countryName || DEFAULT_MOBILE_COUNTRY.name,
     }
   );
 };
@@ -118,7 +121,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
   const [data, setData] = useState({
     name: "",
     mobile: "",
-    mobileCode: EMPTY_MOBILE_COUNTRY,
+    mobileCode: DEFAULT_MOBILE_COUNTRY,
     code: "",
     addressLine1: "",
     pincode: "",
@@ -234,8 +237,11 @@ const AddNewAddress = ({ navigation, route }: any) => {
   useEffect(() => {
     if (!address_id) return;
     getAddressByIdApiHandler(address_id)
-      .then((addr) => {
+      .then(async (addr) => {
         const addressCountry = addr.country ?? "";
+        const fallbackMobileCode = addressCountry
+          ? await getMobileCountry(addressCountry)
+          : DEFAULT_MOBILE_COUNTRY;
 
         setData((prev) => ({
           ...prev,
@@ -244,23 +250,24 @@ const AddNewAddress = ({ navigation, route }: any) => {
           mobileCode:
             addr.dialCode || addr.coname
               ? {
-                  dialCode: addr.dialCode ?? "",
-                  flag: "",
-                  name: addr.coname ?? addressCountry,
+                  dialCode:
+                    addr.dialCode ||
+                    fallbackMobileCode.dialCode ||
+                    DEFAULT_MOBILE_COUNTRY.dialCode,
+                  flag: fallbackMobileCode.flag || DEFAULT_MOBILE_COUNTRY.flag,
+                  name:
+                    addr.coname ??
+                    fallbackMobileCode.name ??
+                    addressCountry ??
+                    DEFAULT_MOBILE_COUNTRY.name,
                 }
-              : prev.mobileCode,
+              : fallbackMobileCode,
           addressLine1: addr.addressLine ?? "",
           pincode: addr.pincode ?? "",
           country: addressCountry,
           state: addr.state ?? "",
           city: addr.city ?? "",
         }));
-
-        if (!addr.dialCode && addressCountry) {
-          getMobileCountry(addressCountry).then((mobileCode) => {
-            setData((prev) => ({ ...prev, mobileCode }));
-          });
-        }
       })
       .catch((error: any) => {
         Toast.show({
@@ -364,7 +371,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
             <View className="flex flex-col">
               <Input
                 label={"Full Name"}
-                placeholderTxt={"Type your name here"}
+                placeholderTxt={"Enter your name"}
                 value={data?.name}
                 onChange={(text: string) => {
                   setData({ ...data, name: text });
@@ -374,7 +381,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
               />
               <PhoneNumberInput
                 label={"Mobile Number"}
-                placeholderTxt={"Type your mobile number"}
+                placeholderTxt={"Enter your mobile number"}
                 value={data?.mobile}
                 selectedCode={data?.mobileCode}
                 disableCode={isCountryLocked}
@@ -384,19 +391,6 @@ const AddNewAddress = ({ navigation, route }: any) => {
                   if (errors.mobile) setErrors((e) => ({ ...e, mobile: "" }));
                 }}
                 error={errors.mobile}
-              />
-              <Input
-                label={"Address"}
-                placeholderTxt={"Type your address here"}
-                value={data?.addressLine1}
-                onChange={(text: string) => {
-                  setData({ ...data, addressLine1: text });
-                  if (errors.addressLine1)
-                    setErrors((e) => ({ ...e, addressLine1: "" }));
-                }}
-                multiline={true}
-                numberOfLines={4}
-                error={errors.addressLine1}
               />
 
               <LocationPickerInput
@@ -411,10 +405,7 @@ const AddNewAddress = ({ navigation, route }: any) => {
                     country: val,
                     state: "",
                     city: "",
-                    mobileCode: {
-                      ...EMPTY_MOBILE_COUNTRY,
-                      name: val,
-                    },
+                    mobileCode: DEFAULT_MOBILE_COUNTRY,
                   });
                   getMobileCountry(val).then((mobileCode) => {
                     setData((prev) =>
@@ -424,6 +415,20 @@ const AddNewAddress = ({ navigation, route }: any) => {
                   if (errors.country) setErrors((e) => ({ ...e, country: "" }));
                 }}
                 error={errors.country}
+              />
+
+              <Input
+                label={"Address"}
+                placeholderTxt={"Enter your address"}
+                value={data?.addressLine1}
+                onChange={(text: string) => {
+                  setData({ ...data, addressLine1: text });
+                  if (errors.addressLine1)
+                    setErrors((e) => ({ ...e, addressLine1: "" }));
+                }}
+                multiline={true}
+                numberOfLines={4}
+                error={errors.addressLine1}
               />
               <Input
                 label={"Pin code"}

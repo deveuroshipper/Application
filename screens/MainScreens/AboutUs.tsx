@@ -2,7 +2,7 @@ import Icon from "@/assets/icons";
 import BackButton from "@/components/BackButton";
 import { ABOUT_PAGES } from "@/constants/enums";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 const AboutUs = ({ navigation }: any) => {
   const items = [
@@ -27,7 +27,7 @@ const AboutUs = ({ navigation }: any) => {
   ];
   return (
     <View className="flex-1 bg-BgWhite">
-      <View className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }} className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">

@@ -60,6 +60,7 @@ export const useCartStore = create<CartState>()((set) => ({
     try {
       const response = await getCartApiHandler();
       const cartItems = Array.isArray(response) ? response : [];
+     
       set({ cartItems, cartCount: cartItems.length });
 
       return cartItems;

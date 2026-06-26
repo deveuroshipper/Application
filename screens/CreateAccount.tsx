@@ -16,9 +16,9 @@ const CreateAccount = ({ navigation }: any) => {
     password: "",
     mobile: "",
     code: {
-      dialCode: "+1",
-      flag: "🇺🇸",
-      name: "United States",
+      dialCode: "",
+      flag: "",
+      name: "",
     },
   });
   const [showPass, setShowPass] = useState(false);
@@ -42,11 +42,15 @@ const CreateAccount = ({ navigation }: any) => {
     if (!data.password) newErrors.password = "Password is required.";
     else if (data.password.length < 6)
       newErrors.password = "Password must be at least 6 characters.";
+    if (data?.code?.dialCode == "" || data?.code?.name == "") {
+      newErrors.mobile = "Please select a mobile country code";
+    }
 
-    if (!data.mobile.trim()) newErrors.mobile = "Phone number is required.";
-    else if (!/^\d{6,15}$/.test(data.mobile.trim()))
-      newErrors.mobile = "Please enter a valid phone number.";
-
+    if (!data.mobile.trim()) {
+      newErrors.mobile = "Phone number is required.";
+    } else if (!/^\d{10}$/.test(data.mobile.trim())) {
+      newErrors.mobile = "Phone number must be exactly 10 digits.";
+    }
     setErrors(newErrors);
     return (
       !newErrors.name &&
@@ -65,6 +69,8 @@ const CreateAccount = ({ navigation }: any) => {
         data.email,
         data.password,
         data.mobile,
+        data?.code?.dialCode,
+        data?.code?.name,
       );
       navigation.push("EmailVerification", {
         screenFor: "EMAIL_VERIFICATION",

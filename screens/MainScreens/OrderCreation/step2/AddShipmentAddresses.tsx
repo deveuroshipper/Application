@@ -48,6 +48,7 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
   const refreshAddress = route?.params?.refreshAddress ?? null;
 
   const IsDropAt = ShipmentType == SHIPMENT_TYPE.DROP_AT_WAREHOUSE;
+  const IsDoorstepPickup = ShipmentType == SHIPMENT_TYPE.DOORSTEP_PICKUP;
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -428,8 +429,7 @@ const AddShipmentAddresses = ({ navigation, route }: any) => {
               text="Continue "
               disabled={
                 !selectedDeliveryAddress ||
-                (!selectedPickupAddress &&
-                  IsDropAt == SHIPMENT_TYPE.DOORSTEP_PICKUP)
+                (IsDoorstepPickup && !selectedPickupAddress)
               }
               action={handelSubmit}
             />

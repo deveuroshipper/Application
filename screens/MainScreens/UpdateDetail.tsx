@@ -13,10 +13,29 @@ import {
 } from "@/helper/Api";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useEffect, useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Platform, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
+
+type PhoneCode = {
+  dialCode: string;
+  flag: string;
+  name: string;
+};
+
+const DEFAULT_PHONE_CODE: PhoneCode = {
+  dialCode: "+1",
+  flag: "🇺🇸",
+  name: "United States",
+};
+
+const getPhoneCodeFromProfile = (userData: any): PhoneCode => ({
+  dialCode: userData?.dialCode || DEFAULT_PHONE_CODE.dialCode,
+  flag: "",
+  name: userData?.coname || "",
+});
+
 const UpdateDetail = ({ navigation, route }: any) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const isFor: INFO_UPDATE = route?.params?.isFor ?? INFO_UPDATE.EMAIL_UPDATE;
 
   const [loading, setLoading] = useState(false);
@@ -36,16 +55,16 @@ const UpdateDetail = ({ navigation, route }: any) => {
   const [detail, setDetail] = useState({
     oldNumber: "",
     oldCode: {
-      dialCode: "+1",
-      flag: "🇺🇸",
-      name: "United States",
+      dialCode: "",
+      flag: "",
+      name: "",
     },
 
     newNumber: "",
     newCode: {
-      dialCode: "+1",
-      flag: "🇺🇸",
-      name: "United States",
+      dialCode: "",
+      flag: "",
+      name: "",
     },
     oldEmail: "",
     newEmail: "",
@@ -90,12 +109,18 @@ const UpdateDetail = ({ navigation, route }: any) => {
           newErrors.newEmail = "Please enter a valid new email address.";
         break;
 
-      // case INFO_UPDATE.PHONE_UPDATE:
-      //   if (!detail.oldNumber?.trim())
-      //     newErrors.oldNumber = "Old mobile number is required.";
-      //   if (!detail.newNumber?.trim())
-      //     newErrors.newNumber = "New mobile number is required.";
-      //   break;
+      case INFO_UPDATE.PHONE_UPDATE:
+        // if (!detail.oldNumber?.trim())
+        //   newErrors.oldNumber = "Old mobile number is required.";
+        if (!detail.newNumber?.trim())
+          newErrors.newNumber = "New mobile number is required.";
+        else if (!/^\d{10}$/.test(detail.newNumber.trim())) {
+          newErrors.newNumber = "Phone number must be exactly 10 digits.";
+        }
+        if (detail?.newCode?.dialCode == "" || detail?.newCode?.name == "") {
+          newErrors.newNumber = "Please select a mobile country code";
+        }
+        break;
 
       case INFO_UPDATE.PASSWORD_UPDATE:
         if (!detail.oldPassword)
@@ -149,13 +174,16 @@ const UpdateDetail = ({ navigation, route }: any) => {
         role: userData?.role,
         status: userData?.status,
         profileImage: null,
+        dialCode: userData?.dialCode,
+        coname: userData?.coname,
       };
       useAuthStore?.getState().setUser(payload);
-      setDetail({
-        ...detail,
+      setDetail((prev) => ({
+        ...prev,
         oldNumber: userData?.phone,
         oldEmail: userData?.email,
-      });
+        oldCode: getPhoneCodeFromProfile(userData),
+      }));
       setUser(payload);
     } catch (error) {
       Toast.show({
@@ -169,28 +197,29 @@ const UpdateDetail = ({ navigation, route }: any) => {
     if (!validate()) return;
 
     try {
-      var response;
       setLoading(true);
       switch (isFor) {
         case INFO_UPDATE.EMAIL_UPDATE:
-          response = await updateInfoApiHandler({
+          await updateInfoApiHandler({
             old: detail?.oldEmail,
             new: detail?.newEmail,
             type: "emailupdate",
           });
           break;
         case INFO_UPDATE.PHONE_UPDATE:
-          const payload = {
+          const payload: any = {
             new: detail?.newNumber,
             type: "phoneupdate",
+            phoneCode: detail.newCode.dialCode,
+            coname: detail.newCode.name,
           };
           if (detail?.oldNumber) {
             payload.old = detail?.oldNumber;
           }
-          response = await updateInfoApiHandler(payload);
+          await updateInfoApiHandler(payload);
           break;
         case INFO_UPDATE.PASSWORD_UPDATE:
-          response = await changePasswordApiHandler({
+          await changePasswordApiHandler({
             oldPassword: detail?.oldPassword,
             newPassword: detail?.newPassword,
           });
@@ -227,6 +256,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
     }
   };
 
+
   useEffect(() => {
     // setUser(useAuthStore.getState().user);
     getProfile();
@@ -255,7 +285,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
                   setDetail({ ...detail, newEmail: text });
                   clearError("newEmail");
                 }}
-                placeholderTxt="abc123@gmail.com"
+                placeholderTxt="jen@gmail.com"
                 error={errors.newEmail}
               />
             </View>
@@ -276,8 +306,9 @@ const UpdateDetail = ({ navigation, route }: any) => {
                   label={"Enter Old Mobile Number"}
                   placeholderTxt={"Type your old mobile number"}
                   value={detail?.oldNumber}
+                  disableCode={true}
                   selectedCode={detail?.oldCode}
-                  onCodeChange={(e) => {}}
+                  onCodeChange={(e) => setDetail({ ...detail, oldCode: e })}
                   onChange={(text: string) => {
                     setDetail({ ...detail, oldNumber: text });
                     clearError("oldNumber");
@@ -290,7 +321,7 @@ const UpdateDetail = ({ navigation, route }: any) => {
                 placeholderTxt={"Type your new mobile number"}
                 value={detail?.newNumber}
                 selectedCode={detail?.newCode}
-                onCodeChange={(e) => {}}
+                onCodeChange={(e) => setDetail({ ...detail, newCode: e })}
                 onChange={(text: string) => {
                   setDetail({ ...detail, newNumber: text });
                   clearError("newNumber");
@@ -393,7 +424,10 @@ const UpdateDetail = ({ navigation, route }: any) => {
           </View>
         }
       />
-      <View className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS === "ios" ? 64 : 54 }}
+        className="  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary"
+      >
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">

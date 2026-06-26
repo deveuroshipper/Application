@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -105,7 +106,10 @@ const OrderCard = ({
   <View className="py-4 px-6 bg-white rounded-xl">
     <View className="flex-row justify-between items-center mb-1">
       <Text className="text-cno font-inter-bold text-primary">
-        Order ID: {order.id.slice(0, 20) + "..."}
+        Order ID:{" "}
+        {order?.shortId
+          ? order?.shortId?.toUpperCase()
+          : order.id.slice(0, 20) + "..."}
       </Text>
       <Text className="text-[12px] font-inter-medium text-[#55658B]/50">
         {order.date}
@@ -170,7 +174,7 @@ const OrdersScreen = ({ navigation }: any) => {
           typeof error === "string"
             ? error
             : (error?.message ?? "Failed to resend OTP"),
-        });
+      });
     } finally {
       if (showFullLoader) setLoading(false);
     }
@@ -190,7 +194,10 @@ const OrdersScreen = ({ navigation }: any) => {
   return (
     <View className="flex-1 bg-BgWhite">
       {/* Header */}
-      <View className="pt-14 pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }}
+        className="pt-14 pb-8 flex flex-col gap-1.5 rounded-b-[40px] items-center bg-primary"
+      >
         <Text className="text-white text-[24px] font-space-grotesk-bold">
           Track Shipment
         </Text>

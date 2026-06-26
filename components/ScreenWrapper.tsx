@@ -1,12 +1,11 @@
 import React from "react";
 import {
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
@@ -23,11 +22,12 @@ const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    // <KeyboardAvoidingView
+    //   style={{ flex: 1 }}
+    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
+    // >
+    <KeyboardProvider>
+      {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ flexGrow: 1 }}
@@ -38,8 +38,9 @@ const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
         >
           <View style={containerStyle}>{children}</View>
         </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      {/* </TouchableWithoutFeedback> */}
+      {/* // </KeyboardAvoidingView> */}
+    </KeyboardProvider>
   );
 };
 

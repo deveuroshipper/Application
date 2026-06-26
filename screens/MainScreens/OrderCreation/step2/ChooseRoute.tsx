@@ -8,7 +8,6 @@ import { getRoutesApiHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
 import { useEffect, useState } from "react";
-import Skeleton from "react-native-reanimated-skeleton";
 
 import {
   ActivityIndicator,
@@ -32,7 +31,8 @@ const TOTAL_STEP = 4;
 const ChooseRoute = ({ navigation }: any) => {
   const step = 1;
   const [selected, setSelected] = useState(useAddressStore.getState().route);
-  const [routes, setRoutes] = useState();
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const pingProgress = useSharedValue(0);
 
@@ -53,10 +53,12 @@ const ChooseRoute = ({ navigation }: any) => {
   };
 
   const getRoutes = async () => {
+    setLoading(true);
     try {
       const response = await getRoutesApiHandler();
-      setRoutes(response);
+      setRoutes(Array.isArray(response) ? response : []);
     } catch (error) {
+      setRoutes([]);
       Toast.show({
         type: "error",
         text1:
@@ -64,6 +66,8 @@ const ChooseRoute = ({ navigation }: any) => {
             ? error
             : (error?.message ?? "Something went wrong"),
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,7 +136,11 @@ const ChooseRoute = ({ navigation }: any) => {
               className="h-[63%]"
               showsVerticalScrollIndicator={false}
             >
-              {routes?.length > 0 ? (
+              {loading ? (
+                <View className="min-h-60 flex justify-end items-center ">
+                  <ActivityIndicator size={"large"} color={"#0F1729"} />
+                </View>
+              ) : routes.length > 0 ? (
                 routes?.map((route: any, index: Number) => (
                   <View
                     key={route.id + "-" + index}
@@ -175,8 +183,13 @@ const ChooseRoute = ({ navigation }: any) => {
                   </View>
                 ))
               ) : (
-                <View className="min-h-60 flex justify-end items-center ">
-                  <ActivityIndicator size={"large"} color={"#0F1729"} />
+                <View className="min-h-60 flex justify-end items-center px-4">
+                  <Text className="text-cno font-inter-semibold text-primary text-center">
+                    No route available
+                  </Text>
+                  <Text className="text-csm font-inter text-primary/50 text-center mt-2">
+                    Please check again later.
+                  </Text>
                 </View>
               )}
             </ScrollView>

@@ -2,7 +2,7 @@ import Icon from "@/assets/icons";
 import Button, { Size, Variant } from "@/components/Button";
 import { useAuthStore } from "@/store/useAuthStore";
 import React, { useState } from "react";
-import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, Platform, Text, TouchableOpacity, View } from "react-native";
 
 const ProfileScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
@@ -101,7 +101,7 @@ const ProfileScreen = ({ navigation }: any) => {
         </View>
       </Modal>
 
-      <View className="pt-16  px-10 pb-12 flex flex-row justify-between gap-1.5 rounded-b-[40px] items-center bg-primary">
+      <View    style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }} className="px-10 pb-12 flex flex-row justify-between gap-1.5 rounded-b-[40px] items-center bg-primary">
         <View className="flex-1">
           <Text className="text-white text-[20px] font-inter-bold">
             Hi, {user?.fullName ?? "Gest"}
@@ -147,7 +147,7 @@ const ProfileScreen = ({ navigation }: any) => {
                   <View className="h-12 w-12 bg-[#D6E0EE] flex justify-center items-center rounded-full">
                     {item?.icon}
                   </View>
-                  <View>
+                  <View className="flex justify-center gap-0.5">
                     <Text className="text-cno font-inter-bold text-primary">
                       {item?.name}
                     </Text>

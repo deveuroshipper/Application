@@ -12,6 +12,7 @@ import {
   Alert,
   Image,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -57,7 +58,7 @@ const AccountInformation = ({ navigation }: any) => {
     try {
       const response = await getProfileApiHandler();
       const userData = response?.user;
-      console.log("response : ", userData);
+
       const payload = {
         id: userData?.id,
         fullName: userData?.fullName,
@@ -169,7 +170,10 @@ const AccountInformation = ({ navigation }: any) => {
         }
       />
       {/* Header */}
-      <View className="pt-14  px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary">
+      <View
+        style={{ paddingTop: Platform.OS == "ios" ? 64 : 54 }}
+        className=" px-10 pb-12 flex flex-col  rounded-b-[40px]  bg-primary"
+      >
         <BackButton color="#FFFF" navigation={navigation} />
         <View className="mt-8">
           <Text className="text-white text-[20px] text-center font-inter-bold">
@@ -186,17 +190,13 @@ const AccountInformation = ({ navigation }: any) => {
         contentContainerClassName="mt-10 px-8 pb-6 flex flex-col gap-6"
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
+        <View
           style={{
             shadowColor: "#BDBDBD",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1115,
             shadowRadius: 8,
             elevation: 5,
-          }}
-          onPress={() => {
-            setName(user?.fullName ?? "");
-            setNameModel(true);
           }}
           className="px-6 py-5 flex flex-row items-center justify-between bg-white border-[1.5px] rounded-xl border-[#E9EDF8]"
         >
@@ -210,8 +210,8 @@ const AccountInformation = ({ navigation }: any) => {
               </Text>
             </View>
           </View>
-          <Icon name="Arrow" />
-        </TouchableOpacity>
+          {/* <Icon name="Arrow" /> */}
+        </View>
 
         <TouchableOpacity
           style={{
@@ -267,7 +267,7 @@ const AccountInformation = ({ navigation }: any) => {
           </View>
           <Icon name="Arrow" />
         </TouchableOpacity>
-        {console.log("user data : ", user)}
+
         {user?.authMethod == "email" ? (
           <TouchableOpacity
             style={{

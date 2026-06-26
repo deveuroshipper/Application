@@ -36,7 +36,10 @@ const EmailVerification = ({ navigation, route }: any) => {
         navigation.push("NewPassword");
       } else {
         await verificationApiHandler(email, otp);
-        navigation.push("LoginScreen");
+        navigation.reset({
+          index: 1,
+          routes: [{ name: "WelcomeScreen" }, { name: "LoginScreen" }],
+        });
       }
     } catch (error: any) {
       Toast.show({

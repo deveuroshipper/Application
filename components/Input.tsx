@@ -33,8 +33,8 @@ const Input = ({
   keyboardTypes?: any;
 }) => {
   return (
-    <View>
-      <View className="flex flex-row mt-2 mb-3 justify-between">
+    <View className="">
+      <View className="flex flex-row mt-2 mb-3 justify-between  ">
         {label && (
           <Text className="text-csm uppercase   text-primary font-inter-medium">
             {label}

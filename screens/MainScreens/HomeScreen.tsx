@@ -12,6 +12,7 @@ const HomeScreen = ({ navigation }: any) => {
   const handelNotificationClick = () => {
     navigation.push("NotificationScreen");
   };
+
   return (
     <ScreenWrapper bg={"#FFFF"} KeyboardAvoiding={false}>
       <View className="flex-1">
@@ -58,7 +59,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View className="flex flex-row gap-4">
               <TouchableOpacity
                 onPress={() => navigation.push("WeProcureScreen")}
-                className="w-1/2 h-fit p-2.5 rounded-2xl bg-[#E4E8EF]"
+                className="relative w-1/2 h-fit p-2.5 rounded-2xl bg-[#E4E8EF]"
               >
                 <Image
                   className="w-full h-fit rounded-xl"
@@ -71,7 +72,7 @@ const HomeScreen = ({ navigation }: any) => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => navigation.push("WeQAScreen")}
-                className="w-1/2 h-fit p-2.5 rounded-2xl bg-[#E4E8EF]"
+                className="relative w-1/2 h-fit p-2.5 rounded-2xl bg-[#E4E8EF]"
               >
                 <Image
                   className="w-full h-fit rounded-xl"

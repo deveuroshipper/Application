@@ -155,10 +155,7 @@ const NotificationItem = ({ item }: { item: ApiNotification }) => {
             {formatNotificationTime(item)}
           </Text>
         </View>
-        <Text
-          className="text-[11px] font-inter-semibold text-[#3F4C6E] mt-0.5"
-          numberOfLines={2}
-        >
+        <Text className="text-[11px] font-inter-semibold text-[#3F4C6E] mt-0.5">
           {item.message}
         </Text>
         {/* <Text className="text-[10px] font-inter-bold text-primary/40 mt-1">
@@ -216,8 +213,6 @@ const NotificationScreen = ({ navigation }: any) => {
     getNotification();
   }, []);
 
-  
-
   const markVisibleNotificationsRead = useCallback(
     async (viewableItems: ViewToken<ApiNotification>[]) => {
       const notificationIds = viewableItems
@@ -242,7 +237,6 @@ const NotificationScreen = ({ navigation }: any) => {
         fetchNotificationStatus().catch(() => {});
       } catch (error) {
         notificationIds.forEach((id) => sentReadIdsRef.current.delete(id));
-       
       }
     },
     [fetchNotificationStatus],

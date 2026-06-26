@@ -247,7 +247,8 @@ const Layout = () => {
 
   if (!fontsLoaded) return null;
   return (
-    <StripeProvider publishableKey="pk_test_51T8IHvGmnpqm6UPOoqXKCWrbx0jnFhqcxITexjsNuhgPocGNJ9EWc6qJWZxUnaSBko7pMTGVf8ZTL52bJ13rN7om00gUVTM9D4">
+    // <StripeProvider publishableKey="pk_test_51T8IHvGmnpqm6UPOoqXKCWrbx0jnFhqcxITexjsNuhgPocGNJ9EWc6qJWZxUnaSBko7pMTGVf8ZTL52bJ13rN7om00gUVTM9D4">
+    <StripeProvider publishableKey="pk_test_51T38UlQsMFVWDp2vo1MQE6MhBLzsixhwUQ7lBvTXZzRp2zU9HStcC8j5OgzCkluTougAWCNdRcauDXVFfiYIQvZs00sYlOG1B9">
       <Stack.Navigator
         initialRouteName="LoadingSplashScreen"
         layout={RootStackLayout}
