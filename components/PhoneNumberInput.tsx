@@ -1,5 +1,5 @@
 import Icon from "@/assets/icons";
-import { nameMap } from "@/constants/country";
+import { nameMap, normalizeCountryName } from "@/constants/country";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -35,12 +35,10 @@ const getFlagEmoji = (countryCode?: string) => {
 };
 
 const getCountryCodeByName = (name?: string) => {
-  const normalizedName = String(name ?? "")
-    .trim()
-    .toLowerCase();
+  const normalizedName = normalizeCountryName(name);
   if (!normalizedName) return "";
 
-  return (nameMap as Record<string, string>)[normalizedName] ?? "";
+  return nameMap[normalizedName] ?? "";
 };
 
 const DEFAULT_COUNTRY: SelectedCountry = {

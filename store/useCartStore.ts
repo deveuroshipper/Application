@@ -5,6 +5,7 @@ export type CartItem = {
   id?: string;
   orderid?: string;
   orderId?: string;
+  checkoutId?: string;
   [key: string]: any;
 };
 
@@ -20,7 +21,10 @@ interface CartState {
 }
 
 const matchesCartItemId = (item: CartItem, id: string) =>
-  item.id === id || item.orderid === id || item.orderId === id;
+  item.id === id ||
+  item.orderid === id ||
+  item.orderId === id ||
+  item.checkoutId === id;
 
 export const useCartStore = create<CartState>()((set) => ({
   cartItems: [],
@@ -37,7 +41,8 @@ export const useCartStore = create<CartState>()((set) => ({
         (cartItem) =>
           (item.id && matchesCartItemId(cartItem, item.id)) ||
           (item.orderid && matchesCartItemId(cartItem, item.orderid)) ||
-          (item.orderId && matchesCartItemId(cartItem, item.orderId)),
+          (item.orderId && matchesCartItemId(cartItem, item.orderId)) ||
+          (item.checkoutId && matchesCartItemId(cartItem, item.checkoutId)),
       );
       const cartItems = exists ? state.cartItems : [item, ...state.cartItems];
 

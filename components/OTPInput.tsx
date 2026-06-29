@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 
@@ -14,6 +14,7 @@ const OTPInput = ({
   onChange: (val: string) => void;
 }) => {
   const inputs = useRef<(TextInput | null)[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const handleChange = (text: string, index: number) => {
     const char = text.slice(-1);
@@ -45,12 +46,16 @@ const OTPInput = ({
         {Array.from({ length }).map((_, i) => (
           <View
             key={i}
-            className="size-20 aspect-square items-center justify-center bg-white border-[1.8px] border-[#B5C3E8]/30 rounded-2xl"
+            className={`size-20 aspect-square items-center justify-center bg-white rounded-2xl ${
+              focusedIndex === i ? "border-primary border-2" : "border-[#B5C3E8]/30 border-[1.8px] "
+            }`}
           >
             <TextInput
               ref={(el) => (inputs.current[i] = el)}
               value={value[i] ?? ""}
               onChangeText={(text) => handleChange(text, i)}
+              onFocus={() => setFocusedIndex(i)}
+              onBlur={() => setFocusedIndex(null)}
               onKeyPress={({ nativeEvent }) =>
                 handleKeyPress(nativeEvent.key, i)
               }

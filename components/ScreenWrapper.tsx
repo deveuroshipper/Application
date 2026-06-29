@@ -1,12 +1,38 @@
 import React from "react";
+import { Animated, View } from "react-native";
 import {
-  Keyboard,
-  ScrollView,
-  TouchableWithoutFeedback,
-  View
-} from "react-native";
-import { KeyboardProvider } from "react-native-keyboard-controller";
+  KeyboardAwareScrollView,
+  useKeyboardAnimation,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const KeyboardAnimatedContent = ({ children, containerStyle, bg }: any) => {
+  const { height } = useKeyboardAnimation();
+  const animatedStyle = {
+    transform: [
+      {
+        translateY: Animated.multiply(height, 0.12),
+      },
+    ],
+  };
+
+  return (
+    <KeyboardAwareScrollView
+      style={{ flex: 1, backgroundColor: bg || "#F8FAFC" }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
+      automaticallyAdjustKeyboardInsets={false}
+      bottomOffset={20}
+      mode="layout"
+    >
+      <Animated.View style={[containerStyle, animatedStyle]}>
+        {children}
+      </Animated.View>
+    </KeyboardAwareScrollView>
+  );
+};
 
 const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
   const insets = useSafeAreaInsets();
@@ -22,28 +48,10 @@ const ScreenWrapper = ({ children, bg, KeyboardAvoiding = false }: any) => {
   }
 
   return (
-    // <KeyboardAvoidingView
-    //   style={{ flex: 1 }}
-    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
-    // >
-    <KeyboardProvider>
-      {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          contentInsetAdjustmentBehavior="never"
-          automaticallyAdjustContentInsets={false}
-          automaticallyAdjustKeyboardInsets={false}
-        >
-          <View style={containerStyle}>{children}</View>
-        </ScrollView>
-      {/* </TouchableWithoutFeedback> */}
-      {/* // </KeyboardAvoidingView> */}
-    </KeyboardProvider>
+    <KeyboardAnimatedContent containerStyle={containerStyle} bg={bg}>
+      {children}
+    </KeyboardAnimatedContent>
   );
 };
 
 export default ScreenWrapper;
-
-/// confirm

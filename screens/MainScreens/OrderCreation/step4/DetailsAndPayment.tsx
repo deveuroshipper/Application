@@ -53,6 +53,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
   const fetchCart = useCartStore((state) => state.fetchCart);
+  const removeCartItem = useCartStore((state) => state.removeCartItem);
   const [pricing, setPricing] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -98,6 +99,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
 
   const handleSaveToCart = async () => {
     if (cartActionLoading) return;
+    if (!showAddToCart) return;
 
     setCartActionLoading("add");
     try {
@@ -107,6 +109,8 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       setShowAddToCart(false);
       handleBackToHome();
     } catch (error: any) {
+      handleBackToHome();
+
       Toast.show({
         type: "error",
         text1: error ?? "Failed to add to cart",
@@ -118,6 +122,10 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
 
   const handleDiscardCheckout = async () => {
     if (cartActionLoading) return;
+    if (!showAddToCart) {
+      handleBackToHome();
+      return;
+    }
 
     setCartActionLoading("discard");
     try {
@@ -125,6 +133,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       await fetchCart();
       handleBackToHome();
     } catch (error: any) {
+      handleBackToHome();
       Toast.show({
         type: "error",
         text1: getErrorMessage(error, "Failed to discard checkout"),
@@ -174,9 +183,9 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
   const getDetail = useCallback(async () => {
     try {
       // setLoading(true);
-  
+
       const response = await getCheckoutOrderHandler(orderId);
-     
+      console.log("order details is  : ", response);
       setOrderDetail(response);
     } catch (error: any) {
       Toast.show({
@@ -217,9 +226,9 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
         couponCode: getAppliedCouponCode(),
         paymentMethod: "STRIPE",
       });
-    
+
       const clientSecret = res.data?.data?.clientSecret;
- 
+
       if (!clientSecret) {
         setPaymentModal({
           type: "fail",
@@ -233,7 +242,6 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
         paymentIntentClientSecret: clientSecret,
       });
       if (init.error) {
-       
         setPaymentModal({
           type: "fail",
           title: "Payment Failed",
@@ -243,25 +251,31 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       }
       const payment = await presentPaymentSheet();
       if (payment.error) {
-     
-       
-
         if (isPaymentSheetCanceled(payment.error)) return;
 
         navigation.push("OrderStatus", { status: ORDER_STATUS.FAILED });
       } else {
+        allowLeaveRef.current = true;
+        setShowAddToCart(false);
+        setShowExitModal(false);
+
         try {
           await removeFromCartApiHandler(orderId);
+        } catch (cartError) {
+        } finally {
+          removeCartItem(orderId);
+        }
+
+        try {
           await fetchCart();
         } catch (cartError) {}
+
         // setPaymentModal({
         //   type: "success",
         //   title: "Payment Successful",
         //   message: "Your payment has been completed successfully.",
         // });
-        
 
-        allowLeaveRef.current = true;
         navigation.reset({
           index: 1,
           routes: [
@@ -285,7 +299,6 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
       //       ? error
       //       : (error?.message ?? "Unable to start payment."),
       // });
-     
 
       if (isPaymentSheetCanceled(error)) return;
 
@@ -311,7 +324,6 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
     let isActive = true;
 
     checkCartApiHandler(orderId).then((canAddToCart) => {
-    
       if (!isActive) return;
 
       setShowAddToCart(!canAddToCart);
@@ -324,14 +336,20 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (event: any) => {
-      if (allowLeaveRef.current || !orderId) return;
+      if (allowLeaveRef.current || !orderId || !showAddToCart) return;
 
       event.preventDefault();
       setShowExitModal(true);
     });
 
     return unsubscribe;
-  }, [navigation, orderId]);
+  }, [navigation, orderId, showAddToCart]);
+
+  useEffect(() => {
+    if (!showAddToCart && showExitModal) {
+      setShowExitModal(false);
+    }
+  }, [showAddToCart, showExitModal]);
 
   useEffect(() => {
     const code = selectedCoupon?.code?.trim();
@@ -564,7 +582,7 @@ const DetailsAndPayment = ({ navigation, route }: any) => {
 
                 {/* Airplane / Ship Icon */}
                 <View className="w-12 h-12 mb-auto  items-center justify-center bg-[#E3EDFA] rounded-full">
-                  {orderDetail?.box?.mode === "SHIP" ? (
+                  {orderDetail?.mode === "SHIP" ? (
                     <Icon name="ShipOutline" size={26} color="#000000" />
                   ) : (
                     <Icon name="PlanOutline" size={26} color="#000000" />

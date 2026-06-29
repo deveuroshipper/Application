@@ -9,6 +9,7 @@ import { SHIPMENT_TYPE } from "@/constants/enums";
 import { getWarehouseApiHandler } from "@/helper/Api";
 import { CountryImage } from "@/helper/buildFlagUrl";
 import { useAddressStore } from "@/store/useAddress";
+// import * as Clipboard from "expo-clipboard";
 import { useEffect, useState } from "react";
 import {
   Image,
@@ -218,6 +219,11 @@ const DateAndTimeSubmission = ({ navigation, route }: any) => {
     if (!warehouseAddress) return;
     const addressText = buildAddress(warehouseAddress);
     try {
+      // await Clipboard.setStringAsync(addressText);
+      Toast.show({
+        type: "success",
+        text1: "Address copied to clipboard",
+      });
       await Share.share({
         message: addressText,
       });

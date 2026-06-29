@@ -455,7 +455,6 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
 
       try {
         const response = await getOrderByIdApiHandler(orderId);
-        console.log("order details : ---", response);
         setOrderDetail(response);
       } catch (error: any) {
         Toast.show({
@@ -471,7 +470,10 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
     getOrderDetail();
   }, []);
 
-  const openExternalLink = async (link: string | undefined, fallback: string) => {
+  const openExternalLink = async (
+    link: string | undefined,
+    fallback: string,
+  ) => {
     if (!link) {
       Toast.show({
         type: "error",
@@ -520,7 +522,7 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
           text: "Continue",
           onPress: () =>
             openExternalLink(
-            IMAGE_URL+  orderDetail?.holdAttachment,
+              IMAGE_URL + orderDetail?.holdAttachment,
               "Hold attachment is not available.",
             ),
         },
@@ -555,9 +557,9 @@ const OrderTracking = ({ navigation, route, orderId: orderIdProp }: any) => {
                   numberOfLines={1}
                   className="text-[24px] uppercase font-space-grotesk-bold text-primary"
                 >
-                  {orderDetail?.shortId
+                  {orderDetail && orderDetail?.shortId
                     ? orderDetail?.shortId?.toUpperCase()
-                    : orderId}
+                    : orderDetail?.id}
                 </Text>
               </View>
             </View>

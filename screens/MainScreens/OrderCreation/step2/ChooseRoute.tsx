@@ -28,6 +28,24 @@ import Toast from "react-native-toast-message";
 
 const TOTAL_STEP = 4;
 
+const CountryFlag = ({ name }: { name?: string }) => {
+  const flagUri = CountryImage(name);
+
+  if (!flagUri) {
+    return (
+      <View className="w-11 h-8 rounded-md bg-[#E2E8F0] items-center justify-center">
+        <Text className="text-[10px] text-primary/60 font-inter-bold">
+          {name?.slice(0, 2).toUpperCase() || "--"}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Image source={{ uri: flagUri }} className="w-11 h-8 rounded-md" />
+  );
+};
+
 const ChooseRoute = ({ navigation }: any) => {
   const step = 1;
   const [selected, setSelected] = useState(useAddressStore.getState().route);
@@ -151,10 +169,7 @@ const ChooseRoute = ({ navigation }: any) => {
                       className="w-full h-fit flex flex-row justify-between items-center gap-2 px-3 py-3 pt-4 border-[#B5C3E8]/30 border-[2px] bg-white rounded-lg"
                     >
                       <View className="flex   w-1/3 flex-col items-center gap-2">
-                        <Image
-                          source={{ uri: CountryImage(route?.originName) }}
-                          className="w-11 h-8 rounded-md"
-                        />
+                        <CountryFlag name={route?.originName} />
                         <Text className="text-[12px] text-primary/90 font-inter-semibold">
                           {route?.originName}
                         </Text>
@@ -166,10 +181,7 @@ const ChooseRoute = ({ navigation }: any) => {
                         />
                       </View>
                       <View className="flex  w-1/3 flex-col items-center gap-2">
-                        <Image
-                          source={{ uri: CountryImage(route?.destinationName) }}
-                          className="w-11 h-8 rounded-md"
-                        />
+                        <CountryFlag name={route?.destinationName} />
                         <Text className="text-[12px] text-primary/90 font-inter-semibold">
                           {route?.destinationName}
                         </Text>

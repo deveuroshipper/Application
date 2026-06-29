@@ -76,7 +76,7 @@ const ListAddresses = ({ navigation, route }: any) => {
                         <View className="h-12 w-12 pr-0.5 flex justify-center items-center bg-[#CBD5E1] rounded-full">
                           <Icon name="User" size={24} />
                         </View>
-                        <View>
+                        <View className="..........0min-w-32">
                           <Text className="text-csm font-inter-bold">
                             {address?.fullName}
                           </Text>

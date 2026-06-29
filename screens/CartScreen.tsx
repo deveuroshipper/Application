@@ -272,6 +272,7 @@ const CartScreen = ({ navigation }: any) => {
       setIsDeleting(true);
       await removeFromCartApiHandler(deleteTargetId);
       removeCartItem(deleteTargetId);
+      await fetchCart();
       setSelectedItems(null);
       setDeleteTargetId(null);
       Toast.show({
@@ -319,7 +320,7 @@ const CartScreen = ({ navigation }: any) => {
     });
   }, [fetchCart]);
 
- 
+  console.log("cart items : ", cartItems);
 
   return (
     <ScreenWrapper KeyboardAvoiding={false}>
@@ -384,8 +385,8 @@ const CartScreen = ({ navigation }: any) => {
                   item.id ?? item.orderid ?? item.orderId ?? String(index);
                 const orderId =
                   item.checkoutId ??
-                  item.checkoutId ??
-                  item.checkoutId ??
+                  item.orderid ??
+                  item.orderId ??
                   itemId;
 
                 return (
